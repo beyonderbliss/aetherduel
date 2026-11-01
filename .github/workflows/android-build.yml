@@ -50,6 +50,17 @@ jobs:
       - name: Set up Gradle and dependency cache
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Install ccache
+        run: sudo apt-get update && sudo apt-get install -y ccache
+
+      - name: Cache native C/C++ compilation
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-aetherduel-ndk21-arm64-${{ hashFiles('**/*.cpp', '**/*.c', '**/*.h', '**/*.hpp', '**/*.mk') }}
+          restore-keys: |
+            ${{ runner.os }}-aetherduel-ndk21-arm64-
+
       - name: Build AetherDuel debug APK
         run: bash scripts/build-android.sh
 
@@ -69,5 +80,7 @@ jobs:
           path: |
             .build/android-wrapper/build/outputs/logs/
             .build/android-wrapper/.cxx/
+            .build/android-wrapper/obj/local/
+            .build/android-wrapper/libs/
           if-no-files-found: ignore
           retention-days: 7
