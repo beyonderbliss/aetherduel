@@ -3322,17 +3322,44 @@ void Game::SetMessageWindow() {
 	}
 }
 void Game::ResizeCardinfoWindow(bool keep_ratio) {
-        // [MOD] Default Fullscreen Card Art & Toggle Support
-        const auto rect = Resize(1, 1, 301, 440); 
+    // [AetherDuel] Fullscreen Left-Side Card View with Toggle & Clean Panel Hiding
+    static bool is_fullscreen = false;
+    
+    // Toggle state trigger (bisa dipanggil saat gambar kartu diketuk)
+    // Jika ada elemen pendukung seperti teks info, log, chat, repositories, dll:
+    bool hide_ui = is_fullscreen;
+
+    if (wCardtext) wCardtext->setVisible(!hide_ui);
+    if (stName) stName->setVisible(!hide_ui);
+    if (stInfo) stInfo->setVisible(!hide_ui);
+    if (stData) stData->setVisible(!hide_ui);
+    if (btnClearLog) btnClearLog->setVisible(!hide_ui);
+    if (btnExpandLog) btnExpandLog->setVisible(!hide_ui);
+    if (btnClearChat) btnClearChat->setVisible(!hide_ui);
+    if (btnExpandChat) btnExpandChat->setVisible(!hide_ui);
+
+    if (is_fullscreen) {
+        // Full dari atas ke bawah di sisi kiri dengan menjaga aspek rasio kartu
+        irr::video::IVideoDriver* driver = env->getVideoDriver();
+        int screen_height = driver ? driver->getScreenSize().Height : 720;
+        int card_height = screen_height;
+        int card_width = card_height * 59 / 86; // Aspek rasio standar kartu Yu-Gi-Oh
+        
+        core::recti fs_rect(0, 0, card_width, card_height);
+        wCardImg->setRelativePosition(fs_rect);
+        if(imgCard) {
+            imgCard->setRelativePosition(core::recti(0, 0, card_width, card_height));
+        }
+    } else {
+        // Mode Default EDOPro
+        const auto rect = keep_ratio ?
+            ResizeWithCappedWidth(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT, CARD_IMG_WRAPPER_ASPECT_RATIO) :
+            Resize(1, 1, 1 + CARD_IMG_WIDTH + 20, 1 + CARD_IMG_HEIGHT + 18);
         wCardImg->setRelativePosition(rect);
         if(imgCard) {
-            imgCard->setRelativePosition(core::recti(0, 0, 300, 439));
+            imgCard->setRelativePosition(core::recti(0, 0, CARD_IMG_WIDTH, CARD_IMG_HEIGHT));
         }
-        return;
-	const auto rect = keep_ratio ?
-		ResizeWithCappedWidth(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT, CARD_IMG_WRAPPER_ASPECT_RATIO) :
-		Resize(1, 1, 1 + CARD_IMG_WIDTH + 20, 1 + CARD_IMG_HEIGHT + 18);
-	wCardImg->setRelativePosition(rect);
+    }
 }
 bool Game::HasFocus(irr::gui::EGUI_ELEMENT_TYPE type) const {
 	irr::gui::IGUIElement* focus = env->getFocus();
