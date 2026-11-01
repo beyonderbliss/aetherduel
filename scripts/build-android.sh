@@ -12,13 +12,14 @@ APPLICATION_ID="io.github.beyonderbliss.aetherduel"
 fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 command -v git >/dev/null || fail "git is required"
 command -v python3 >/dev/null || fail "python3 is required"
-command -v ndk-build >/dev/null || fail "ndk-build is missing; install Android NDK $NDK_VERSION and add it to PATH"
 command -v java >/dev/null || fail "Java is required"
 
 SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
 [[ -n "$SDK_ROOT" && -d "$SDK_ROOT" ]] || fail "Set ANDROID_SDK_ROOT (or ANDROID_HOME) to an installed Android SDK"
 export ANDROID_SDK_ROOT="$SDK_ROOT"
 export ANDROID_HOME="$SDK_ROOT"
+export PATH="$SDK_ROOT/ndk/$NDK_VERSION:$PATH"
+command -v ndk-build >/dev/null || fail "ndk-build is missing; install Android NDK $NDK_VERSION under $SDK_ROOT/ndk"
 
 mkdir -p "$BUILD_DIR"
 if [[ ! -d "$WRAPPER_DIR/.git" ]]; then
