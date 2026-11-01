@@ -306,7 +306,7 @@ void Game::Initialize() {
 	wCardImg = env->addStaticText(L"", Scale(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT), true, false, 0, -1, true);
 	wCardImg->setBackgroundColor(skin::CARDINFO_IMAGE_BACKGROUND_VAL);
 	wCardImg->setVisible(false);
-	imgCard = AlignElementWithParent(irr::gui::CGUIImageButton::addImageButton(env,Scale(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT), wCardImg));
+	imgCard = AlignElementWithParent(irr::gui::CGUIImageButton::addImageButton(env, Scale(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT), wCardImg, -1));
 	imgCard->setImage(imageManager.tCover[0]);
 	imgCard->setScaleImage(true);
 	imgCard->setUseAlphaChannel(true);

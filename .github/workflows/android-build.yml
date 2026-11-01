@@ -1,0 +1,39 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build-android:
+    name: Build Android APK (AetherDuel)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build Android APK via Gradle
+        run: |
+          echo "Memulai proses kompilasi APK AetherDuel..."
+          if [ -f "android/gradlew" ]; then
+            cd android && ./gradlew assembleRelease
+          else
+            echo "Mencari gradlew di root..."
+            if [ -f "./gradlew" ]; then
+              ./gradlew assembleRelease
+            else
+              echo "Error: gradlew tidak ditemukan!"
+              exit 1
+            fi
+          fi
