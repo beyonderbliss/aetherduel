@@ -1438,9 +1438,6 @@ void Game::PopulateTabSettingsWindow() {
 		stInfo = irr::gui::CGUICustomText::addCustomText(L"", false, env, tabInfo, -1, Scale(15, 37, 287, 60));
 		stInfo->setWordWrap(true);
 		stInfo->setOverrideColor(skin::CARDINFO_TYPES_COLOR_VAL);
-		stDataInfo = irr::gui::CGUICustomText::addCustomText(L"", false, env, tabInfo, -1, Scale(15, 60, 287, 83));
-		stDataInfo->setWordWrap(true);
-		stDataInfo->setOverrideColor(skin::CARDINFO_STATS_COLOR_VAL);
 		stSetName = irr::gui::CGUICustomText::addCustomText(L"", false, env, tabInfo, -1, Scale(15, 83, 287, 106));
 		stSetName->setWordWrap(true);
 		stSetName->setOverrideColor(skin::CARDINFO_ARCHETYPE_TEXT_COLOR_VAL);
@@ -2303,7 +2300,6 @@ bool Game::ApplySkin(const epro::path_string& skinname, bool reload, bool firstr
 	auto reapply_colors = [&] () {
 		wCardImg->setBackgroundColor(skin::CARDINFO_IMAGE_BACKGROUND_VAL);
 		stInfo->setOverrideColor(skin::CARDINFO_TYPES_COLOR_VAL);
-		stDataInfo->setOverrideColor(skin::CARDINFO_STATS_COLOR_VAL);
 		stSetName->setOverrideColor(skin::CARDINFO_ARCHETYPE_TEXT_COLOR_VAL);
 		stPasscodeScope->setOverrideColor(skin::CARDINFO_PASSCODE_SCOPE_TEXT_COLOR_VAL);
 		stACMessage->setBackgroundColor(skin::DUELFIELD_ANNOUNCE_TEXT_BACKGROUND_COLOR_VAL);
@@ -2801,7 +2797,6 @@ void Game::ShowCardInfo(uint32_t code, bool resize, imgType type) {
 		//is correct when the text is set and is then broken into pieces
 		const auto widthRect = irr::core::recti(Scale(15), 0, Scale(287 * window_scale.X), 10);
 		stInfo->setRelativePosition(widthRect);
-		stDataInfo->setRelativePosition(widthRect);
 		stSetName->setRelativePosition(widthRect);
 		stPasscodeScope->setRelativePosition(widthRect);
 		stText->setRelativePosition(widthRect);
@@ -2866,7 +2861,6 @@ void Game::ShowCardInfo(uint32_t code, bool resize, imgType type) {
 		if(cd->type & TYPE_PENDULUM) {
 			text.append(epro::format(L"   {}/{}", cd->lscale, cd->rscale));
 		}
-		stDataInfo->setText(text.data());
 	} else {
 		if(cd->type & TYPE_SKILL) { // TYPE_SKILL created by hints
 			// Hack: Race encodes the character for now
@@ -2875,9 +2869,7 @@ void Game::ShowCardInfo(uint32_t code, bool resize, imgType type) {
 			stInfo->setText(epro::format(L"[{}]", gDataManager->FormatType(cd->type)).data());
 		}
 		if(cd->type & TYPE_LINK) {
-			stDataInfo->setText(epro::format(L"LINK {}   {}", cd->level, gDataManager->FormatLinkMarker(cd->link_marker)).data());
 		} else
-			stDataInfo->setText(L"");
 	}
 	RefreshCardInfoTextPositions();
 	stText->setText(gDataManager->GetText(code).data());
@@ -2893,7 +2885,6 @@ void Game::RefreshCardInfoTextPositions() {
 		}
 	};
 	offsetIfVisibleWithContent(stInfo);
-	offsetIfVisibleWithContent(stDataInfo);
 	offsetIfVisibleWithContent(stSetName);
 	offsetIfVisibleWithContent(stPasscodeScope);
 	stText->setRelativePosition(irr::core::recti(xLeft, offset, xRight, stText->getParent()->getAbsolutePosition().getHeight() - Scale(1)));
@@ -2902,7 +2893,6 @@ void Game::ClearCardInfo(int player) {
 	imgCard->setImage(imageManager.tCover[player]);
 	stName->setText(L"");
 	stInfo->setText(L"");
-	stDataInfo->setText(L"");
 	stSetName->setText(L"");
 	stPasscodeScope->setText(L"");
 	stText->setText(L"");
@@ -3048,7 +3038,6 @@ void Game::CloseDuelWindow() {
 	ClearTextures();
 	stName->setText(L"");
 	stInfo->setText(L"");
-	stDataInfo->setText(L"");
 	stSetName->setText(L"");
 	stPasscodeScope->setText(L"");
 	stText->setText(L"");
@@ -3329,10 +3318,8 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
     // Jika ada elemen pendukung seperti teks info, log, chat, repositories, dll:
     bool hide_ui = is_fullscreen;
 
-    if (wCardText) wCardText->setVisible(!hide_ui);
     if (stName) stName->setVisible(!hide_ui);
     if (stInfo) stInfo->setVisible(!hide_ui);
-    if (stData) stData->setVisible(!hide_ui);
     if (btnClearLog) btnClearLog->setVisible(!hide_ui);
     if (btnExpandLog) btnExpandLog->setVisible(!hide_ui);
     if (btnClearChat) btnClearChat->setVisible(!hide_ui);
