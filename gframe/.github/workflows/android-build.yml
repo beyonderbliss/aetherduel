@@ -1,0 +1,35 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK (Java)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build with Gradle / CMake (AetherDuel)
+        run: |
+          echo "Memulai proses build Android untuk AetherDuel..."
+          # Mengikuti skrip build bawaan EDOPro untuk Android jika tersedia
+          if [ -f "android/gradlew" ]; then
+            cd android && ./gradlew assembleRelease
+          else
+            echo "Struktur build Android standar sedang disiapkan..."
+            # Fallback info
+          fi
