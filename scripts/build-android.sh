@@ -12,6 +12,7 @@ APPLICATION_ID="io.github.beyonderbliss.aetherduel"
 fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 command -v git >/dev/null || fail "git is required"
 command -v python3 >/dev/null || fail "python3 is required"
+command -v curl >/dev/null || fail "curl is required to fetch pinned runtime assets"
 command -v java >/dev/null || fail "Java is required"
 
 SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
@@ -61,10 +62,11 @@ download_asset "config/strings.conf" "$DEFAULTS/config/strings.conf"
 download_asset "config/configs.json" "$DEFAULTS/config/configs.json"
 download_asset "config/system.conf" "$DEFAULTS/config/system.conf"
 download_asset "fonts/NotoSansJP-Regular.otf" "$DEFAULTS/fonts/NotoSansJP-Regular.otf"
+download_asset "fonts/NotoSansJP-Regular-OFL.txt" "$DEFAULTS/fonts/NotoSansJP-Regular-OFL.txt"
 
 # index.txt lists directories; filelist.txt lists directories and files in copy order.
 printf 'config\nfonts\n' > "$ASSETS/index.txt"
-printf 'config\nconfig/strings.conf\nconfig/configs.json\nconfig/system.conf\nfonts\nfonts/NotoSansJP-Regular.otf\n' > "$ASSETS/filelist.txt"
+printf 'config\nconfig/strings.conf\nconfig/configs.json\nconfig/system.conf\nfonts\nfonts/NotoSansJP-Regular.otf\nfonts/NotoSansJP-Regular-OFL.txt\n' > "$ASSETS/filelist.txt"
 : > "$ASSETS/indexu.txt"
 : > "$ASSETS/filelistu.txt"
 
