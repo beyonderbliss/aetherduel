@@ -103,7 +103,7 @@ PY
 : > "$ASSETS/filelistu.txt"
 
 
-gradlew --no-daemon --stacktrace assembleDebug
+cd "$WRAPPER_DIR" && ./gradlew --no-daemon --stacktrace assembleDebug
 )
 
 printf '\nAPK output:\n%s\n' "$WRAPPER_DIR/build/outputs/apk/debug/"
