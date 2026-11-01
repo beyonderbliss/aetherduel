@@ -13,8 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ANDROID_SDK_ROOT: ${{ HOME }}/android-sdk
-  ANDROID_HOME: ${{ HOME }}/android-sdk
+  ANDROID_SDK_ROOT: /tmp/android-sdk
+  ANDROID_HOME: /tmp/android-sdk
 
 jobs:
   build-android:
