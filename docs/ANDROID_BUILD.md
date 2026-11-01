@@ -8,11 +8,11 @@ This is a lightweight Android build for rapid source/UI iteration. It is not a c
 - Checks out the Android wrapper at pinned commit `36517642ce8151d9e6e5fb1acb801dfa7a8ef1f5`.
 - Builds ARM64 only.
 - Disables WindBot in the generated wrapper checkout; it does not delete WindBot source from AetherDuel.
-- Creates empty asset indexes and does not run `ci/download-assets.sh` or `ci/touch-assets.sh`.
+- Packages a minimal runtime set from pinned ProjectIgnis Distribution commit `54a6e2395c532648ff762540e9615319fac4f51b`: `config/strings.conf`, `config/configs.json`, `config/system.conf`, and `fonts/NotoSansJP-Regular.otf`. It generates the Android asset-copy manifests so these files are actually copied into the selected EDOPro folder. It does not download the full distribution or run `ci/download-assets.sh` / `ci/touch-assets.sh`.
 - Builds a debug APK with `assembleDebug`.
 - Keeps the generated wrapper and build output under `.build/android-wrapper/`, which is ignored by Git.
 
-Because the full ProjectIgnis distribution is intentionally omitted, this APK is for startup/build diagnostics and UI iteration. It is not expected to support a complete duel or normal card/database functionality.
+Because the full ProjectIgnis distribution is intentionally omitted, this APK is for startup/build diagnostics and UI iteration. It has the strings and base font needed to get past initial runtime setup, but it is not expected to support a complete duel or normal card/database functionality.
 
 ## Automatic build
 
