@@ -63,8 +63,8 @@ download_asset "config/system.conf" "$DEFAULTS/config/system.conf"
 download_asset "fonts/NotoSansJP-Regular.otf" "$DEFAULTS/fonts/NotoSansJP-Regular.otf"
 
 # index.txt lists directories; filelist.txt lists directories and files in copy order.
-printf 'config\\nfonts\\n' > "$ASSETS/index.txt"
-printf 'config\\nconfig/strings.conf\\nconfig/configs.json\\nconfig/system.conf\\nfonts\\nfonts/NotoSansJP-Regular.otf\\n' > "$ASSETS/filelist.txt"
+printf 'config\nfonts\n' > "$ASSETS/index.txt"
+printf 'config\nconfig/strings.conf\nconfig/configs.json\nconfig/system.conf\nfonts\nfonts/NotoSansJP-Regular.otf\n' > "$ASSETS/filelist.txt"
 : > "$ASSETS/indexu.txt"
 : > "$ASSETS/filelistu.txt"
 
