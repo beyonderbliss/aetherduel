@@ -9,6 +9,7 @@ This is a lightweight Android build for rapid source/UI iteration. It is not a c
 - Builds ARM64 only.
 - Disables WindBot in the generated wrapper checkout; it does not delete WindBot source from AetherDuel.
 - Packages a minimal runtime set from pinned ProjectIgnis Distribution commit `54a6e2395c532648ff762540e9615319fac4f51b`: `config/strings.conf`, `config/configs.json`, `config/system.conf`, and `fonts/NotoSansJP-Regular.otf`. It generates the Android asset-copy manifests so these files are actually copied into the selected EDOPro folder. It does not download the full distribution or run `ci/download-assets.sh` / `ci/touch-assets.sh`.
+- Assigns a fresh per-build Android `versionCode`, ensuring an installed app copies the updated minimal asset pack instead of trusting an old `assets_copied` marker.
 - Builds a debug APK with `assembleDebug`.
 - Keeps the generated wrapper and build output under `.build/android-wrapper/`, which is ignored by Git.
 
