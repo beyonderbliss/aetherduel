@@ -223,7 +223,7 @@ void Game::Initialize() {
 	((irr::gui::CGUICustomText*)stAbout)->enableScrollBar();
 	((irr::gui::CGUICustomText*)stAbout)->setWordWrap(true);
 	((irr::gui::CGUICustomContextMenu*)mAbout)->addItem(wAbout, -1);
-	wAbout->setRelativePosition(irr::irr::core::recti(0, 0, std::min(Scale(450), stAbout->getTextWidth() + Scale(20)), std::min(stAbout->getTextHeight() + Scale(20), Scale(700))));
+	wAbout->setRelativePosition(irr::core::recti(0, 0, std::min(Scale(450), stAbout->getTextWidth() + Scale(20)), std::min(stAbout->getTextHeight() + Scale(20), Scale(700))));
 	mVersion = mTopMenu->getSubMenu(mTopMenu->addItem(gDataManager->GetSysString(2040).data(), 3, true, true));
 	wVersion = env->addWindow(Scale(0, 0, 300, 135), false, L"", mVersion);
 	wVersion->getCloseButton()->setVisible(false);
@@ -232,7 +232,7 @@ void Game::Initialize() {
 	wVersion->setDrawBackground(false);
 	stVersion = env->addStaticText(EDOPRO_VERSION_STRING, Scale(10, 10, 290, 35), false, false, wVersion);
 	int titleWidth = stVersion->getTextWidth();
-	stVersion->setRelativePosition(irr::irr::core::recti(Scale(10), Scale(10), titleWidth + Scale(10), Scale(35)));
+	stVersion->setRelativePosition(irr::core::recti(Scale(10), Scale(10), titleWidth + Scale(10), Scale(35)));
 	stCoreVersion = env->addStaticText(L"", Scale(10, 40, 500, 65), false, false, wVersion);
 	stExpectedCoreVersion = env->addStaticText(
 		GetLocalizedExpectedCore().data(),
@@ -306,7 +306,7 @@ void Game::Initialize() {
 	wCardImg = env->addStaticText(L"", Scale(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT), true, false, 0, -1, true);
 	wCardImg->setBackgroundColor(skin::CARDINFO_IMAGE_BACKGROUND_VAL);
 	wCardImg->setVisible(false);
-	imgCard = AlignElementWithParent(irr::gui::CGUIImageButton::addImageButton(env, Scale(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT), wCardImg, -1));
+	imgCard = (irr::gui::IGUIImage*)AlignElementWithParent(irr::gui::CGUIImageButton::addImageButton(env, Scale(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT), wCardImg, -1));
 	imgCard->setImage(imageManager.tCover[0]);
 	imgCard->setScaleImage(true);
 	imgCard->setUseAlphaChannel(true);
@@ -1438,9 +1438,6 @@ void Game::PopulateTabSettingsWindow() {
 		stInfo = irr::gui::CGUICustomText::addCustomText(L"", false, env, tabInfo, -1, Scale(15, 37, 287, 60));
 		stInfo->setWordWrap(true);
 		stInfo->setOverrideColor(skin::CARDINFO_TYPES_COLOR_VAL);
-		stDataInfo = irr::gui::CGUICustomText::addCustomText(L"", false, env, tabInfo, -1, Scale(15, 60, 287, 83));
-		stDataInfo->setWordWrap(true);
-		stDataInfo->setOverrideColor(skin::CARDINFO_STATS_COLOR_VAL);
 		stSetName = irr::gui::CGUICustomText::addCustomText(L"", false, env, tabInfo, -1, Scale(15, 83, 287, 106));
 		stSetName->setWordWrap(true);
 		stSetName->setOverrideColor(skin::CARDINFO_ARCHETYPE_TEXT_COLOR_VAL);
@@ -2303,7 +2300,6 @@ bool Game::ApplySkin(const epro::path_string& skinname, bool reload, bool firstr
 	auto reapply_colors = [&] () {
 		wCardImg->setBackgroundColor(skin::CARDINFO_IMAGE_BACKGROUND_VAL);
 		stInfo->setOverrideColor(skin::CARDINFO_TYPES_COLOR_VAL);
-		stDataInfo->setOverrideColor(skin::CARDINFO_STATS_COLOR_VAL);
 		stSetName->setOverrideColor(skin::CARDINFO_ARCHETYPE_TEXT_COLOR_VAL);
 		stPasscodeScope->setOverrideColor(skin::CARDINFO_PASSCODE_SCOPE_TEXT_COLOR_VAL);
 		stACMessage->setBackgroundColor(skin::DUELFIELD_ANNOUNCE_TEXT_BACKGROUND_COLOR_VAL);
@@ -2406,7 +2402,7 @@ bool Game::ApplySkin(const epro::path_string& skinname, bool reload, bool firstr
 	if(!firstrun)
 		reapply_colors();
 	if(wAbout)
-		wAbout->setRelativePosition(irr::irr::core::recti(0, 0, std::min(Scale(450), stAbout->getTextWidth() + Scale(20)), std::min(stAbout->getTextHeight() + Scale(40), Scale(700))));
+		wAbout->setRelativePosition(irr::core::recti(0, 0, std::min(Scale(450), stAbout->getTextWidth() + Scale(20)), std::min(stAbout->getTextHeight() + Scale(40), Scale(700))));
 	if(dpi_scale > 1.5f) {
 		auto* sprite_texture = imageManager.GetCheckboxScaledTexture(dpi_scale);
 		if(sprite_texture) {
@@ -2799,9 +2795,8 @@ void Game::ShowCardInfo(uint32_t code, bool resize, imgType type) {
 	if(resize) {
 		//Update the text fields beforehand when resizing so that their horizontal size
 		//is correct when the text is set and is then broken into pieces
-		const auto widthRect = irr::irr::core::recti(Scale(15), 0, Scale(287 * window_scale.X), 10);
+		const auto widthRect = irr::core::recti(Scale(15), 0, Scale(287 * window_scale.X), 10);
 		stInfo->setRelativePosition(widthRect);
-		stDataInfo->setRelativePosition(widthRect);
 		stSetName->setRelativePosition(widthRect);
 		stPasscodeScope->setRelativePosition(widthRect);
 		stText->setRelativePosition(widthRect);
@@ -2866,7 +2861,6 @@ void Game::ShowCardInfo(uint32_t code, bool resize, imgType type) {
 		if(cd->type & TYPE_PENDULUM) {
 			text.append(epro::format(L"   {}/{}", cd->lscale, cd->rscale));
 		}
-		stDataInfo->setText(text.data());
 	} else {
 		if(cd->type & TYPE_SKILL) { // TYPE_SKILL created by hints
 			// Hack: Race encodes the character for now
@@ -2874,10 +2868,6 @@ void Game::ShowCardInfo(uint32_t code, bool resize, imgType type) {
 		} else {
 			stInfo->setText(epro::format(L"[{}]", gDataManager->FormatType(cd->type)).data());
 		}
-		if(cd->type & TYPE_LINK) {
-			stDataInfo->setText(epro::format(L"LINK {}   {}", cd->level, gDataManager->FormatLinkMarker(cd->link_marker)).data());
-		} else
-			stDataInfo->setText(L"");
 	}
 	RefreshCardInfoTextPositions();
 	stText->setText(gDataManager->GetText(code).data());
@@ -2888,21 +2878,19 @@ void Game::RefreshCardInfoTextPositions() {
 	int offset = Scale(37);
 	auto offsetIfVisibleWithContent = [&](irr::gui::IGUIStaticText* st) {
 		if (st->isVisible() && wcscmp(st->getText(), L"")) {
-			st->setRelativePosition(irr::irr::core::recti(xLeft, offset, xRight, offset + st->getTextHeight()));
+			st->setRelativePosition(irr::core::recti(xLeft, offset, xRight, offset + st->getTextHeight()));
 			offset += st->getTextHeight();
 		}
 	};
 	offsetIfVisibleWithContent(stInfo);
-	offsetIfVisibleWithContent(stDataInfo);
 	offsetIfVisibleWithContent(stSetName);
 	offsetIfVisibleWithContent(stPasscodeScope);
-	stText->setRelativePosition(irr::irr::core::recti(xLeft, offset, xRight, stText->getParent()->getAbsolutePosition().getHeight() - Scale(1)));
+	stText->setRelativePosition(irr::core::recti(xLeft, offset, xRight, stText->getParent()->getAbsolutePosition().getHeight() - Scale(1)));
 }
 void Game::ClearCardInfo(int player) {
 	imgCard->setImage(imageManager.tCover[player]);
 	stName->setText(L"");
 	stInfo->setText(L"");
-	stDataInfo->setText(L"");
 	stSetName->setText(L"");
 	stPasscodeScope->setText(L"");
 	stText->setText(L"");
@@ -3048,7 +3036,6 @@ void Game::CloseDuelWindow() {
 	ClearTextures();
 	stName->setText(L"");
 	stInfo->setText(L"");
-	stDataInfo->setText(L"");
 	stSetName->setText(L"");
 	stPasscodeScope->setText(L"");
 	stText->setText(L"");
@@ -3370,7 +3357,7 @@ void Game::RefreshUICoreVersion() {
 	stCoreVersion->setText(label.data());
 	auto w1 = stVersion->getTextWidth();
 	auto w2 = stCoreVersion->getTextWidth();
-	wVersion->setRelativePosition(irr::irr::core::recti(0, 0, Scale(20) + std::max({ Scale(280), w1, w2 }), Scale(135)));
+	wVersion->setRelativePosition(irr::core::recti(0, 0, Scale(20) + std::max({ Scale(280), w1, w2 }), Scale(135)));
 }
 std::wstring Game::GetLocalizedExpectedCore() {
 	return epro::format(gDataManager->GetSysString(2011), Core::EXPECTED_VERSION_MAJOR, Core::EXPECTED_VERSION_MINOR);
@@ -3665,7 +3652,7 @@ void Game::ReloadElementsStrings() {
 	ReloadCBCurrentSkin();
 }
 void Game::OnResize() {
-	env->getRootGUIElement()->setRelativePosition(irr::irr::core::recti(0, 0, window_size.Width, window_size.Height));
+	env->getRootGUIElement()->setRelativePosition(irr::core::recti(0, 0, window_size.Width, window_size.Height));
 	{
 		const auto waboutcorner = wAbout->getAbsolutePosition().UpperLeftCorner;
 		using std::min;
@@ -3673,9 +3660,9 @@ void Game::OnResize() {
 											min<uint32_t>(Scale(440), stAbout->getTextWidth() + Scale(10)));
 		const auto minheight = min<uint32_t>(window_size.Height - waboutcorner.Y,
 											 min<uint32_t>(stAbout->getTextHeight() + Scale(10), Scale(690)));
-		stAbout->setRelativePosition(irr::irr::core::recti(10, 10, minwidth, minheight));
+		stAbout->setRelativePosition(irr::core::recti(10, 10, minwidth, minheight));
 	}
-	wRoomListPlaceholder->setRelativePosition(irr::irr::core::recti(0, 0, window_size.Width, window_size.Height));
+	wRoomListPlaceholder->setRelativePosition(irr::core::recti(0, 0, window_size.Width, window_size.Height));
 	wMainMenu->setRelativePosition(ResizeWin(mainMenuLeftX, 200, mainMenuRightX, 450));
 	wBtnSettings->setRelativePosition(ResizeWin(0, 610, 30, 640));
 	SetCentered(wCommitsLog);
@@ -3732,7 +3719,7 @@ void Game::OnResize() {
 	ResizeCardinfoWindow(gGameConfig->keep_cardinfo_aspect_ratio);
 	for(auto& window : repoInfoGui) {
 		window.second.progress2->setRelativePosition(Scale(5, 20 + 15, (300 - 8) * window_scale.X, 20 + 30));
-		window.second.history_button2->setRelativePosition(irr::irr::core::recti(ResizeX(200), 5, ResizeX(300 - 5), Scale(20 + 10)));
+		window.second.history_button2->setRelativePosition(irr::core::recti(ResizeX(200), 5, ResizeX(300 - 5), Scale(20 + 10)));
 	}
 	stName->setRelativePosition(Scale(10, 10, 287 * window_scale.X, 32));
 
@@ -3774,7 +3761,7 @@ void Game::OnResize() {
 
 	auto prev = roomListTable->getSelected();
 
-	roomListTable->setRelativePosition(irr::irr::core::recti(ResizeX(1), chkShowActiveRooms->getRelativePosition().LowerRightCorner.Y + ResizeY(10), ResizeX(1024 - 2), btnLanRefresh2->getRelativePosition().UpperLeftCorner.Y - ResizeY(25)));
+	roomListTable->setRelativePosition(irr::core::recti(ResizeX(1), chkShowActiveRooms->getRelativePosition().LowerRightCorner.Y + ResizeY(10), ResizeX(1024 - 2), btnLanRefresh2->getRelativePosition().UpperLeftCorner.Y - ResizeY(25)));
 	roomListTable->setColumnWidth(0, window_scale.X * Scale(30));  // lock
 	roomListTable->setColumnWidth(1, window_scale.X * Scale(110)); // Allowed Cards:
 	roomListTable->setColumnWidth(2, window_scale.X * Scale(150)); // Duel Mode:
@@ -3787,14 +3774,14 @@ void Game::OnResize() {
 	roomListTable->removeRow(roomListTable->getRowCount() - 1);
 	roomListTable->setSelected(prev);
 }
-irr::irr::core::recti Game::Resize(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2) const {
+irr::core::recti Game::Resize(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2) const {
 	x = x * window_scale.X;
 	y = y * window_scale.Y;
 	x2 = x2 * window_scale.X;
 	y2 = y2 * window_scale.Y;
 	return Scale(x, y, x2, y2);
 }
-irr::irr::core::recti Game::Resize(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2, irr::s32 dx, irr::s32 dy, irr::s32 dx2, irr::s32 dy2) const {
+irr::core::recti Game::Resize(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2, irr::s32 dx, irr::s32 dy, irr::s32 dx2, irr::s32 dy2) const {
 	x = x * window_scale.X + dx;
 	y = y * window_scale.Y + dy;
 	x2 = x2 * window_scale.X + dx2;
@@ -3814,7 +3801,7 @@ irr::core::vector2di Game::Resize(irr::s32 x, irr::s32 y, bool reverse) const {
 
 // Resizes the bounds and caps the width if necessary to maintain the provided targetAspectRatio.
 // This prevents the GUI element from appearing too wide if its width is overproportional.
-irr::irr::core::recti Game::ResizeWithCappedWidth(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2, float targetAspectRatio, bool scale) const {
+irr::core::recti Game::ResizeWithCappedWidth(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2, float targetAspectRatio, bool scale) const {
 	x *= window_scale.X;
 	y *= window_scale.Y;
 	x2 *= window_scale.X;
@@ -3829,10 +3816,10 @@ irr::irr::core::recti Game::ResizeWithCappedWidth(irr::s32 x, irr::s32 y, irr::s
 		y2 = y + dx / targetAspectRatio;
 	} */ // This commented out part is left in case it is ever necessary to adjust the height too to maintain the aspect ratio.
 
-	return scale ? Scale(x, y, x2, y2) : irr::irr::core::recti{ x, y, x2, y2 };
+	return scale ? Scale(x, y, x2, y2) : irr::core::recti{ x, y, x2, y2 };
 }
 
-irr::irr::core::recti Game::ResizeWin(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2, bool chat) const {
+irr::core::recti Game::ResizeWin(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2, bool chat) const {
 	irr::s32 sx = x2 - x;
 	irr::s32 sy = y2 - y;
 	if(chat) {
@@ -3853,26 +3840,26 @@ void Game::SetCentered(irr::gui::IGUIElement* elem, bool use_offset) const {
 	else
 		elem->setRelativePosition(ResizeWinFromCenter(0, 0, elem->getRelativePosition().getWidth(), elem->getRelativePosition().getHeight()));
 }
-irr::irr::core::recti Game::ResizeElem(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2, bool scale) const {
+irr::core::recti Game::ResizeElem(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2, bool scale) const {
 	irr::s32 sx = x2 - x;
 	irr::s32 sy = y2 - y;
 	x = (x + sx / 2 - 100) * window_scale.X - sx / 2 + 100;
 	y = y * window_scale.Y;
 	x2 = sx + x;
 	y2 = sy + y;
-	return scale ? Scale(x, y, x2, y2) : irr::irr::core::recti{x, y, x2, y2};
+	return scale ? Scale(x, y, x2, y2) : irr::core::recti{x, y, x2, y2};
 }
-irr::irr::core::recti Game::ResizePhaseHint(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2, irr::s32 width) const {
+irr::core::recti Game::ResizePhaseHint(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2, irr::s32 width) const {
 	auto res = Resize(x, y, x2, y2);
 	res.UpperLeftCorner.X -= width / 2;
 	return res;
 }
-irr::irr::core::recti Game::ResizeWinFromCenter(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2, irr::s32 xoff, irr::s32 yoff) const {
+irr::core::recti Game::ResizeWinFromCenter(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2, irr::s32 xoff, irr::s32 yoff) const {
 	auto size = driver->getScreenSize();
-	irr::irr::core::recti rect(0, 0, size.Width, size.Height);
+	irr::core::recti rect(0, 0, size.Width, size.Height);
 	auto center = rect.getCenter();
 	irr::core::dimension2du sizes((x + x2) / 2, (y + y2) / 2);
-	return irr::irr::core::recti((center.X - sizes.Width) + xoff, center.Y - sizes.Height + yoff, center.X + sizes.Width + xoff, center.Y + sizes.Height + yoff);
+	return irr::core::recti((center.X - sizes.Width) + xoff, center.Y - sizes.Height + yoff, center.X + sizes.Width + xoff, center.Y + sizes.Height + yoff);
 }
 void Game::ValidateName(irr::gui::IGUIElement* obj) {
 	std::wstring text = obj->getText();
