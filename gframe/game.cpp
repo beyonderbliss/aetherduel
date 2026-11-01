@@ -2868,8 +2868,6 @@ void Game::ShowCardInfo(uint32_t code, bool resize, imgType type) {
 		} else {
 			stInfo->setText(epro::format(L"[{}]", gDataManager->FormatType(cd->type)).data());
 		}
-		if(cd->type & TYPE_LINK) {
-		} else
 	}
 	RefreshCardInfoTextPositions();
 	stText->setText(gDataManager->GetText(code).data());
