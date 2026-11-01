@@ -84,24 +84,21 @@ for p in defaults_dir.rglob("*"):
         rel = p.relative_to(defaults_dir)
         for parent in rel.parents:
             if str(parent) != ".":
-                dirs.add(str(parent).replace("\", "/"))
-        files.append(str(rel).replace("\", "/"))
+                dirs.add(parent.as_posix())
+        files.append(rel.as_posix())
 
 sorted_dirs = sorted(list(dirs))
 sorted_files = sorted(files)
 
 # Tulis ke index.txt (hanya direktori)
-index_content = "\n".join(sorted_dirs) + "\n"
-(assets_dir / "index.txt").write_text(index_content)
+(assets_dir / "index.txt").write_text("\n".join(sorted_dirs) + "\n")
 
 # Tulis ke filelist.txt (direktori lalu file-file di dalamnya)
 filelist_items = sorted_dirs + sorted_files
-filelist_content = "\n".join(filelist_items) + "\n"
-(assets_dir / "filelist.txt").write_text(filelist_content)
+(assets_dir / "filelist.txt").write_text("\n".join(filelist_items) + "\n")
 
 print(f"Generated asset manifests: {len(sorted_dirs)} directories, {len(sorted_files)} files.")
 PY
-
 : > "$ASSETS/indexu.txt"
 : > "$ASSETS/filelistu.txt"
 
