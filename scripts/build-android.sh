@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(
+# Pastikan local.properties ada untuk mendefinisikan Android SDK path
+if [[ ! -f "$WRAPPER_DIR/local.properties" ]] && [[ -n "$ANDROID_HOME" ]]; then
+  echo "sdk.dir=$ANDROID_HOME" > "$WRAPPER_DIR/local.properties"
+fi
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="${AETHERDUEL_BUILD_DIR:-$ROOT_DIR/.build}"
 WRAPPER_DIR="${AETHERDUEL_ANDROID_WRAPPER_DIR:-$BUILD_DIR/android-wrapper}"
 WRAPPER_REF="36517642ce8151d9e6e5fb1acb801dfa7a8ef1f5"
