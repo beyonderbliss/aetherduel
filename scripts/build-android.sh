@@ -19,6 +19,7 @@ SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
 export ANDROID_SDK_ROOT="$SDK_ROOT"
 export ANDROID_HOME="$SDK_ROOT"
 export PATH="$SDK_ROOT/ndk/$NDK_VERSION:$PATH"
+if command -v ccache >/dev/null; then export NDK_CCACHE=ccache; fi
 command -v ndk-build >/dev/null || fail "ndk-build is missing; install Android NDK $NDK_VERSION under $SDK_ROOT/ndk"
 
 mkdir -p "$BUILD_DIR"
