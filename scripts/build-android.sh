@@ -52,124 +52,61 @@ DISTRIBUTION_REF="54a6e2395c532648ff762540e9615319fac4f51b"
 DISTRIBUTION_RAW="https://raw.githubusercontent.com/ProjectIgnis/Distribution/$DISTRIBUTION_REF"
 
 mkdir -p "$DEFAULTS/config" "$DEFAULTS/fonts" "$ASSETS/update"
-download_asset() {
-  local source_path="$1"
-  local destination="$2"
-  curl --fail --silent --show-error --location --retry 5 --connect-timeout 30 \
-    "$DISTRIBUTION_RAW/$source_path" -o "$destination"
-  [[ -s "$destination" ]] || fail "Required runtime asset is missing or empty: $source_path"
-}
 
-download_asset "config/strings.conf" "$DEFAULTS/config/strings.conf"
-download_asset "config/configs.json" "$DEFAULTS/config/configs.json"
-download_asset "config/system.conf" "$DEFAULTS/config/system.conf"
-download_asset "fonts/NotoSansJP-Regular.otf" "$DEFAULTS/fonts/NotoSansJP-Regular.otf"
-download_asset "fonts/NotoSansJP-Regular-OFL.txt" "$DEFAULTS/fonts/NotoSansJP-Regular-OFL.txt"
+# Clone ProjectIgnis/Distribution secara shallow untuk mendapatkan seluruh aset textures, config, dan fonts secara utuh
+DIST_TMP="$BUILD_DIR/Distribution"
+if [[ ! -d "$DIST_TMP" ]]; then
+  git clone --depth=1 https://github.com/ProjectIgnis/Distribution.git "$DIST_TMP"
+else
+  git -C "$DIST_TMP" pull origin master || true
+fi
 
-# index.txt lists directories; filelist.txt lists directories and files in copy order.
-printf 'config\nfonts\n' > "$ASSETS/index.txt"
-printf 'config\nconfig/strings.conf\nconfig/configs.json\nconfig/system.conf\nfonts\nfonts/NotoSansJP-Regular.otf\nfonts/NotoSansJP-Regular-OFL.txt\n' > "$ASSETS/filelist.txt"
+mkdir -p "$DEFAULTS/config" "$DEFAULTS/fonts" "$DEFAULTS/textures" "$ASSETS/update"
+
+# Salin seluruh isi folder secara utuh ke defaults
+cp -r "$DIST_TMP/config/." "$DEFAULTS/config/"
+cp -r "$DIST_TMP/fonts/." "$DEFAULTS/fonts/"
+cp -r "$DIST_TMP/textures/." "$DEFAULTS/textures/"
+
+# Generate index.txt dan filelist.txt secara otomatis berdasarkan isi folder defaults
+python3 - "$DEFAULTS" "$ASSETS" <<'PY'
+from pathlib import Path
+import sys
+
+defaults_dir = Path(sys.argv[1])
+assets_dir = Path(sys.argv[2])
+
+dirs = set()
+files = []
+
+for p in defaults_dir.rglob("*"):
+    if p.is_file():
+        rel = p.relative_to(defaults_dir)
+        for parent in rel.parents:
+            if str(parent) != ".":
+                dirs.add(str(parent).replace("\", "/"))
+        files.append(str(rel).replace("\", "/"))
+
+sorted_dirs = sorted(list(dirs))
+sorted_files = sorted(files)
+
+# Tulis ke index.txt (hanya direktori)
+index_content = "\n".join(sorted_dirs) + "\n"
+(assets_dir / "index.txt").write_text(index_content)
+
+# Tulis ke filelist.txt (direktori lalu file-file di dalamnya)
+filelist_items = sorted_dirs + sorted_files
+filelist_content = "\n".join(filelist_items) + "\n"
+(assets_dir / "filelist.txt").write_text(filelist_content)
+
+print(f"Generated asset manifests: {len(sorted_dirs)} directories, {len(sorted_files)} files.")
+PY
+
 : > "$ASSETS/indexu.txt"
 : > "$ASSETS/filelistu.txt"
 
-python3 - "$WRAPPER_DIR" "$APPLICATION_ID" "$BUILD_VERSION_CODE" <<'PY'
-from pathlib import Path
-import re
-import sys
 
-root = Path(sys.argv[1])
-application_id = sys.argv[2]
-version_code = sys.argv[3]
-
-gradle = root / "build.gradle"
-text = gradle.read_text()
-dependency = '\timplementation(files("libs/libWindbot.aar"))\n'
-assert text.count(dependency) == 1, "Expected exactly one WindBot AAR dependency"
-text = text.replace(dependency, "")
-text, count = re.subn(
-    r"abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86'.*",
-    "abiFilters 'arm64-v8a'",
-    text,
-    count=1,
-)
-assert count == 1, "Could not restrict Gradle ABI filters to ARM64"
-text, count = re.subn(
-    r'applicationId "io\.github\.edo9300\.edopro"',
-    f'applicationId "{application_id}"',
-    text,
-    count=1,
-)
-assert count == 1, "Could not set the AetherDuel application ID"
-text, count = re.subn(r"versionCode \d+", f"versionCode {version_code}", text, count=1)
-assert count == 1, "Could not set the per-build asset revision"
-gradle.write_text(text)
-
-main = root / "src/main/java/io.github.edo9300.edopro/MainActivity.java"
-text = main.read_text()
-text, count = re.subn(r"^import libwindbot\.windbot\.WindBot;\n", "", text, count=1, flags=re.M)
-assert count == 1, "Could not remove WindBot import from MainActivity"
-old = """\t\tvar use_windbot = true;
-\t\tif (Build.VERSION.SDK_INT <= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
-\t\t\tuse_windbot = false;
-\t\t} else {
-\t\t\ttry {
-\t\t\t\t/*
-\t\t\t\t * windbot loading might fail, for whatever reason,
-\t\t\t\t * disable it if that's the case
-\t\t\t\t */
-\t\t\t\tWindBot.initAndroid(working_directory + "/WindBot");
-\t\t\t} catch (Exception e) {
-\t\t\t\tuse_windbot = false;
-\t\t\t}
-\t\t}
-"""
-assert text.count(old) == 1, "Could not uniquely locate WindBot initialization"
-text = text.replace(old, "\t\tvar use_windbot = false;\n")
-assert "WindBot" not in text, "Unexpected WindBot reference remains in MainActivity"
-main.write_text(text)
-
-native = root / "src/main/java/io.github.edo9300.edopro/EpNativeActivity.java"
-text = native.read_text()
-text, count = re.subn(r"^import libwindbot\.windbot\.WindBot;\n", "", text, count=1, flags=re.M)
-assert count == 1, "Could not remove WindBot import from EpNativeActivity"
-for action, method in [
-    ("RUN_WINDBOT", "runAndroid"),
-    ("ATTACH_WINDBOT_DATABASE", "addDatabase"),
-]:
-    pattern = (
-        r'\n\t\t\t\tcase "' + action + r'": \{.*?'
-        + re.escape("WindBot." + method) + r'\(args\);'
-        + r'.*?\n\t\t\t\t\}'
-    )
-    text, count = re.subn(pattern, "", text, count=1, flags=re.S)
-    assert count == 1, "Could not remove " + action + " receiver"
-assert "WindBot." not in text, "WindBot runtime call remains in EpNativeActivity"
-native.write_text(text)
-
-app_mk = root / "jni/Application.mk"
-text = app_mk.read_text()
-text, count = re.subn(r"^APP_ABI :=.*$", "APP_ABI := arm64-v8a", text, count=1, flags=re.M)
-assert count == 1, "Could not restrict native ABI to ARM64"
-text, count = re.subn(r"^APP_OPTIM :=.*$", "APP_OPTIM := debug", text, count=1, flags=re.M)
-assert count == 1, "Could not set native debug optimization"
-app_mk.write_text(text)
-PY
-
-if grep -R -nE 'libwindbot|WindBot\.(initAndroid|runAndroid|addDatabase)' \
-  "$WRAPPER_DIR/build.gradle" "$WRAPPER_DIR/src/main/java"; then
-  fail "WindBot references remain after diagnostic isolation"
-fi
-
-printf 'sdk.dir=%s\nndk.dir=%s/ndk/%s\n' "$SDK_ROOT" "$SDK_ROOT" "$NDK_VERSION" > "$WRAPPER_DIR/local.properties"
-
-printf '\n== AetherDuel Android build configuration ==\n'
-printf 'Source: %s\nWrapper: %s (%s)\nABI: arm64-v8a\nWindBot: disabled for this diagnostic build\nFull distribution assets: skipped\n' "$ROOT_DIR" "$WRAPPER_REPO" "$WRAPPER_REF"
-
-export PATH="$SDK_ROOT/ndk/$NDK_VERSION:$PATH"
-ndk-build -C "$WRAPPER_DIR" -j"$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 2)"
-(
-  cd "$WRAPPER_DIR"
-  ./gradlew --no-daemon --stacktrace assembleDebug
+gradlew --no-daemon --stacktrace assembleDebug
 )
 
 printf '\nAPK output:\n%s\n' "$WRAPPER_DIR/build/outputs/apk/debug/"
