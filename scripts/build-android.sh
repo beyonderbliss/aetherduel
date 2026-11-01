@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# Pastikan direktori kerja didefinisikan dengan aman untuk menghindari unbound variable
+BUILD_DIR="${BUILD_DIR:-.build}"
+WRAPPER_DIR="$BUILD_DIR/android-wrapper"
+DEFAULTS="$BUILD_DIR/Distribution/defaults"
+ASSETS="$WRAPPER_DIR/src/main/assets"
+
 ROOT_DIR="$(
 # Pastikan local.properties ada untuk mendefinisikan Android SDK path
 if [[ ! -f "$WRAPPER_DIR/local.properties" ]] && [[ -n "$ANDROID_HOME" ]]; then
