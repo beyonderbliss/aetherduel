@@ -306,7 +306,7 @@ void Game::Initialize() {
 	wCardImg = env->addStaticText(L"", Scale(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT), true, false, 0, -1, true);
 	wCardImg->setBackgroundColor(skin::CARDINFO_IMAGE_BACKGROUND_VAL);
 	wCardImg->setVisible(false);
-	imgCard = AlignElementWithParent(irr::gui::CGUIImageButton::addImageButton(env, Scale(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT), wCardImg, -1));
+	imgCard = (irr::gui::IGUIImage*)AlignElementWithParent(irr::gui::CGUIImageButton::addImageButton(env, Scale(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT), wCardImg, -1));
 	imgCard->setImage(imageManager.tCover[0]);
 	imgCard->setScaleImage(true);
 	imgCard->setUseAlphaChannel(true);
@@ -3329,10 +3329,10 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
     // Jika ada elemen pendukung seperti teks info, log, chat, repositories, dll:
     bool hide_ui = is_fullscreen;
 
-    if (wCardtext) wCardtext->setVisible(!hide_ui);
+    if (wCardText) wCardText->setVisible(!hide_ui);
     if (stName) stName->setVisible(!hide_ui);
     if (stInfo) stInfo->setVisible(!hide_ui);
-    if (st_data) st_data->setVisible(!hide_ui);
+    if (stData) stData->setVisible(!hide_ui);
     if (btnClearLog) btnClearLog->setVisible(!hide_ui);
     if (btnExpandLog) btnExpandLog->setVisible(!hide_ui);
     if (btnClearChat) btnClearChat->setVisible(!hide_ui);
