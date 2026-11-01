@@ -41,11 +41,30 @@ rm -rf "$WRAPPER_DIR/deps/edopro"
 mkdir -p "$WRAPPER_DIR/deps"
 ln -s "$ROOT_DIR" "$WRAPPER_DIR/deps/edopro"
 
-# Prepare only empty asset indexes. Do not run download-assets.sh or touch-assets.sh.
+# Package the smallest useful runtime set from a pinned ProjectIgnis distribution.
+# AssetCopy requires populated index.txt/filelist.txt; empty lists silently copy nothing.
 ASSETS="$WRAPPER_DIR/src/main/assets"
-mkdir -p "$ASSETS/defaults" "$ASSETS/update"
-: > "$ASSETS/index.txt"
-: > "$ASSETS/filelist.txt"
+DEFAULTS="$ASSETS/defaults"
+DISTRIBUTION_REF="54a6e2395c532648ff762540e9615319fac4f51b"
+DISTRIBUTION_RAW="https://raw.githubusercontent.com/ProjectIgnis/Distribution/$DISTRIBUTION_REF"
+
+mkdir -p "$DEFAULTS/config" "$DEFAULTS/fonts" "$ASSETS/update"
+download_asset() {
+  local source_path="$1"
+  local destination="$2"
+  curl --fail --silent --show-error --location --retry 5 --connect-timeout 30 \
+    "$DISTRIBUTION_RAW/$source_path" -o "$destination"
+  [[ -s "$destination" ]] || fail "Required runtime asset is missing or empty: $source_path"
+}
+
+download_asset "config/strings.conf" "$DEFAULTS/config/strings.conf"
+download_asset "config/configs.json" "$DEFAULTS/config/configs.json"
+download_asset "config/system.conf" "$DEFAULTS/config/system.conf"
+download_asset "fonts/NotoSansJP-Regular.otf" "$DEFAULTS/fonts/NotoSansJP-Regular.otf"
+
+# index.txt lists directories; filelist.txt lists directories and files in copy order.
+printf 'config\\nfonts\\n' > "$ASSETS/index.txt"
+printf 'config\\nconfig/strings.conf\\nconfig/configs.json\\nconfig/system.conf\\nfonts\\nfonts/NotoSansJP-Regular.otf\\n' > "$ASSETS/filelist.txt"
 : > "$ASSETS/indexu.txt"
 : > "$ASSETS/filelistu.txt"
 
