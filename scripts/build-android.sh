@@ -8,6 +8,8 @@ WRAPPER_REF="36517642ce8151d9e6e5fb1acb801dfa7a8ef1f5"
 WRAPPER_REPO="https://github.com/edo9300/edopro-android.git"
 NDK_VERSION="21.4.7075529"
 APPLICATION_ID="io.github.beyonderbliss.aetherduel"
+# Force the Android wrapper to treat each build as a new asset revision.
+BUILD_VERSION_CODE="$(date +%s)"
 
 fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 command -v git >/dev/null || fail "git is required"
@@ -70,13 +72,14 @@ printf 'config\nconfig/strings.conf\nconfig/configs.json\nconfig/system.conf\nfo
 : > "$ASSETS/indexu.txt"
 : > "$ASSETS/filelistu.txt"
 
-python3 - "$WRAPPER_DIR" "$APPLICATION_ID" <<'PY'
+python3 - "$WRAPPER_DIR" "$APPLICATION_ID" "$BUILD_VERSION_CODE" <<'PY'
 from pathlib import Path
 import re
 import sys
 
 root = Path(sys.argv[1])
 application_id = sys.argv[2]
+version_code = sys.argv[3]
 
 gradle = root / "build.gradle"
 text = gradle.read_text()
@@ -97,6 +100,8 @@ text, count = re.subn(
     count=1,
 )
 assert count == 1, "Could not set the AetherDuel application ID"
+text, count = re.subn(r"versionCode \d+", f"versionCode {version_code}", text, count=1)
+assert count == 1, "Could not set the per-build asset revision"
 gradle.write_text(text)
 
 main = root / "src/main/java/io.github.edo9300.edopro/MainActivity.java"
