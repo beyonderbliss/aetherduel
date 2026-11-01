@@ -20,20 +20,36 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Configure Android SDK Environment
+        run: |
+          echo "Setting up Android SDK environment..."
+          export ANDROID_HOME=$HOME/android-sdk
+          mkdir -p $ANDROID_HOME
+          
+          # Install command-line tools manually to avoid setup-android v3 bugs
+          CMDLINE_TOOLS_URL="https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+          wget -q $CMDLINE_TOOLS_URL -O cmdline-tools.zip
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          unzip -q cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+          
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+
+      - name: Accept SDK Licenses & Install Build Tools
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
 
       - name: Build Android APK via Gradle
         run: |
           echo "Memulai proses kompilasi APK AetherDuel..."
           if [ -f "android/gradlew" ]; then
-            cd android && ./gradlew assembleRelease
+            cd android && chmod +x gradlew && ./gradlew assembleRelease
+          elif [ -f "./gradlew" ]; then
+            chmod +x gradlew && ./gradlew assembleRelease
           else
-            echo "Mencari gradlew di root..."
-            if [ -f "./gradlew" ]; then
-              ./gradlew assembleRelease
-            else
-              echo "Error: gradlew tidak ditemukan!"
-              exit 1
-            fi
+            echo "Error: gradlew tidak ditemukan!"
+            exit 1
           fi
