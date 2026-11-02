@@ -3356,11 +3356,13 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 			layout::kStandardPanelOriginX + wrapperWidth,
 			layout::kStandardPanelOriginY + wrapperHeight);
 	wCardImg->setRelativePosition(rect);
+	// Match the artwork child bounds to the resized wrapper. This keeps both
+	// edges synchronized when window_scale.X and window_scale.Y differ.
 	imgCard->setRelativePosition(irr::core::recti(
 		Scale(layout::kStandardArtworkOriginX),
 		Scale(layout::kStandardArtworkOriginY),
-		Scale(layout::kStandardArtworkOriginX + layout::kStandardArtworkWidth),
-		Scale(layout::kStandardArtworkOriginY + layout::kStandardArtworkHeight)));
+		Scale(layout::kStandardArtworkOriginX + rect.getWidth()),
+		Scale(layout::kStandardArtworkOriginY + rect.getHeight())));
 	wCardImg->getParent()->sendToBack(wCardImg);
 }
 bool Game::HasFocus(irr::gui::EGUI_ELEMENT_TYPE type) const {
@@ -3826,12 +3828,12 @@ irr::core::recti Game::ResizeWithCappedWidth(irr::s32 x, irr::s32 y, irr::s32 x2
 
 	const auto dx = x2 - x;
 	const auto dy = y2 - y;
-	const auto incx = static_cast<irr::s32>(dy * targetAspectRatio);
-	if(dx > incx) {
-		x2 = x + incx;
-	} /* else {
-		y2 = y + dx / targetAspectRatio;
-	} */ // This commented out part is left in case it is ever necessary to adjust the height too to maintain the aspect ratio.
+	const auto width_from_height = static_cast<irr::s32>(dy * targetAspectRatio);
+	if(dx > width_from_height) {
+		x2 = x + width_from_height;
+	} else {
+		y2 = y + static_cast<irr::s32>(dx / targetAspectRatio);
+	}
 
 	return scale ? Scale(x, y, x2, y2) : irr::core::recti{ x, y, x2, y2 };
 }
