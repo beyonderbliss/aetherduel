@@ -45,6 +45,8 @@ def render_header(spec: dict) -> str:
         integer(value, f"standard.artwork_origin.{key}")
     for key, value in ratio.items():
         positive_int(value, f"fullscreen.artwork_aspect_ratio.{key}")
+    if ratio["width"] * artwork["height"] != ratio["height"] * artwork["width"]:
+        raise ValueError("fullscreen artwork aspect ratio must match standard artwork_size")
     for key, value in fullscreen_origin.items():
         integer(value, f"fullscreen.origin.{key}")
 
