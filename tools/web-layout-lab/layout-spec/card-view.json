@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "component": "card_view",
+  "fullscreen": {
+    "artwork_aspect_ratio": {
+      "width": 59,
+      "height": 86
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "height": "viewport"
+  }
+}
