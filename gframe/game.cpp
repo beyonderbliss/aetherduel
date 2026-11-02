@@ -3321,14 +3321,17 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
     if (btnExpandChat) btnExpandChat->setVisible(!hide_ui);
 
     if (is_fullscreen) {
-        // Full dari atas ke bawah di sisi kiri dengan menjaga aspek rasio kartu (59:86)
+        // Match the native EDOPro card-art aspect ratio.
         irr::video::IVideoDriver* driver = env->getVideoDriver();
         int screen_height = driver ? driver->getScreenSize().Height : 720;
         int card_height = screen_height;
-        int card_width = card_height * 59 / 86;
+        int card_width = card_height * CARD_IMG_WIDTH / CARD_IMG_HEIGHT;
 
         irr::core::recti fs_rect(0, 0, card_width, card_height);
-        if (wCardImg) wCardImg->setRelativePosition(fs_rect);
+        if (wCardImg) {
+            wCardImg->setRelativePosition(fs_rect);
+            wCardImg->bringToFront();
+        }
         if (imgCard) {
             imgCard->setRelativePosition(irr::core::recti(0, 0, card_width, card_height));
         }
@@ -3341,6 +3344,13 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
         if (imgCard) {
             imgCard->setRelativePosition(irr::core::recti(0, 0, CARD_IMG_WIDTH, CARD_IMG_HEIGHT));
         }
+    }
+
+    // The card texture is reloaded for the new control size after a mode toggle.
+    // Keep the button at native scale instead of stretching its texture independently.
+    if (imgCard) {
+        auto* cardButton = (irr::gui::CGUIImageButton*)imgCard;
+        cardButton->setImageScale(irr::core::vector2df(1.0f, 1.0f));
     }
 }
 bool Game::HasFocus(irr::gui::EGUI_ELEMENT_TYPE type) const {
