@@ -99,6 +99,7 @@ Game::~Game() {
 }
 
 void Game::Initialize() {
+    is_fullscreen = true;
 	dpi_scale = gGameConfig->dpi_scale;
 	duel_param = gGameConfig->lastDuelParam;
 	if(!device)
@@ -303,10 +304,10 @@ void Game::Initialize() {
 	PopulateAIBotWindow();
 
 	//img
-	wCardImg = env->addStaticText(L"", Scale(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT), true, false, 0, -1, true);
+	wCardImg = env->addStaticText(L"", Scale(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT), true, false, 0, 1005, true);
 	wCardImg->setBackgroundColor(skin::CARDINFO_IMAGE_BACKGROUND_VAL);
 	wCardImg->setVisible(false);
-	imgCard = (irr::gui::IGUIImage*)AlignElementWithParent(irr::gui::CGUIImageButton::addImageButton(env, Scale(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT), wCardImg, -1));
+	imgCard = (irr::gui::IGUIImage*)AlignElementWithParent(irr::gui::CGUIImageButton::addImageButton(env, Scale(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT), wCardImg, 1006));
 	imgCard->setImage(imageManager.tCover[0]);
 	imgCard->setScaleImage(true);
 	imgCard->setUseAlphaChannel(true);
@@ -3310,10 +3311,6 @@ void Game::SetMessageWindow() {
 }
 void Game::ResizeCardinfoWindow(bool keep_ratio) {
     // [AetherDuel] Fullscreen Left-Side Card View with Toggle & Clean Panel Hiding
-    static bool is_fullscreen = false;
-    
-    // Toggle state trigger (bisa dipanggil saat gambar kartu diketuk)
-    // Jika ada elemen pendukung seperti teks info, log, chat, repositories, dll:
     bool hide_ui = is_fullscreen;
 
     if (stName) stName->setVisible(!hide_ui);
@@ -3324,15 +3321,15 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
     if (btnExpandChat) btnExpandChat->setVisible(!hide_ui);
 
     if (is_fullscreen) {
-        // Full dari atas ke bawah di sisi kiri dengan menjaga aspek rasio kartu
+        // Full dari atas ke bawah di sisi kiri dengan menjaga aspek rasio kartu (59:86)
         irr::video::IVideoDriver* driver = env->getVideoDriver();
         int screen_height = driver ? driver->getScreenSize().Height : 720;
         int card_height = screen_height;
-        int card_width = card_height * 59 / 86; // Aspek rasio standar kartu Yu-Gi-Oh
-        
+        int card_width = card_height * 59 / 86;
+
         irr::core::recti fs_rect(0, 0, card_width, card_height);
-        wCardImg->setRelativePosition(fs_rect);
-        if(imgCard) {
+        if (wCardImg) wCardImg->setRelativePosition(fs_rect);
+        if (imgCard) {
             imgCard->setRelativePosition(irr::core::recti(0, 0, card_width, card_height));
         }
     } else {
@@ -3340,8 +3337,8 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
         const auto rect = keep_ratio ?
             ResizeWithCappedWidth(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT, CARD_IMG_WRAPPER_ASPECT_RATIO) :
             Resize(1, 1, 1 + CARD_IMG_WIDTH + 20, 1 + CARD_IMG_HEIGHT + 18);
-        wCardImg->setRelativePosition(rect);
-        if(imgCard) {
+        if (wCardImg) wCardImg->setRelativePosition(rect);
+        if (imgCard) {
             imgCard->setRelativePosition(irr::core::recti(0, 0, CARD_IMG_WIDTH, CARD_IMG_HEIGHT));
         }
     }

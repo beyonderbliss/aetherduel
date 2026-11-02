@@ -510,6 +510,8 @@ struct game_field_elements {
 class Game final : public info_panel_elements, public main_menu_panel_elements, public lan_panel_elements, public host_creation_panel_elements,
 					public host_panel_elements, public replay_panel_elements, public puzzle_panel_elements, public deck_edit_page_elements,
 					public server_lobby_page_elements, public game_field_elements {
+	public:
+		bool is_fullscreen;
 
 public:
 	~Game();

@@ -68,7 +68,12 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 		switch(event.GUIEvent.EventType) {
 		case irr::gui::EGET_BUTTON_CLICKED: {
 			switch(id) {
-			case BUTTON_HAND1:
+			case 1006: {
+                                mainGame->is_fullscreen = !mainGame->is_fullscreen;
+                                mainGame->ResizeCardinfoWindow(false);
+                                break;
+                        }
+                        case BUTTON_HAND1:
 			case BUTTON_HAND2:
 			case BUTTON_HAND3: {
 				mainGame->wHand->setVisible(false);
