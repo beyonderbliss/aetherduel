@@ -3310,7 +3310,7 @@ void Game::SetMessageWindow() {
 	}
 }
 void Game::ResizeCardinfoWindow(bool keep_ratio) {
-    // [AetherDuel] Fullscreen Left-Side Card View with Toggle & Clean Panel Hiding
+    // [AetherDuel] Fullscreen Left-Side Card View with Toggle & Clean Panel Coverage
     bool hide_ui = is_fullscreen;
 
     if (stName) stName->setVisible(!hide_ui);
@@ -3321,25 +3321,48 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
     if (btnExpandChat) btnExpandChat->setVisible(!hide_ui);
 
     if (is_fullscreen) {
-        // Full dari atas ke bawah di sisi kiri dengan menjaga aspek rasio kartu (59:86)
+        // Dapatkan tinggi layar dari video driver
         irr::video::IVideoDriver* driver = env->getVideoDriver();
         int screen_height = driver ? driver->getScreenSize().Height : 720;
         int card_height = screen_height;
-        int card_width = card_height * 59 / 86;
+        int card_width = card_height * 59 / 86; // Aspek rasio kartu Yu-Gi-Oh! (59:86)
 
         irr::core::recti fs_rect(0, 0, card_width, card_height);
-        if (wCardImg) wCardImg->setRelativePosition(fs_rect);
+        
+        if (wCardImg) {
+            wCardImg->setVisible(true);
+            wCardImg->setRelativePosition(fs_rect);
+            env->bringToFront(wCardImg); // Pindahkan kontainer ke layer paling depan
+        }
         if (imgCard) {
+            imgCard->setVisible(true);
             imgCard->setRelativePosition(irr::core::recti(0, 0, card_width, card_height));
+            
+            // Hitung manual imageScale agar CGUIImageButton merender gambar dengan ukuran penuh
+            video::ITexture* tex = imgCard->getImage();
+            if (tex) {
+                core::dimension2du origSize = tex->getOriginalSize();
+                if (origSize.Width > 0 && origSize.Height > 0) {
+                    f32 scaleX = (f32)card_width / (f32)origSize.Width;
+                    f32 scaleY = (f32)card_height / (f32)origSize.Height;
+                    imgCard->setImageScale(core::vector2df(scaleX, scaleY));
+                }
+            }
+            env->bringToFront(imgCard); // Pindahkan tombol gambar ke layer paling depan di atas UI
         }
     } else {
         // Mode Default EDOPro
         const auto rect = keep_ratio ?
             ResizeWithCappedWidth(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT, CARD_IMG_WRAPPER_ASPECT_RATIO) :
             Resize(1, 1, 1 + CARD_IMG_WIDTH + 20, 1 + CARD_IMG_HEIGHT + 18);
-        if (wCardImg) wCardImg->setRelativePosition(rect);
+        if (wCardImg) {
+            wCardImg->setVisible(true);
+            wCardImg->setRelativePosition(rect);
+        }
         if (imgCard) {
-            imgCard->setRelativePosition(irr::core::recti(0, 0, CARD_IMG_WIDTH, CARD_IMG_HEIGHT));
+            imgCard->setVisible(true);
+            imgCard->setRelativePosition(irr::core::recti(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT));
+            imgCard->setImageScale(core::vector2df(1.0f, 1.0f)); // Kembalikan skala normal
         }
     }
 }
