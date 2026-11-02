@@ -27,6 +27,7 @@
 #include <ISceneCollisionManager.h>
 #include <IrrlichtDevice.h>
 #include <IGUIEnvironment.h>
+#include <IGUIImage.h>
 #include <IGUIWindow.h>
 #include <IGUIStaticText.h>
 #include <IGUIEditBox.h>
