@@ -70,7 +70,7 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 			switch(id) {
 			case 1006: {
                                 mainGame->is_fullscreen = !mainGame->is_fullscreen;
-                                mainGame->ResizeCardinfoWindow(false);
+                                mainGame->ResizeCardinfoWindow();
                                 break;
                         }
                         case BUTTON_HAND1:
@@ -1127,10 +1127,10 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 				break;
 			// The card artwork is an IGUIImage, so handle its tap independently
 			// of the old CGUIImageButton click event (ID 1006).
-			if(mainGame->wCardImg->isVisible() && mainGame->imgCard->isVisible()
-			   && mainGame->imgCard->getAbsolutePosition().isPointInside({ event.MouseInput.X, event.MouseInput.Y })) {
+			if(mainGame->wCardImg->isVisible()
+			   && mainGame->wCardImg->getAbsolutePosition().isPointInside({ event.MouseInput.X, event.MouseInput.Y })) {
 				mainGame->is_fullscreen = !mainGame->is_fullscreen;
-				mainGame->ResizeCardinfoWindow(false);
+				mainGame->ResizeCardinfoWindow();
 				return true;
 			}
 			hovered_location = 0;
@@ -2070,7 +2070,7 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 			case CHECKBOX_KEEP_CARD_ASPECT_RATIO: {
 				const auto checked = static_cast<irr::gui::IGUICheckBox*>(event.GUIEvent.Caller)->isChecked();
 				gGameConfig->keep_cardinfo_aspect_ratio = checked;
-				mainGame->ResizeCardinfoWindow(checked);
+				mainGame->ResizeCardinfoWindow();
 				break;
 			}
 			}
