@@ -7,10 +7,10 @@
   <title>AetherDuel · Card Layout Lab</title>
   <style>
     * { box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; margin: 0; }
+    html, body { width: 100%; min-height: 100%; margin: 0; }
     body {
-      height: 100vh; height: 100dvh;
-      display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+      min-height: 100vh; min-height: 100dvh;
+      display: flex; flex-direction: column; overflow: auto;
       background: #17191d; color: #e8eaf0;
       font: 14px/1.4 system-ui, sans-serif;
     }
@@ -41,10 +41,11 @@
     }
     .fields[hidden] { display: none; }
     .fields .group-title { color: #8993a2; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
-    main { position: relative; flex: 1; display: grid; place-items: center; min-width: 0; min-height: 0; overflow: hidden; }
-    canvas { display: block; width: min(100%, 222.295dvh); height: auto; max-height: 100%; aspect-ratio: 2712 / 1220; }
+    main { position: relative; flex: none; display: block; width: max-content; min-width: 100%; min-height: 0; overflow: visible; }
+    /* One CSS pixel per device-reference pixel: the page scrolls around this fixed sandbox. */
+    canvas { display: block; width: 2712px; height: 1220px; max-width: none; max-height: none; }
     @media (orientation: portrait) {
-      canvas { width: auto; height: min(100%, 222.295vw); max-width: 100%; aspect-ratio: 1220 / 2712; }
+      canvas { width: 1220px; height: 2712px; }
     }
     #status {
       position: absolute; right: 8px; bottom: 8px; max-width: calc(100% - 16px);
@@ -58,7 +59,7 @@
       .toolbar, .fields { gap: 6px; padding-inline: 8px; }
       .control { font-size: 10px; }
       input[type="number"] { width: 57px; }
-      main { min-height: 100px; }
+      main { min-height: 0; }
     }
   </style>
 </head>
@@ -303,7 +304,7 @@
       const drawnHeight = cardHeight * previewScale;
       status.textContent = [
         `FIXED DEVICE SANDBOX · ${viewportWidth}×${viewportHeight} reference px`,
-        `canvas ${Math.round(width)}×${Math.round(height)} CSS px · fit scale ${previewScale.toFixed(3)}`,
+        `canvas ${Math.round(width)}×${Math.round(height)} CSS px · page scroll enabled · scale ${previewScale.toFixed(3)}`,
         `native logical scale X ${(viewportWidth / 1024).toFixed(3)} · Y ${(viewportHeight / 640).toFixed(3)}`,
         `card reference ${Math.round(cardWidth)}×${Math.round(cardHeight)} · drawn ${Math.round(drawnWidth)}×${Math.round(drawnHeight)} CSS px`,
         `origin ${layout.origin.x}, ${layout.origin.y} · ${fit} · DPR ${(window.devicePixelRatio || 1).toFixed(2)}`
@@ -315,7 +316,8 @@
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
       if (!width || !height) return;
-      const dpr = window.devicePixelRatio || 1;
+      // Keep the large fixed-reference canvas within a predictable memory budget.
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
