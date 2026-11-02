@@ -39,6 +39,7 @@
 #include "file_stream.h"
 #include "porting.h"
 #include "fmt.h"
+#include "card_view_layout.generated.h"
 
 #if EDOPRO_ANDROID || EDOPRO_IOS
 #include "CGUICustomComboBox/CGUICustomComboBox.h"
@@ -53,10 +54,15 @@
 #define ClearZBuffer(driver) do {driver->clearZBuffer();} while(0)
 #endif
 
-constexpr int CARD_IMG_WRAPPER_H_PADDING = 10;
-constexpr int CARD_IMG_WRAPPER_V_PADDING = 9;
-constexpr int CARD_IMG_WRAPPER_WIDTH = CARD_IMG_WIDTH + CARD_IMG_WRAPPER_H_PADDING * 2;
-constexpr int CARD_IMG_WRAPPER_HEIGHT = CARD_IMG_HEIGHT + CARD_IMG_WRAPPER_V_PADDING * 2;
+static_assert(ygo::layout::kStandardArtworkWidth == CARD_IMG_WIDTH, "Shared card layout artwork width differs from native texture size");
+static_assert(ygo::layout::kStandardArtworkHeight == CARD_IMG_HEIGHT, "Shared card layout artwork height differs from native texture size");
+static_assert(ygo::layout::kFullscreenAspectWidth * CARD_IMG_HEIGHT == ygo::layout::kFullscreenAspectHeight * CARD_IMG_WIDTH,
+              "Fullscreen artwork aspect ratio must match the native card texture");
+
+constexpr int CARD_IMG_WRAPPER_H_PADDING = ygo::layout::kStandardWrapperPaddingX;
+constexpr int CARD_IMG_WRAPPER_V_PADDING = ygo::layout::kStandardWrapperPaddingY;
+constexpr int CARD_IMG_WRAPPER_WIDTH = ygo::layout::kStandardArtworkWidth + CARD_IMG_WRAPPER_H_PADDING * 2;
+constexpr int CARD_IMG_WRAPPER_HEIGHT = ygo::layout::kStandardArtworkHeight + CARD_IMG_WRAPPER_V_PADDING * 2;
 constexpr float CARD_IMG_WRAPPER_ASPECT_RATIO = ((float)CARD_IMG_WRAPPER_WIDTH) / ((float)CARD_IMG_WRAPPER_HEIGHT);
 
 uint16_t PRO_VERSION = 0x1354;
@@ -3322,10 +3328,52 @@ void Game::SetMessageWindow() {
 	}
 }
 void Game::ResizeCardinfoWindow(bool keep_ratio) {
-	const auto rect = keep_ratio ?
-		ResizeWithCappedWidth(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT, CARD_IMG_WRAPPER_ASPECT_RATIO) :
-		Resize(1, 1, 1 + CARD_IMG_WIDTH + 20, 1 + CARD_IMG_HEIGHT + 18);
-	wCardImg->setRelativePosition(rect);
+	// Fullscreen is an overlay only while a duel is active. Outside a duel,
+	// preserve EDOPro's original card-preview layout and visibility behavior.
+	const bool fullscreen_overlay = is_fullscreen && dInfo.isInDuel;
+	const bool hide_ui = fullscreen_overlay;
+
+	if(stName) stName->setVisible(!hide_ui);
+	if(stInfo) stInfo->setVisible(!hide_ui);
+	if(btnClearLog) btnClearLog->setVisible(!hide_ui);
+	if(btnExpandLog) btnExpandLog->setVisible(!hide_ui);
+	if(btnClearChat) btnClearChat->setVisible(!hide_ui);
+	if(btnExpandChat) btnExpandChat->setVisible(!hide_ui);
+
+	if(fullscreen_overlay) {
+		const auto* driver = env->getVideoDriver();
+		const irr::core::dimension2du screen_size = driver
+			? driver->getScreenSize()
+			: irr::core::dimension2du(720, 720);
+		const irr::f32 viewport_width = static_cast<irr::f32>(screen_size.Width);
+		const irr::f32 viewport_height = static_cast<irr::f32>(screen_size.Height);
+		const irr::f32 aspect_width = static_cast<irr::f32>(layout::kFullscreenAspectWidth);
+		const irr::f32 aspect_height = static_cast<irr::f32>(layout::kFullscreenAspectHeight);
+		const irr::f32 contain_scale = std::min(viewport_width / aspect_width, viewport_height / aspect_height);
+		const int card_width = static_cast<int>(aspect_width * contain_scale + 0.5f);
+		const int card_height = static_cast<int>(aspect_height * contain_scale + 0.5f);
+		const int card_x = layout::kFullscreenOriginX;
+		const int card_y = (screen_size.Height - card_height) / 2 + layout::kFullscreenOriginY;
+		const irr::core::recti fullscreen_rect(card_x, card_y, card_x + card_width, card_y + card_height);
+
+		if(wCardImg) {
+			wCardImg->setVisible(true);
+			wCardImg->setRelativePosition(fullscreen_rect);
+			env->bringToFront(wCardImg);
+		}
+		if(imgCard) {
+			imgCard->setVisible(true);
+			imgCard->setRelativePosition(irr::core::recti(0, 0, card_width, card_height));
+		}
+	} else {
+		const auto rect = keep_ratio ?
+			ResizeWithCappedWidth(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT, CARD_IMG_WRAPPER_ASPECT_RATIO) :
+			Resize(1, 1, 1 + CARD_IMG_WIDTH + 20, 1 + CARD_IMG_HEIGHT + 18);
+		if(wCardImg)
+			wCardImg->setRelativePosition(rect);
+		if(imgCard)
+			imgCard->setRelativePosition(Scale(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT));
+	}
 }
 bool Game::HasFocus(irr::gui::EGUI_ELEMENT_TYPE type) const {
 	irr::gui::IGUIElement* focus = env->getFocus();
