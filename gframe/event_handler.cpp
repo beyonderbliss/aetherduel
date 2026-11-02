@@ -1120,6 +1120,14 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 		case irr::EMIE_LMOUSE_LEFT_UP: {
 			if(!mainGame->dInfo.isInDuel)
 				break;
+			// The original card artwork is an IGUIImage, not a clickable button.
+			// Hit-test its wrapper so the same tap toggles both display modes.
+			if(mainGame->wCardImg && mainGame->wCardImg->isVisible()
+			   && mainGame->wCardImg->getAbsolutePosition().isPointInside({ event.MouseInput.X, event.MouseInput.Y })) {
+				mainGame->is_fullscreen = !mainGame->is_fullscreen;
+				mainGame->ResizeCardinfoWindow(gGameConfig->keep_cardinfo_aspect_ratio);
+				return true;
+			}
 			hovered_location = 0;
 			irr::core::vector2di pos = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
 			irr::core::vector2di mousepos(event.MouseInput.X, event.MouseInput.Y);
