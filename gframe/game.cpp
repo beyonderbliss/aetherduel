@@ -3361,8 +3361,8 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 	imgCard->setRelativePosition(irr::core::recti(
 		Scale(layout::kStandardArtworkOriginX),
 		Scale(layout::kStandardArtworkOriginY),
-		Scale(layout::kStandardArtworkOriginX + rect.getWidth()),
-		Scale(layout::kStandardArtworkOriginY + rect.getHeight())));
+		Scale(layout::kStandardArtworkOriginX) + rect.getWidth(),
+		Scale(layout::kStandardArtworkOriginY) + rect.getHeight()));
 	wCardImg->getParent()->sendToBack(wCardImg);
 }
 bool Game::HasFocus(irr::gui::EGUI_ELEMENT_TYPE type) const {
