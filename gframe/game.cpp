@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <sstream>
 #include <nlohmann/json.hpp>
 #include <irrlicht.h>
@@ -3337,11 +3338,18 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 		return;
 	}
 
-	const auto rect = Resize(
-		layout::kStandardPanelOriginX,
-		layout::kStandardPanelOriginY,
-		layout::kStandardPanelOriginX + layout::kStandardArtworkWidth,
-		layout::kStandardPanelOriginY + layout::kStandardArtworkHeight);
+	const auto rect = (keep_ratio && layout::kStandardKeepAspectRatio) ?
+		ResizeWithCappedWidth(
+			layout::kStandardPanelOriginX,
+			layout::kStandardPanelOriginY,
+			layout::kStandardPanelOriginX + layout::kStandardArtworkWidth,
+			layout::kStandardPanelOriginY + layout::kStandardArtworkHeight,
+			static_cast<float>(layout::kStandardArtworkWidth) / layout::kStandardArtworkHeight) :
+		Resize(
+			layout::kStandardPanelOriginX,
+			layout::kStandardPanelOriginY,
+			layout::kStandardPanelOriginX + layout::kStandardArtworkWidth,
+			layout::kStandardPanelOriginY + layout::kStandardArtworkHeight);
 	wCardImg->setRelativePosition(rect);
 	imgCard->setRelativePosition(irr::core::recti(
 		Scale(layout::kStandardArtworkOriginX),
