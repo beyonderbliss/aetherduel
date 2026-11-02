@@ -3,7 +3,7 @@ name: Card Layout Lab Validation
 on:
   push:
     branches:
-      - feat/shared-card-layout-poc
+      - feat/card-view-fullscreen-original-base
     paths:
       - "tools/web-layout-lab/**"
       - "gframe/card_view_layout.generated.h"
@@ -11,7 +11,7 @@ on:
       - ".github/workflows/card-layout-lab.yml"
   pull_request:
     branches:
-      - feat/shared-card-layout-poc
+      - feat/card-view-fullscreen-original-base
   workflow_dispatch:
 
 permissions:
