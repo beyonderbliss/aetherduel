@@ -311,7 +311,11 @@ void Game::Initialize() {
 	wCardImg = env->addStaticText(L"", Scale(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT), true, false, 0, 1005, true);
 	wCardImg->setBackgroundColor(skin::CARDINFO_IMAGE_BACKGROUND_VAL);
 	wCardImg->setVisible(false);
-	imgCard = (irr::gui::IGUIImage*)AlignElementWithParent(irr::gui::CGUIImageButton::addImageButton(env, Scale(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT), wCardImg, 1006));
+	imgCard = (irr::gui::IGUIImage*)AlignElementWithParent(irr::gui::CGUIImageButton::addImageButton(env, Scale(
+        ygo::layout::kStandardArtworkOriginX,
+        ygo::layout::kStandardArtworkOriginY,
+        ygo::layout::kStandardArtworkOriginX + ygo::layout::kStandardArtworkWidth,
+        ygo::layout::kStandardArtworkOriginY + ygo::layout::kStandardArtworkHeight), wCardImg, 1006));
 	imgCard->setImage(imageManager.tCover[0]);
 	imgCard->setScaleImage(true);
 	imgCard->setUseAlphaChannel(true);
@@ -3327,12 +3331,24 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
     if (is_fullscreen) {
         // Dapatkan tinggi layar dari video driver
         irr::video::IVideoDriver* driver = env->getVideoDriver();
-        int screen_height = driver ? driver->getScreenSize().Height : 720;
-        int card_height = screen_height;
-        int card_width = card_height * layout::kFullscreenAspectWidth / layout::kFullscreenAspectHeight;
+        const irr::core::dimension2du screen_size = driver
+            ? driver->getScreenSize()
+            : irr::core::dimension2du(720, 720);
+        const irr::f32 viewport_width = static_cast<irr::f32>(screen_size.Width);
+        const irr::f32 viewport_height = static_cast<irr::f32>(screen_size.Height);
+        const irr::f32 card_aspect_width = static_cast<irr::f32>(layout::kFullscreenAspectWidth);
+        const irr::f32 card_aspect_height = static_cast<irr::f32>(layout::kFullscreenAspectHeight);
+
+        // Match the web lab: contain the complete card in the viewport.
+        // Landscape fills the viewport height; portrait constrains by width.
+        const irr::f32 contain_scale = layout::kFullscreenContain
+            ? std::min(viewport_width / card_aspect_width, viewport_height / card_aspect_height)
+            : viewport_height / card_aspect_height;
+        const int card_width = static_cast<int>(card_aspect_width * contain_scale);
+        const int card_height = static_cast<int>(card_aspect_height * contain_scale);
 
         const int card_x = layout::kFullscreenOriginX;
-        const int card_y = layout::kFullscreenOriginY;
+        const int card_y = (screen_size.Height - card_height) / 2 + layout::kFullscreenOriginY;
         irr::core::recti fs_rect(card_x, card_y, card_x + card_width, card_y + card_height);
         
         if (wCardImg) {
