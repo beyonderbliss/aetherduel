@@ -7,6 +7,7 @@
 #include "image_downloader.h"
 #include "config.h"
 #include "game.h"
+#include "card_view_layout.generated.h"
 #include "server_lobby.h"
 #include "sound_manager.h"
 #include "image_manager.h"
@@ -3322,10 +3323,31 @@ void Game::SetMessageWindow() {
 	}
 }
 void Game::ResizeCardinfoWindow(bool keep_ratio) {
-	const auto rect = keep_ratio ?
-		ResizeWithCappedWidth(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT, CARD_IMG_WRAPPER_ASPECT_RATIO) :
-		Resize(1, 1, 1 + CARD_IMG_WIDTH + 20, 1 + CARD_IMG_HEIGHT + 18);
+	if(!dInfo.isInDuel)
+		cardViewFullscreen = false;
+
+	if(cardViewFullscreen) {
+		const float aspect = static_cast<float>(layout::kFullscreenAspectWidth) / layout::kFullscreenAspectHeight;
+		const auto viewport = driver->getScreenSize();
+		const irr::s32 cardWidth = std::min<irr::s32>(viewport.Width, static_cast<irr::s32>(viewport.Height * aspect));
+		const irr::s32 cardHeight = static_cast<irr::s32>(cardWidth / aspect);
+		const irr::s32 top = (static_cast<irr::s32>(viewport.Height) - cardHeight) / 2;
+		wCardImg->setRelativePosition(irr::core::recti(0, top, cardWidth, top + cardHeight));
+		imgCard->setRelativePosition(irr::core::recti(0, 0, cardWidth, cardHeight));
+		return;
+	}
+
+	const auto rect = Resize(
+		layout::kStandardPanelOriginX,
+		layout::kStandardPanelOriginY,
+		layout::kStandardPanelOriginX + layout::kStandardArtworkWidth,
+		layout::kStandardPanelOriginY + layout::kStandardArtworkHeight);
 	wCardImg->setRelativePosition(rect);
+	imgCard->setRelativePosition(irr::core::recti(
+		Scale(layout::kStandardArtworkOriginX),
+		Scale(layout::kStandardArtworkOriginY),
+		Scale(layout::kStandardArtworkOriginX + layout::kStandardArtworkWidth),
+		Scale(layout::kStandardArtworkOriginY + layout::kStandardArtworkHeight)));
 }
 bool Game::HasFocus(irr::gui::EGUI_ELEMENT_TYPE type) const {
 	irr::gui::IGUIElement* focus = env->getFocus();
