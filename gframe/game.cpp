@@ -54,10 +54,13 @@
 #define ClearZBuffer(driver) do {driver->clearZBuffer();} while(0)
 #endif
 
-constexpr int CARD_IMG_WRAPPER_H_PADDING = 10;
-constexpr int CARD_IMG_WRAPPER_V_PADDING = 9;
-constexpr int CARD_IMG_WRAPPER_WIDTH = CARD_IMG_WIDTH + CARD_IMG_WRAPPER_H_PADDING * 2;
-constexpr int CARD_IMG_WRAPPER_HEIGHT = CARD_IMG_HEIGHT + CARD_IMG_WRAPPER_V_PADDING * 2;
+static_assert(ygo::layout::kStandardArtworkWidth == CARD_IMG_WIDTH, "Shared card layout artwork width differs from native texture size");
+static_assert(ygo::layout::kStandardArtworkHeight == CARD_IMG_HEIGHT, "Shared card layout artwork height differs from native texture size");
+
+constexpr int CARD_IMG_WRAPPER_H_PADDING = ygo::layout::kStandardWrapperPaddingX;
+constexpr int CARD_IMG_WRAPPER_V_PADDING = ygo::layout::kStandardWrapperPaddingY;
+constexpr int CARD_IMG_WRAPPER_WIDTH = ygo::layout::kStandardArtworkWidth + CARD_IMG_WRAPPER_H_PADDING * 2;
+constexpr int CARD_IMG_WRAPPER_HEIGHT = ygo::layout::kStandardArtworkHeight + CARD_IMG_WRAPPER_V_PADDING * 2;
 constexpr float CARD_IMG_WRAPPER_ASPECT_RATIO = ((float)CARD_IMG_WRAPPER_WIDTH) / ((float)CARD_IMG_WRAPPER_HEIGHT);
 
 uint16_t PRO_VERSION = 0x1354;
@@ -3354,16 +3357,22 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
         }
     } else {
         // Mode Default EDOPro
+        const int panel_x = layout::kStandardPanelOriginX;
+        const int panel_y = layout::kStandardPanelOriginY;
         const auto rect = keep_ratio ?
-            ResizeWithCappedWidth(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT, CARD_IMG_WRAPPER_ASPECT_RATIO) :
-            Resize(1, 1, 1 + CARD_IMG_WIDTH + 20, 1 + CARD_IMG_HEIGHT + 18);
+            ResizeWithCappedWidth(panel_x, panel_y, panel_x + CARD_IMG_WRAPPER_WIDTH, panel_y + CARD_IMG_WRAPPER_HEIGHT, CARD_IMG_WRAPPER_ASPECT_RATIO) :
+            Resize(panel_x, panel_y, panel_x + CARD_IMG_WRAPPER_WIDTH, panel_y + CARD_IMG_WRAPPER_HEIGHT);
         if (wCardImg) {
             wCardImg->setVisible(true);
             wCardImg->setRelativePosition(rect);
         }
         if (imgCard) {
             imgCard->setVisible(true);
-            imgCard->setRelativePosition(irr::core::recti(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT));
+            imgCard->setRelativePosition(irr::core::recti(
+                layout::kStandardArtworkOriginX,
+                layout::kStandardArtworkOriginY,
+                layout::kStandardArtworkOriginX + layout::kStandardArtworkWidth,
+                layout::kStandardArtworkOriginY + layout::kStandardArtworkHeight));
             irr::gui::CGUIImageButton* btnCard = (irr::gui::CGUIImageButton*)imgCard;
             btnCard->setImageScale(irr::core::vector2df(1.0f, 1.0f)); // Kembalikan skala normal
         }
