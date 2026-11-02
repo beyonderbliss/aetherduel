@@ -173,19 +173,28 @@
       const baseW = layout.artwork_size.width + layout.wrapper_padding.x * 2;
       const baseH = layout.artwork_size.height + layout.wrapper_padding.y * 2;
 
-      // Native Game::Resize uses viewport/1024 and viewport/640 after
-      // window_scale and dpi_scale cancel each other.
-      const scaleX = width / layout.resize_reference.width;
-      const scaleY = height / layout.resize_reference.height;
-      const panelX = layout.panel_origin.x * scaleX;
-      const panelY = layout.panel_origin.y * scaleY;
-      const panelHeight = baseH * scaleY;
-      const uncappedWidth = baseW * scaleX;
+      // Model the full browser viewport as the native device viewport.
+      // The lab toolbar reduces the canvas area, so fit the virtual device
+      // screen into the canvas with one uniform presentation scale.
+      const viewportWidth = window.visualViewport?.width || window.innerWidth;
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      const previewScale = Math.min(width / viewportWidth, height / viewportHeight);
+      const offsetX = (width - viewportWidth * previewScale) / 2;
+      const offsetY = (height - viewportHeight * previewScale) / 2;
+
+      // Native window_scale is viewport/1024 and viewport/640; dpi_scale
+      // cancels when the native Scale() helper converts logical coordinates.
+      const scaleX = viewportWidth / layout.resize_reference.width;
+      const scaleY = viewportHeight / layout.resize_reference.height;
+      const panelX = offsetX + layout.panel_origin.x * scaleX * previewScale;
+      const panelY = offsetY + layout.panel_origin.y * scaleY * previewScale;
+      const panelHeight = baseH * scaleY * previewScale;
+      const uncappedWidth = baseW * scaleX * previewScale;
       const panelWidth = layout.keep_aspect_ratio
         ? Math.min(uncappedWidth, panelHeight * (baseW / baseH))
         : uncappedWidth;
 
-      // EDOPro's EGUIA_SCALE child alignment scales the artwork with its wrapper.
+      // EGUIA_SCALE scales the artwork child independently with its wrapper.
       const childScaleX = panelWidth / baseW;
       const childScaleY = panelHeight / baseH;
       const artworkX = panelX + layout.artwork_origin.x * childScaleX;
@@ -212,7 +221,8 @@
           : `vertical stretch ×${(1 / distortion).toFixed(2)}`;
 
       status.textContent = [
-        `STANDARD · viewport ${Math.round(width)}×${Math.round(height)}`,
+        `STANDARD · native viewport ${Math.round(viewportWidth)}×${Math.round(viewportHeight)}`,
+        `preview canvas ${Math.round(width)}×${Math.round(height)}`,
         `panel ${panelWidth.toFixed(1)}×${panelHeight.toFixed(1)} · artwork ${artworkWidth.toFixed(1)}×${artworkHeight.toFixed(1)}`,
         `artwork ratio ${renderedRatio.toFixed(3)} (source ${sourceRatio.toFixed(3)}) · ${shapeResult}`,
         `keep wrapper ratio: ${layout.keep_aspect_ratio}`
