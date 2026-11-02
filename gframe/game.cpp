@@ -3336,27 +3336,32 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 		const irr::s32 top = (static_cast<irr::s32>(viewport.Height) - cardHeight) / 2;
 		wCardImg->setRelativePosition(irr::core::recti(0, top, cardWidth, top + cardHeight));
 		imgCard->setRelativePosition(irr::core::recti(0, 0, cardWidth, cardHeight));
+		wCardImg->bringToFront();
 		return;
 	}
 
+	const irr::s32 wrapperWidth = layout::kStandardArtworkWidth + layout::kStandardWrapperPaddingX * 2;
+	const irr::s32 wrapperHeight = layout::kStandardArtworkHeight + layout::kStandardWrapperPaddingY * 2;
+	const float wrapperAspect = static_cast<float>(wrapperWidth) / wrapperHeight;
 	const auto rect = (keep_ratio && layout::kStandardKeepAspectRatio) ?
 		ResizeWithCappedWidth(
 			layout::kStandardPanelOriginX,
 			layout::kStandardPanelOriginY,
-			layout::kStandardPanelOriginX + layout::kStandardArtworkWidth,
-			layout::kStandardPanelOriginY + layout::kStandardArtworkHeight,
-			static_cast<float>(layout::kStandardArtworkWidth) / layout::kStandardArtworkHeight) :
+			layout::kStandardPanelOriginX + wrapperWidth,
+			layout::kStandardPanelOriginY + wrapperHeight,
+			wrapperAspect) :
 		Resize(
 			layout::kStandardPanelOriginX,
 			layout::kStandardPanelOriginY,
-			layout::kStandardPanelOriginX + layout::kStandardArtworkWidth,
-			layout::kStandardPanelOriginY + layout::kStandardArtworkHeight);
+			layout::kStandardPanelOriginX + wrapperWidth,
+			layout::kStandardPanelOriginY + wrapperHeight);
 	wCardImg->setRelativePosition(rect);
 	imgCard->setRelativePosition(irr::core::recti(
 		Scale(layout::kStandardArtworkOriginX),
 		Scale(layout::kStandardArtworkOriginY),
 		Scale(layout::kStandardArtworkOriginX + layout::kStandardArtworkWidth),
 		Scale(layout::kStandardArtworkOriginY + layout::kStandardArtworkHeight)));
+	wCardImg->sendToBack();
 }
 bool Game::HasFocus(irr::gui::EGUI_ELEMENT_TYPE type) const {
 	irr::gui::IGUIElement* focus = env->getFocus();
