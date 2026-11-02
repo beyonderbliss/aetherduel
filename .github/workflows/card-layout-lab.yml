@@ -41,8 +41,8 @@ jobs:
             '#include "card_view_layout.generated.h"' \
             'static_assert(ygo::layout::kStandardArtworkWidth == 177);' \
             'static_assert(ygo::layout::kStandardArtworkHeight == 254);' \
-            'static_assert(ygo::layout::kFullscreenAspectWidth == 59);' \
-            'static_assert(ygo::layout::kFullscreenAspectHeight == 86);' \
+            'static_assert(ygo::layout::kFullscreenAspectWidth == 177);' \
+            'static_assert(ygo::layout::kFullscreenAspectHeight == 254);' \
             | g++ -std=c++17 -Wall -Wextra -Werror -x c++ -fsyntax-only -Igframe -
 
       - name: Check browser module syntax
