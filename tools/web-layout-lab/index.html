@@ -233,15 +233,36 @@
       const layout = spec.fullscreen;
       const ratioW = layout.artwork_aspect_ratio.width;
       const ratioH = layout.artwork_aspect_ratio.height;
-      // Keep the complete card visible in mobile portrait and landscape.
-      const scale = Math.min(width / ratioW, height / ratioH);
-      const cardWidth = ratioW * scale;
-      const cardHeight = ratioH * scale;
-      const x = (width - cardWidth) / 2 + layout.origin.x * scale;
-      const y = (height - cardHeight) / 2 + layout.origin.y * scale;
-      drawArtwork(x, y, cardWidth, cardHeight);
-      status.textContent =
-        `FULLSCREEN · viewport ${Math.round(width)}×${Math.round(height)} · card ${Math.round(cardWidth)}×${Math.round(cardHeight)} · ratio ${ratioW}:${ratioH} · browser fit: contain`;
+
+      // Simulate the complete device viewport, not the smaller canvas left
+      // after the lab controls. Fullscreen is a left-edge overlay whose card
+      // height follows the viewport; it is intentionally not centered or
+      // reduced to fit the viewport width.
+      const viewportWidth = window.visualViewport?.width || window.innerWidth;
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      const previewScale = Math.min(width / viewportWidth, height / viewportHeight);
+      const offsetX = (width - viewportWidth * previewScale) / 2;
+      const offsetY = (height - viewportHeight * previewScale) / 2;
+
+      const cardScale = viewportHeight / ratioH;
+      const cardWidth = ratioW * cardScale;
+      const cardHeight = ratioH * cardScale;
+      const x = offsetX + layout.origin.x * cardScale * previewScale;
+      const y = offsetY + layout.origin.y * cardScale * previewScale;
+      drawArtwork(
+        x,
+        y,
+        cardWidth * previewScale,
+        cardHeight * previewScale
+      );
+
+      const rightOverflow = Math.max(0, cardWidth - viewportWidth);
+      status.textContent = [
+        `FULLSCREEN · device viewport ${Math.round(viewportWidth)}×${Math.round(viewportHeight)}`,
+        `left overlay · card ${Math.round(cardWidth)}×${Math.round(cardHeight)} · ratio ${ratioW}:${ratioH}`,
+        `origin ${layout.origin.x}, ${layout.origin.y} · right overflow ${Math.round(rightOverflow)}px`,
+        `preview canvas ${Math.round(width)}×${Math.round(height)}`
+      ].join("\\n");
     }
 
     function draw() {
