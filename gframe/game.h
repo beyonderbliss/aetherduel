@@ -512,6 +512,8 @@ class Game final : public info_panel_elements, public main_menu_panel_elements, 
 					public server_lobby_page_elements, public game_field_elements {
 
 public:
+	bool is_fullscreen = false;
+
 	~Game();
 	void Initialize();
 	void LoadCore();
