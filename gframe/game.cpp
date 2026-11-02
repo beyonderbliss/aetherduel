@@ -99,7 +99,7 @@ Game::~Game() {
 }
 
 void Game::Initialize() {
-    is_fullscreen = true;
+    is_fullscreen = false;
 	dpi_scale = gGameConfig->dpi_scale;
 	duel_param = gGameConfig->lastDuelParam;
 	if(!device)
@@ -3310,8 +3310,7 @@ void Game::SetMessageWindow() {
 	}
 }
 void Game::ResizeCardinfoWindow(bool keep_ratio) {
-    // [AetherDuel] Fullscreen Left-Side Card View with Toggle & Clean Panel Hiding
-    bool hide_ui = is_fullscreen;
+    const bool hide_ui = is_fullscreen;
 
     if (stName) stName->setVisible(!hide_ui);
     if (stInfo) stInfo->setVisible(!hide_ui);
@@ -3321,36 +3320,29 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
     if (btnExpandChat) btnExpandChat->setVisible(!hide_ui);
 
     if (is_fullscreen) {
-        // Match the native EDOPro card-art aspect ratio.
         irr::video::IVideoDriver* driver = env->getVideoDriver();
-        int screen_height = driver ? driver->getScreenSize().Height : 720;
-        int card_height = screen_height;
-        int card_width = card_height * CARD_IMG_WIDTH / CARD_IMG_HEIGHT;
+        const int screen_height = driver ? driver->getScreenSize().Height : 720;
+        const int card_height = screen_height;
+        const int card_width = card_height * CARD_IMG_WIDTH / CARD_IMG_HEIGHT;
+        const irr::core::recti card_rect(0, 0, card_width, card_height);
 
-        irr::core::recti fs_rect(0, 0, card_width, card_height);
-        if (wCardImg) {
-            wCardImg->setRelativePosition(fs_rect);
-            wCardImg->bringToFront();
-        }
+        if (wCardImg)
+            wCardImg->setRelativePosition(card_rect);
         if (imgCard) {
-            imgCard->setRelativePosition(irr::core::recti(0, 0, card_width, card_height));
+            imgCard->setRelativePosition(card_rect);
+            auto* cardButton = (irr::gui::CGUIImageButton*)imgCard;
+            const float image_scale = (float)card_height / CARD_IMG_HEIGHT;
+            cardButton->setImageScale(irr::core::vector2df(image_scale, image_scale));
         }
     } else {
-        // Mode Default EDOPro
         const auto rect = keep_ratio ?
             ResizeWithCappedWidth(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT, CARD_IMG_WRAPPER_ASPECT_RATIO) :
             Resize(1, 1, 1 + CARD_IMG_WIDTH + 20, 1 + CARD_IMG_HEIGHT + 18);
         if (wCardImg) wCardImg->setRelativePosition(rect);
         if (imgCard) {
             imgCard->setRelativePosition(irr::core::recti(0, 0, CARD_IMG_WIDTH, CARD_IMG_HEIGHT));
+            ((irr::gui::CGUIImageButton*)imgCard)->setImageScale(irr::core::vector2df(1.0f, 1.0f));
         }
-    }
-
-    // The card texture is reloaded for the new control size after a mode toggle.
-    // Keep the button at native scale instead of stretching its texture independently.
-    if (imgCard) {
-        auto* cardButton = (irr::gui::CGUIImageButton*)imgCard;
-        cardButton->setImageScale(irr::core::vector2df(1.0f, 1.0f));
     }
 }
 bool Game::HasFocus(irr::gui::EGUI_ELEMENT_TYPE type) const {
