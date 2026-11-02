@@ -132,6 +132,7 @@ struct info_panel_elements {
 	//card image
 	irr::gui::IGUIStaticText* wCardImg;
 	irr::gui::IGUIImage* imgCard;
+	bool cardViewFullscreen = false;
 	//infos
 	int infosExpanded; //0: not expanded, 1: expanded and to be shown as expanded, 2: expanded but not to be shown as expanded
 	irr::gui::IGUITabControl* wInfos;
