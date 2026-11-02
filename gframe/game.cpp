@@ -3332,23 +3332,23 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
         if (wCardImg) {
             wCardImg->setVisible(true);
             wCardImg->setRelativePosition(fs_rect);
-            env->bringToFront(wCardImg); // Pindahkan kontainer ke layer paling depan
+            wCardImg->bringToFront(); // Pindahkan kontainer ke layer paling depan
         }
         if (imgCard) {
             imgCard->setVisible(true);
             imgCard->setRelativePosition(irr::core::recti(0, 0, card_width, card_height));
             
-            // Hitung manual imageScale agar CGUIImageButton merender gambar dengan ukuran penuh
-            video::ITexture* tex = imgCard->getImage();
+            // Hitung manual imageScale dengan casting eksplisit ke CGUIImageButton dan namespace irr:: penuh
+            irr::video::ITexture* tex = ((irr::gui::CGUIImageButton*)imgCard)->getImage();
             if (tex) {
-                core::dimension2du origSize = tex->getOriginalSize();
+                irr::core::dimension2du origSize = tex->getOriginalSize();
                 if (origSize.Width > 0 && origSize.Height > 0) {
-                    f32 scaleX = (f32)card_width / (f32)origSize.Width;
-                    f32 scaleY = (f32)card_height / (f32)origSize.Height;
-                    imgCard->setImageScale(core::vector2df(scaleX, scaleY));
+                    irr::f32 scaleX = (irr::f32)card_width / (irr::f32)origSize.Width;
+                    irr::f32 scaleY = (irr::f32)card_height / (irr::f32)origSize.Height;
+                    ((irr::gui::CGUIImageButton*)imgCard)->setImageScale(irr::core::vector2df(scaleX, scaleY));
                 }
             }
-            env->bringToFront(imgCard); // Pindahkan tombol gambar ke layer paling depan di atas UI
+            imgCard->bringToFront(); // Pindahkan tombol gambar ke layer paling depan di atas UI
         }
     } else {
         // Mode Default EDOPro
@@ -3362,7 +3362,7 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
         if (imgCard) {
             imgCard->setVisible(true);
             imgCard->setRelativePosition(irr::core::recti(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT));
-            imgCard->setImageScale(core::vector2df(1.0f, 1.0f)); // Kembalikan skala normal
+            ((irr::gui::CGUIImageButton*)imgCard)->setImageScale(irr::core::vector2df(1.0f, 1.0f)); // Kembalikan skala normal
         }
     }
 }
