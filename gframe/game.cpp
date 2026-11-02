@@ -3005,6 +3005,7 @@ void Game::ClearTextures() {
 	imageManager.ClearTexture();
 }
 void Game::CloseDuelWindow() {
+	cardViewFullscreen = false;
 	for(auto wit = fadingList.begin(); wit != fadingList.end(); ++wit) {
 		if(wit->isFadein)
 			wit->autoFadeoutFrame = 1;
