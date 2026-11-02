@@ -20,8 +20,8 @@ static constexpr int kStandardResizeReferenceWidth = 1024;
 static constexpr int kStandardResizeReferenceHeight = 640;
 static constexpr bool kStandardKeepAspectRatio = true;
 
-static constexpr int kFullscreenAspectWidth = 59;
-static constexpr int kFullscreenAspectHeight = 86;
+static constexpr int kFullscreenAspectWidth = 177;
+static constexpr int kFullscreenAspectHeight = 254;
 static constexpr int kFullscreenOriginX = 0;
 static constexpr int kFullscreenOriginY = 0;
 static constexpr bool kFullscreenContain = true;
