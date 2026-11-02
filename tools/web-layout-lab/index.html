@@ -363,7 +363,8 @@
       const fit = cardHeight >= viewportHeight - 1 ? "height-fit" : "width-fit · full artwork visible";
       status.textContent = [
         `FULLSCREEN · device viewport ${Math.round(viewportWidth)}×${Math.round(viewportHeight)}`,
-        `duel controls behind artwork: covered by overlay`,\n        `left overlay · card ${Math.round(cardWidth)}×${Math.round(cardHeight)} · ratio ${ratioW}:${ratioH}`,
+        `duel controls behind artwork: covered by overlay`,
+        `left overlay · card ${Math.round(cardWidth)}×${Math.round(cardHeight)} · ratio ${ratioW}:${ratioH}`,
         `origin ${layout.origin.x}, ${layout.origin.y} · ${fit}`,
         `preview canvas ${Math.round(width)}×${Math.round(height)}`
       ].join("\n");
