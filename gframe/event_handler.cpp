@@ -1123,6 +1123,12 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 			hovered_location = 0;
 			irr::core::vector2di pos = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
 			irr::core::vector2di mousepos(event.MouseInput.X, event.MouseInput.Y);
+			if(mainGame->wCardImg->isVisible() &&
+			   mainGame->wCardImg->getAbsolutePosition().isPointInside(mousepos)) {
+				mainGame->cardViewFullscreen = !mainGame->cardViewFullscreen;
+				mainGame->ResizeCardinfoWindow(gGameConfig->keep_cardinfo_aspect_ratio);
+				break;
+			}
 			irr::s32 x = pos.X;
 			irr::s32 y = pos.Y;
 			if(mainGame->always_chain) {
