@@ -3332,7 +3332,7 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 		const float aspect = static_cast<float>(layout::kFullscreenAspectWidth) / layout::kFullscreenAspectHeight;
 		const auto viewport = driver->getScreenSize();
 		// Keep the card just inside the physical screen corners without changing its aspect ratio.
-		const irr::s32 inset = std::max<irr::s32>(4, std::min(viewport.Width, viewport.Height) / 100);
+		const irr::s32 inset = std::max<irr::s32>(4, static_cast<irr::s32>(std::min(viewport.Width, viewport.Height) * 0.0075f));
 		const irr::s32 availableWidth = static_cast<irr::s32>(viewport.Width) - inset * 2;
 		const irr::s32 availableHeight = static_cast<irr::s32>(viewport.Height) - inset * 2;
 		const irr::s32 cardWidth = std::min<irr::s32>(availableWidth, static_cast<irr::s32>(availableHeight * aspect));
@@ -3353,13 +3353,17 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 		layout::kStandardPanelOriginX + wrapperWidth,
 		layout::kStandardPanelOriginY + wrapperHeight);
 	const auto rect = (keep_ratio && layout::kStandardKeepAspectRatio) ?
-		irr::core::recti(
-			standardRect.UpperLeftCorner.X,
-			standardRect.UpperLeftCorner.Y,
-			standardRect.UpperLeftCorner.X + standardRect.getWidth(),
-			standardRect.UpperLeftCorner.Y + static_cast<irr::s32>(
-				static_cast<double>(standardRect.getWidth()) * layout::kStandardArtworkHeight /
-				layout::kStandardArtworkWidth)) :
+		[&]() {
+			const irr::s32 artworkWidth = standardRect.getWidth() + Scale(2);
+			const irr::s32 artworkHeight = static_cast<irr::s32>(
+				static_cast<double>(artworkWidth) * layout::kStandardArtworkHeight /
+				layout::kStandardArtworkWidth);
+			return irr::core::recti(
+				standardRect.UpperLeftCorner.X,
+				standardRect.UpperLeftCorner.Y,
+				standardRect.UpperLeftCorner.X + artworkWidth,
+				standardRect.UpperLeftCorner.Y + artworkHeight);
+		}() :
 		standardRect;
 	wCardImg->setRelativePosition(rect);
 	// Match the artwork child bounds to the resized wrapper. This keeps both
