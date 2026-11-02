@@ -68,6 +68,7 @@
   </header>
 
   <section class="toolbar" aria-label="Preview controls">
+    <label class="control">Context<select id="scene"><option value="duel">Duel</option><option value="menu">Menu</option></select></label>
     <label class="control">Mode
       <select id="mode">
         <option value="standard">Standard EDOPro</option>
@@ -109,6 +110,7 @@
     const ctx = canvas.getContext("2d");
     const status = document.querySelector("#status");
     const modeSelect = document.querySelector("#mode");
+    const sceneSelect = document.querySelector("#scene");
     const standardFields = document.querySelector("#standardFields");
     const fullscreenFields = document.querySelector("#fullscreenFields");
     const keepRatio = document.querySelector("#keepRatio");
@@ -328,6 +330,10 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.fillStyle = "#17191d";
       ctx.fillRect(0, 0, width, height);
+      if (sceneSelect.value === "menu") {
+        status.textContent = "MENU CONTEXT · duel controls and fullscreen card overlay are not rendered";
+        return;
+      }
       if (modeSelect.value === "standard") drawStandard(width, height);
       else drawFullscreen(width, height);
     }
@@ -353,6 +359,7 @@
     }
 
     modeSelect.addEventListener("change", syncControls);
+    sceneSelect.addEventListener("change", draw);
     keepRatio.addEventListener("change", () => {
       spec.standard.keep_aspect_ratio = keepRatio.checked;
       draw();
