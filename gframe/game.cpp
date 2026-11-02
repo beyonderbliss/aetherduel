@@ -3347,24 +3347,19 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 
 	const irr::s32 wrapperWidth = layout::kStandardArtworkWidth + layout::kStandardWrapperPaddingX * 2;
 	const irr::s32 wrapperHeight = layout::kStandardArtworkHeight + layout::kStandardWrapperPaddingY * 2;
-	const auto standardRect = Resize(
-		layout::kStandardPanelOriginX,
-		layout::kStandardPanelOriginY,
-		layout::kStandardPanelOriginX + wrapperWidth,
-		layout::kStandardPanelOriginY + wrapperHeight);
+	const float wrapperAspect = static_cast<float>(wrapperWidth + 2) / wrapperHeight;
 	const auto rect = (keep_ratio && layout::kStandardKeepAspectRatio) ?
-		[&]() {
-			const irr::s32 artworkWidth = standardRect.getWidth() + Scale(2);
-			const irr::s32 artworkHeight = static_cast<irr::s32>(
-				static_cast<double>(artworkWidth) * layout::kStandardArtworkHeight /
-				layout::kStandardArtworkWidth);
-			return irr::core::recti(
-				standardRect.UpperLeftCorner.X,
-				standardRect.UpperLeftCorner.Y,
-				standardRect.UpperLeftCorner.X + artworkWidth,
-				standardRect.UpperLeftCorner.Y + artworkHeight);
-		}() :
-		standardRect;
+		ResizeWithCappedWidth(
+			layout::kStandardPanelOriginX,
+			layout::kStandardPanelOriginY,
+			layout::kStandardPanelOriginX + wrapperWidth + 2,
+			layout::kStandardPanelOriginY + wrapperHeight,
+			wrapperAspect) :
+		Resize(
+			layout::kStandardPanelOriginX,
+			layout::kStandardPanelOriginY,
+			layout::kStandardPanelOriginX + wrapperWidth,
+			layout::kStandardPanelOriginY + wrapperHeight);
 	wCardImg->setRelativePosition(rect);
 	// Match the artwork child bounds to the resized wrapper. This keeps both
 	// edges synchronized when window_scale.X and window_scale.Y differ.
