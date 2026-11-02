@@ -277,7 +277,8 @@
     }
 
     function drawFullscreen(width, height) {
-      ctx.fillStyle = '#18252a'; ctx.fillRect(0, 0, width, height);\n      drawNativeDuelUi(width, height);
+      ctx.fillStyle = '#18252a'; ctx.fillRect(0, 0, width, height);
+      drawNativeDuelUi(width, height);
       const layout = spec.fullscreen;
       const ratioW = layout.artwork_aspect_ratio.width;
       const ratioH = layout.artwork_aspect_ratio.height;
