@@ -3331,10 +3331,15 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 	if(cardViewFullscreen) {
 		const float aspect = static_cast<float>(layout::kFullscreenAspectWidth) / layout::kFullscreenAspectHeight;
 		const auto viewport = driver->getScreenSize();
-		const irr::s32 cardWidth = std::min<irr::s32>(viewport.Width, static_cast<irr::s32>(viewport.Height * aspect));
+		// Keep the card just inside the physical screen corners without changing its aspect ratio.
+		const irr::s32 inset = std::max<irr::s32>(4, std::min(viewport.Width, viewport.Height) / 100);
+		const irr::s32 availableWidth = static_cast<irr::s32>(viewport.Width) - inset * 2;
+		const irr::s32 availableHeight = static_cast<irr::s32>(viewport.Height) - inset * 2;
+		const irr::s32 cardWidth = std::min<irr::s32>(availableWidth, static_cast<irr::s32>(availableHeight * aspect));
 		const irr::s32 cardHeight = static_cast<irr::s32>(cardWidth / aspect);
+		const irr::s32 left = (static_cast<irr::s32>(viewport.Width) - cardWidth) / 2;
 		const irr::s32 top = (static_cast<irr::s32>(viewport.Height) - cardHeight) / 2;
-		wCardImg->setRelativePosition(irr::core::recti(0, top, cardWidth, top + cardHeight));
+		wCardImg->setRelativePosition(irr::core::recti(left, top, left + cardWidth, top + cardHeight));
 		imgCard->setRelativePosition(irr::core::recti(0, 0, cardWidth, cardHeight));
 		wCardImg->getParent()->bringToFront(wCardImg);
 		return;
