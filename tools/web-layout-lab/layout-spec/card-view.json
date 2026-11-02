@@ -11,12 +11,12 @@
       "y": 1
     },
     "wrapper_padding": {
-      "x": 0,
-      "y": 0
+      "x": 10,
+      "y": 9
     },
     "artwork_origin": {
-      "x": 0,
-      "y": 0
+      "x": 10,
+      "y": 9
     },
     "keep_aspect_ratio": true,
     "resize_reference": {
