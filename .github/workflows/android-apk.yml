@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout clean AetherDuel source
         uses: actions/checkout@v5
+        with:
+          path: aetherduel-source
 
       - name: Checkout pinned Android wrapper and submodules
         uses: actions/checkout@v5
@@ -37,7 +39,7 @@ jobs:
             --exclude='.git' \
             --exclude='ocgcore/' \
             --exclude='.github/' \
-            "$GITHUB_WORKSPACE/" android-wrapper/deps/edopro/
+            "aetherduel-source/" android-wrapper/deps/edopro/
           ! grep -nE 'is_fullscreen|Fullscreen Left-Side|Default Fullscreen Card Art' android-wrapper/deps/edopro/gframe/game.cpp
           test -f android-wrapper/deps/edopro/gframe/game.cpp
           echo "AetherDuel source revision: $GITHUB_SHA"
