@@ -3336,7 +3336,7 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 		const irr::s32 top = (static_cast<irr::s32>(viewport.Height) - cardHeight) / 2;
 		wCardImg->setRelativePosition(irr::core::recti(0, top, cardWidth, top + cardHeight));
 		imgCard->setRelativePosition(irr::core::recti(0, 0, cardWidth, cardHeight));
-		wCardImg->bringToFront();
+		wCardImg->getParent()->bringToFront(wCardImg);
 		return;
 	}
 
@@ -3361,7 +3361,7 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 		Scale(layout::kStandardArtworkOriginY),
 		Scale(layout::kStandardArtworkOriginX + layout::kStandardArtworkWidth),
 		Scale(layout::kStandardArtworkOriginY + layout::kStandardArtworkHeight)));
-	wCardImg->sendToBack();
+	wCardImg->getParent()->sendToBack(wCardImg);
 }
 bool Game::HasFocus(irr::gui::EGUI_ELEMENT_TYPE type) const {
 	irr::gui::IGUIElement* focus = env->getFocus();
