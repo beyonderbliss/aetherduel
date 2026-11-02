@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17191d">
   <title>AetherDuel · Card Layout Lab</title>
   <style>
     * { box-sizing: border-box; }
@@ -10,39 +11,63 @@
     body {
       display: flex;
       flex-direction: column;
+      min-height: 100%;
+      min-height: 100dvh;
       overflow: hidden;
       background: #17191d;
       color: #e8eaf0;
       font: 14px/1.4 system-ui, sans-serif;
     }
     header {
+      position: relative;
+      z-index: 1;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px 12px;
+      flex-wrap: wrap;
       min-height: 48px;
-      padding: 8px 14px;
+      padding: 8px 12px;
+      padding-top: max(8px, env(safe-area-inset-top));
       background: #22252b;
       border-bottom: 1px solid #3b3f48;
     }
-    header strong { font-size: 14px; }
-    header span { color: #aeb4c0; font-size: 12px; }
+    header strong { font-size: 13px; }
+    header span { color: #aeb4c0; font-size: 11px; }
     label {
       margin-left: auto;
-      padding: 6px 10px;
+      padding: 6px 9px;
       border: 1px solid #555c68;
       border-radius: 6px;
       cursor: pointer;
+      white-space: nowrap;
+      font-size: 12px;
     }
     input { display: none; }
-    main { position: relative; flex: 1; min-height: 0; }
+    main {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
     canvas { display: block; width: 100%; height: 100%; }
     #status {
       position: absolute;
-      right: 12px;
-      bottom: 10px;
+      right: 8px;
+      bottom: 8px;
+      max-width: calc(100% - 16px);
+      padding: 4px 6px;
+      border-radius: 4px;
+      background: #17191dcc;
       color: #aeb4c0;
-      font-size: 11px;
+      font-size: 10px;
       pointer-events: none;
+    }
+    @media (max-width: 480px) {
+      header { gap: 6px 8px; padding-inline: 9px; }
+      header span { flex-basis: 100%; order: 3; }
+      label { margin-left: auto; }
     }
   </style>
 </head>
@@ -65,6 +90,7 @@
 
     let spec;
     let artwork = null;
+    let artworkUrl = null;
 
     async function loadSpec() {
       const response = await fetch("./layout-spec/card-view.json", { cache: "no-store" });
@@ -78,6 +104,8 @@
       if (!spec) return;
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
+      if (!width || !height) return;
+
       const dpr = window.devicePixelRatio || 1;
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
@@ -87,11 +115,16 @@
       ctx.fillRect(0, 0, width, height);
 
       const layout = spec.fullscreen;
-      const cardHeight = height;
-      const cardWidth = cardHeight * layout.artwork_aspect_ratio.width
-        / layout.artwork_aspect_ratio.height;
-      const x = layout.origin.x;
-      const y = layout.origin.y;
+      const ratioWidth = layout.artwork_aspect_ratio.width;
+      const ratioHeight = layout.artwork_aspect_ratio.height;
+
+      // Browser preview only: contain the complete native-ratio card in the
+      // available Chrome viewport. The native C++ geometry remains unchanged.
+      const scale = Math.min(width / ratioWidth, height / ratioHeight);
+      const cardWidth = ratioWidth * scale;
+      const cardHeight = ratioHeight * scale;
+      const x = (width - cardWidth) / 2;
+      const y = (height - cardHeight) / 2;
 
       ctx.fillStyle = "#30343b";
       ctx.fillRect(x, y, cardWidth, cardHeight);
@@ -105,28 +138,31 @@
         ctx.fillStyle = "#d7dce5";
         ctx.textAlign = "center";
         ctx.font = "13px system-ui, sans-serif";
-        ctx.fillText("Load card artwork", x + cardWidth / 2, cardHeight / 2);
+        ctx.fillText("Load card artwork", x + cardWidth / 2, y + cardHeight / 2);
       }
 
       status.textContent =
-        `Viewport ${Math.round(width)}×${Math.round(height)} · Card ${Math.round(cardWidth)}×${Math.round(cardHeight)} · ratio ${layout.artwork_aspect_ratio.width}:${layout.artwork_aspect_ratio.height}`;
+        `Chrome viewport ${Math.round(width)}×${Math.round(height)} · Card ${Math.round(cardWidth)}×${Math.round(cardHeight)} · ratio ${ratioWidth}:${ratioHeight} · fit: contain`;
     }
 
     fileInput.addEventListener("change", () => {
       const file = fileInput.files?.[0];
       if (!file) return;
-      const url = URL.createObjectURL(file);
+      if (artworkUrl) URL.revokeObjectURL(artworkUrl);
+      artworkUrl = URL.createObjectURL(file);
       const image = new Image();
       image.onload = () => {
-        if (artwork) URL.revokeObjectURL(artwork.src);
         artwork = image;
         draw();
       };
       image.onerror = () => { status.textContent = "Could not read selected image."; };
-      image.src = url;
+      image.src = artworkUrl;
     });
 
-    new ResizeObserver(draw).observe(canvas.parentElement);
+    const resizeObserver = new ResizeObserver(draw);
+    resizeObserver.observe(canvas.parentElement);
+    window.visualViewport?.addEventListener("resize", draw);
+    window.addEventListener("orientationchange", draw);
     loadSpec().catch(error => {
       status.textContent = error.message;
       console.error(error);
