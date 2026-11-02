@@ -3310,33 +3310,40 @@ void Game::SetMessageWindow() {
 	}
 }
 void Game::ResizeCardinfoWindow(bool keep_ratio) {
-	const bool fullscreen = is_fullscreen && dInfo.isInDuel;
+    const bool hide_ui = is_fullscreen;
 
-	if(stName) stName->setVisible(!fullscreen);
-	if(stInfo) stInfo->setVisible(!fullscreen);
-	if(btnClearLog) btnClearLog->setVisible(!fullscreen);
-	if(btnExpandLog) btnExpandLog->setVisible(!fullscreen);
-	if(btnClearChat) btnClearChat->setVisible(!fullscreen);
-	if(btnExpandChat) btnExpandChat->setVisible(!fullscreen);
+    if (stName) stName->setVisible(!hide_ui);
+    if (stInfo) stInfo->setVisible(!hide_ui);
+    if (btnClearLog) btnClearLog->setVisible(!hide_ui);
+    if (btnExpandLog) btnExpandLog->setVisible(!hide_ui);
+    if (btnClearChat) btnClearChat->setVisible(!hide_ui);
+    if (btnExpandChat) btnExpandChat->setVisible(!hide_ui);
 
-	if(fullscreen) {
-		irr::s32 width = 300;
-		irr::s32 height = static_cast<irr::s32>(
-			width / CARD_IMG_WRAPPER_ASPECT_RATIO);
-		if(height > 640) {
-			height = 640;
-			width = static_cast<irr::s32>(
-				height * CARD_IMG_WRAPPER_ASPECT_RATIO);
-		}
-		wCardImg->setRelativePosition(
-			Scale(1, 1, 1 + width, 1 + height));
-		return;
-	}
+    if (is_fullscreen) {
+        irr::video::IVideoDriver* driver = env->getVideoDriver();
+        const int screen_height = driver ? driver->getScreenSize().Height : 720;
+        const int card_height = screen_height;
+        const int card_width = card_height * CARD_IMG_WIDTH / CARD_IMG_HEIGHT;
+        const irr::core::recti card_rect(0, 0, card_width, card_height);
 
-	const auto rect = keep_ratio ?
-		ResizeWithCappedWidth(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT, CARD_IMG_WRAPPER_ASPECT_RATIO) :
-		Resize(1, 1, 1 + CARD_IMG_WIDTH + 20, 1 + CARD_IMG_HEIGHT + 18);
-	wCardImg->setRelativePosition(rect);
+        if (wCardImg)
+            wCardImg->setRelativePosition(card_rect);
+        if (imgCard) {
+            imgCard->setRelativePosition(card_rect);
+            auto* cardButton = (irr::gui::CGUIImageButton*)imgCard;
+            const float image_scale = (float)card_height / CARD_IMG_HEIGHT;
+            cardButton->setImageScale(irr::core::vector2df(image_scale, image_scale));
+        }
+    } else {
+        const auto rect = keep_ratio ?
+            ResizeWithCappedWidth(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT, CARD_IMG_WRAPPER_ASPECT_RATIO) :
+            Resize(1, 1, 1 + CARD_IMG_WIDTH + 20, 1 + CARD_IMG_HEIGHT + 18);
+        if (wCardImg) wCardImg->setRelativePosition(rect);
+        if (imgCard) {
+            imgCard->setRelativePosition(irr::core::recti(0, 0, CARD_IMG_WIDTH, CARD_IMG_HEIGHT));
+            ((irr::gui::CGUIImageButton*)imgCard)->setImageScale(irr::core::vector2df(1.0f, 1.0f));
+        }
+    }
 }
 bool Game::HasFocus(irr::gui::EGUI_ELEMENT_TYPE type) const {
 	irr::gui::IGUIElement* focus = env->getFocus();
