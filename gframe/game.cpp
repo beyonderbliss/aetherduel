@@ -313,11 +313,11 @@ void Game::Initialize() {
 	wCardImg = env->addStaticText(L"", Scale(1, 1, 1 + CARD_IMG_WRAPPER_WIDTH, 1 + CARD_IMG_WRAPPER_HEIGHT), true, false, 0, 1005, true);
 	wCardImg->setBackgroundColor(skin::CARDINFO_IMAGE_BACKGROUND_VAL);
 	wCardImg->setVisible(false);
-	imgCard = (irr::gui::IGUIImage*)AlignElementWithParent(irr::gui::CGUIImageButton::addImageButton(env, Scale(
-        ygo::layout::kStandardArtworkOriginX,
-        ygo::layout::kStandardArtworkOriginY,
-        ygo::layout::kStandardArtworkOriginX + ygo::layout::kStandardArtworkWidth,
-        ygo::layout::kStandardArtworkOriginY + ygo::layout::kStandardArtworkHeight), wCardImg, 1006));
+	imgCard = AlignElementWithParent(env->addImage(Scale(
+		ygo::layout::kStandardArtworkOriginX,
+		ygo::layout::kStandardArtworkOriginY,
+		ygo::layout::kStandardArtworkOriginX + ygo::layout::kStandardArtworkWidth,
+		ygo::layout::kStandardArtworkOriginY + ygo::layout::kStandardArtworkHeight), wCardImg));
 	imgCard->setImage(imageManager.tCover[0]);
 	imgCard->setScaleImage(true);
 	imgCard->setUseAlphaChannel(true);
@@ -3360,17 +3360,6 @@ void Game::ResizeCardinfoWindow() {
             imgCard->setVisible(true);
             imgCard->setRelativePosition(irr::core::recti(0, 0, card_width, card_height));
 
-            auto* card_button = static_cast<irr::gui::CGUIImageButton*>(imgCard);
-            irr::video::ITexture* texture = card_button->getImage();
-            if (texture) {
-                const irr::core::dimension2du source_size = texture->getOriginalSize();
-                if (source_size.Width > 0 && source_size.Height > 0) {
-                    const irr::f32 image_scale = std::min(
-                        static_cast<irr::f32>(card_width) / source_size.Width,
-                        static_cast<irr::f32>(card_height) / source_size.Height);
-                    card_button->setImageScale(irr::core::vector2df(image_scale, image_scale));
-                }
-            }
         }
     } else {
         // Standard mode: fit the complete wrapper without changing its aspect ratio.
@@ -3390,16 +3379,6 @@ void Game::ResizeCardinfoWindow() {
             imgCard->setVisible(true);
             // Keep the child hitbox exactly equal to the wrapper's actual resized bounds.
             imgCard->setRelativePosition(irr::core::recti(0, 0, rect.getWidth(), rect.getHeight()));
-            auto* card_button = static_cast<irr::gui::CGUIImageButton*>(imgCard);
-            irr::video::ITexture* texture = card_button->getImage();
-            if (texture) {
-                const irr::core::dimension2du source_size = texture->getOriginalSize();
-                if (source_size.Width > 0 && source_size.Height > 0) {
-                    const irr::f32 scale_x = static_cast<irr::f32>(rect.getWidth()) / source_size.Width;
-                    const irr::f32 scale_y = static_cast<irr::f32>(rect.getHeight()) / source_size.Height;
-                    card_button->setImageScale(irr::core::vector2df(scale_x, scale_y));
-                }
-            }
         }
     }
 }
