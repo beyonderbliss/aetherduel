@@ -3347,7 +3347,6 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 
 	const irr::s32 wrapperWidth = layout::kStandardArtworkWidth + layout::kStandardWrapperPaddingX * 2;
 	const irr::s32 wrapperHeight = layout::kStandardArtworkHeight + layout::kStandardWrapperPaddingY * 2;
-	const float wrapperAspect = static_cast<float>(wrapperWidth) / wrapperHeight;
 	const auto standardRect = Resize(
 		layout::kStandardPanelOriginX,
 		layout::kStandardPanelOriginY,
