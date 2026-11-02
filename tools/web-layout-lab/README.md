@@ -44,7 +44,7 @@ shared spec.
 
 ## Fullscreen mode model
 
-Fullscreen retains the 59:86 artwork ratio and viewport-height sizing used by
+Fullscreen retains the 177:254 artwork ratio and viewport-height sizing used by
 the native fullscreen branch. The browser preview uses `contain` so the entire
 card remains visible in Chrome portrait and landscape. This is a browser
 presentation choice; do not treat its centering/fit behavior as proof of
