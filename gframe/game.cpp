@@ -39,6 +39,7 @@
 #include "file_stream.h"
 #include "porting.h"
 #include "fmt.h"
+#include "card_view_layout.generated.h"
 
 #if EDOPRO_ANDROID || EDOPRO_IOS
 #include "CGUICustomComboBox/CGUICustomComboBox.h"
@@ -3325,9 +3326,11 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
         irr::video::IVideoDriver* driver = env->getVideoDriver();
         int screen_height = driver ? driver->getScreenSize().Height : 720;
         int card_height = screen_height;
-        int card_width = card_height * 59 / 86; // Aspek rasio kartu Yu-Gi-Oh! (59:86)
+        int card_width = card_height * layout::kFullscreenAspectWidth / layout::kFullscreenAspectHeight;
 
-        irr::core::recti fs_rect(0, 0, card_width, card_height);
+        const int card_x = layout::kFullscreenOriginX;
+        const int card_y = layout::kFullscreenOriginY;
+        irr::core::recti fs_rect(card_x, card_y, card_x + card_width, card_y + card_height);
         
         if (wCardImg) {
             wCardImg->setVisible(true);
@@ -3335,7 +3338,7 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
         }
         if (imgCard) {
             imgCard->setVisible(true);
-            imgCard->setRelativePosition(irr::core::recti(0, 0, card_width, card_height));
+            imgCard->setRelativePosition(irr::core::recti(card_x, card_y, card_x + card_width, card_y + card_height));
             
             // Gunakan public getter getImage() yang baru saja ditambahkan
             irr::gui::CGUIImageButton* btnCard = (irr::gui::CGUIImageButton*)imgCard;
