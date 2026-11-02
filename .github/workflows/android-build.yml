@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 90
     steps:
-      - name: Checkout AetherDuel source for this ref
+      - name: Checkout clean AetherDuel source
         uses: actions/checkout@v5
         with:
           path: aetherduel-source
@@ -30,19 +30,18 @@ jobs:
           path: android-wrapper
           submodules: recursive
 
-      - name: Overlay this AetherDuel revision into Android wrapper
+      - name: Overlay clean AetherDuel source into Android wrapper
         run: |
           set -euo pipefail
-          test -f aetherduel-source/gframe/game.cpp
           test -d android-wrapper/deps/edopro/ocgcore
-          rsync -a --delete \\
-            --exclude='.git' \\
-            --exclude='ocgcore/' \\
-            --exclude='.github/' \\
+          rsync -a --delete \
+            --exclude='.git' \
+            --exclude='ocgcore/' \
+            --exclude='.github/' \
             "aetherduel-source/" android-wrapper/deps/edopro/
           test -f android-wrapper/deps/edopro/gframe/game.cpp
           echo "AetherDuel source revision: $GITHUB_SHA"
-          echo "Source overlay complete; project source remains the selected ref."
+          echo "AetherDuel source revision staged for Android build."
 
       - name: Set up Java 17
         uses: actions/setup-java@v5
@@ -65,44 +64,44 @@ jobs:
 
           gradle = Path("build.gradle")
           text = gradle.read_text()
-          dependency = '\\timplementation(files("libs/libWindbot.aar"))\\n'
+          dependency = '\timplementation(files("libs/libWindbot.aar"))\n'
           assert text.count(dependency) == 1, "Expected exactly one WindBot AAR dependency"
           gradle.write_text(text.replace(dependency, ""))
 
           main = Path("src/main/java/io.github.edo9300.edopro/MainActivity.java")
           text = main.read_text()
-          text = text.replace("import libwindbot.windbot.WindBot;\\n", "")
-          old = """\\t\\tvar use_windbot = true;
-          \\t\\tif (Build.VERSION.SDK_INT <= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
-          \\t\\t\\tuse_windbot = false;
-          \\t\\t} else {
-          \\t\\t\\ttry {
-          \\t\\t\\t\\t/*
-          \\t\\t\\t\\t * windbot loading might fail, for whatever reason,
-          \\t\\t\\t\\t * disable it if that's the case
-          \\t\\t\\t\\t */
-          \\t\\t\\t\\tWindBot.initAndroid(working_directory + "/WindBot");
-          \\t\\t\\t} catch (Exception e) {
-          \\t\\t\\t\\tuse_windbot = false;
-          \\t\\t\\t}
-          \\t\\t}
+          text = text.replace("import libwindbot.windbot.WindBot;\n", "")
+          old = """\t\tvar use_windbot = true;
+          \t\tif (Build.VERSION.SDK_INT <= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+          \t\t\tuse_windbot = false;
+          \t\t} else {
+          \t\t\ttry {
+          \t\t\t\t/*
+          \t\t\t\t * windbot loading might fail, for whatever reason,
+          \t\t\t\t * disable it if that's the case
+          \t\t\t\t */
+          \t\t\t\tWindBot.initAndroid(working_directory + "/WindBot");
+          \t\t\t} catch (Exception e) {
+          \t\t\t\tuse_windbot = false;
+          \t\t\t}
+          \t\t}
           """
           assert text.count(old) == 1, "Could not uniquely locate WindBot initialization"
-          text = text.replace(old, "\\t\\tvar use_windbot = false;\\n")
+          text = text.replace(old, "\t\tvar use_windbot = false;\n")
           assert "WindBot" not in text, "Unexpected WindBot reference remains in MainActivity"
           main.write_text(text)
 
           native = Path("src/main/java/io.github.edo9300.edopro/EpNativeActivity.java")
           text = native.read_text()
-          text = text.replace("import libwindbot.windbot.WindBot;\\n", "")
+          text = text.replace("import libwindbot.windbot.WindBot;\n", "")
           for action, method in [
               ("RUN_WINDBOT", "runAndroid"),
               ("ATTACH_WINDBOT_DATABASE", "addDatabase"),
           ]:
               pattern = (
-                  r'\\n\\t\\t\\t\\tcase "' + action + r'": \\{.*?'
-                  + re.escape("WindBot." + method) + r'\\(args\\);'
-                  + r'.*?\\n\\t\\t\\t\\t\\}'
+                  r'\n\t\t\t\tcase "' + action + r'": \{.*?'
+                  + re.escape("WindBot." + method) + r'\(args\);'
+                  + r'.*?\n\t\t\t\t\}'
               )
               text, count = re.subn(pattern, "", text, count=1, flags=re.S)
               assert count == 1, "Could not remove " + action + " receiver"
@@ -110,7 +109,7 @@ jobs:
           native.write_text(text)
           print("WindBot-free Android wrapper prepared.")
           PY
-          ! grep -R -nE 'libwindbot|WindBot\\.(initAndroid|runAndroid|addDatabase)' build.gradle src/main/java
+          ! grep -R -nE 'libwindbot|WindBot\.(initAndroid|runAndroid|addDatabase)' build.gradle src/main/java
 
       - name: Restrict native build to Android ARM64
         working-directory: android-wrapper
@@ -130,8 +129,8 @@ jobs:
           curl -fL "$BASE/config/strings.conf" -o "$A/config/strings.conf"
           curl -fL "$BASE/config/system.conf" -o "$A/config/system.conf"
           curl -fL "$BASE/fonts/NotoSansJP-Regular.otf" -o "$A/fonts/NotoSansJP-Regular.otf"
-          printf '{"repos":[],"urls":[]}\\n' > "$A/config/configs.json"
-          printf '{"mappings":[]}\\n' > "$A/config/mappings.json"
+          printf '{"repos":[],"urls":[]}\n' > "$A/config/configs.json"
+          printf '{"mappings":[]}\n' > "$A/config/mappings.json"
           for name in cover unknown act attack chain negated number lp lpf mask equip target chaintarget lim ot f1 f2 f3 bg field2 field-transparent2 field3 field-transparent3 field field-transparent field4 field-transparent4 fieldSP2 field-transparentSP2 fieldSP3 field-transparentSP3 fieldSP field-transparentSP fieldSP4 field-transparentSP4 settings; do
             for ext in png jpg; do
               if curl -fsSL "$BASE/textures/$name.$ext" -o "$A/textures/$name.$ext"; then break; fi
@@ -167,8 +166,8 @@ jobs:
       - name: Configure Android SDK paths
         working-directory: android-wrapper
         run: |
-          printf 'sdk.dir=%s\\n' "$ANDROID_SDK_ROOT" > local.properties
-          printf 'ndk.dir=%s/ndk/21.4.7075529\\n' "$ANDROID_SDK_ROOT" >> local.properties
+          printf 'sdk.dir=%s\n' "$ANDROID_SDK_ROOT" > local.properties
+          printf 'ndk.dir=%s/ndk/21.4.7075529\n' "$ANDROID_SDK_ROOT" >> local.properties
 
       - name: Build native libraries
         working-directory: android-wrapper
@@ -192,17 +191,4 @@ jobs:
           name: aetherduel-android-arm64-debug
           path: android-wrapper/build/outputs/apk/debug/*.apk
           if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload native build diagnostics on failure
-        if: failure()
-        uses: actions/upload-artifact@v5
-        with:
-          name: aetherduel-android-build-diagnostics
-          path: |
-            android-wrapper/build/outputs/logs/
-            android-wrapper/.cxx/
-            android-wrapper/obj/local/
-            android-wrapper/libs/
-          if-no-files-found: ignore
           retention-days: 7
