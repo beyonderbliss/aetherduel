@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "component": "card_view",
+  "standard": {
+    "artwork_size": {
+      "width": 177,
+      "height": 254
+    },
+    "panel_origin": {
+      "x": 1,
+      "y": 1
+    },
+    "wrapper_padding": {
+      "x": 0,
+      "y": 0
+    },
+    "artwork_origin": {
+      "x": 0,
+      "y": 0
+    },
+    "keep_aspect_ratio": true,
+    "resize_reference": {
+      "width": 1024,
+      "height": 640
+    }
+  },
+  "fullscreen": {
+    "artwork_aspect_ratio": {
+      "width": 177,
+      "height": 254
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "height": "viewport",
+    "fit": "contain"
+  }
+}
