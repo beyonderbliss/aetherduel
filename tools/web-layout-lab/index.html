@@ -235,9 +235,8 @@
       const ratioH = layout.artwork_aspect_ratio.height;
 
       // Simulate the complete device viewport, not the smaller canvas left
-      // after the lab controls. Fullscreen is a left-edge overlay whose card
-      // height follows the viewport; it is intentionally not centered or
-      // reduced to fit the viewport width.
+      // after the lab controls. Fullscreen is a left-edge overlay; contain
+      // keeps the complete artwork visible in both portrait and landscape.
       const viewportWidth = window.visualViewport?.width || window.innerWidth;
       const viewportHeight = window.visualViewport?.height || window.innerHeight;
       const previewScale = Math.min(width / viewportWidth, height / viewportHeight);
