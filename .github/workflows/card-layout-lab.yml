@@ -1,0 +1,78 @@
+name: Card Layout Lab Validation
+
+on:
+  push:
+    branches:
+      - feat/shared-card-layout-poc
+    paths:
+      - "tools/web-layout-lab/**"
+      - "gframe/card_view_layout.generated.h"
+      - "gframe/game.cpp"
+      - ".github/workflows/card-layout-lab.yml"
+  pull_request:
+    branches:
+      - feat/shared-card-layout-poc
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-layout-lab:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      - name: Validate shared JSON and generated header
+        run: |
+          python3 -m json.tool tools/web-layout-lab/layout-spec/card-view.json >/dev/null
+          python3 tools/web-layout-lab/scripts/generate_card_view_header.py --check
+
+      - name: Compile generated C++ header
+        run: |
+          printf '%s\n' \
+            '#include "card_view_layout.generated.h"' \
+            'static_assert(ygo::layout::kStandardArtworkWidth == 177);' \
+            'static_assert(ygo::layout::kStandardArtworkHeight == 254);' \
+            'static_assert(ygo::layout::kFullscreenAspectWidth == 59);' \
+            'static_assert(ygo::layout::kFullscreenAspectHeight == 86);' \
+            | g++ -std=c++17 -Wall -Wextra -Werror -x c++ -fsyntax-only -Igframe -
+
+      - name: Check browser module syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          html = Path("tools/web-layout-lab/index.html").read_text(encoding="utf-8")
+          matches = re.findall(r'<script type="module">([\s\S]*?)</script>', html)
+          assert len(matches) == 1, "Expected exactly one browser module script"
+          Path("/tmp/card-layout-preview.mjs").write_text(matches[0], encoding="utf-8")
+          PY
+          node --check /tmp/card-layout-preview.mjs
+
+      - name: Verify native source consumes generated standard geometry
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          source = Path("gframe/game.cpp").read_text(encoding="utf-8")
+          required = [
+              '#include "card_view_layout.generated.h"',
+              'static_assert(ygo::layout::kStandardArtworkWidth == CARD_IMG_WIDTH',
+              'ygo::layout::kStandardWrapperPaddingX',
+              'ygo::layout::kStandardWrapperPaddingY',
+              'layout::kStandardPanelOriginX',
+              'layout::kStandardArtworkOriginX',
+              'layout::kStandardArtworkOriginY',
+          ]
+          missing = [item for item in required if item not in source]
+          assert not missing, "Native layout integration missing: " + ", ".join(missing)
+          PY
