@@ -3347,12 +3347,12 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 
 	const irr::s32 wrapperWidth = layout::kStandardArtworkWidth + layout::kStandardWrapperPaddingX * 2;
 	const irr::s32 wrapperHeight = layout::kStandardArtworkHeight + layout::kStandardWrapperPaddingY * 2;
-	const float wrapperAspect = static_cast<float>(wrapperWidth + 12) / wrapperHeight;
-	const auto rect = (keep_ratio && layout::kStandardKeepAspectRatio) ?
+	const float wrapperAspect = static_cast<float>(wrapperWidth) / wrapperHeight;
+	auto rect = (keep_ratio && layout::kStandardKeepAspectRatio) ?
 		ResizeWithCappedWidth(
 			layout::kStandardPanelOriginX,
 			layout::kStandardPanelOriginY,
-			layout::kStandardPanelOriginX + wrapperWidth + 12,
+			layout::kStandardPanelOriginX + wrapperWidth,
 			layout::kStandardPanelOriginY + wrapperHeight,
 			wrapperAspect) :
 		Resize(
@@ -3360,6 +3360,14 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 			layout::kStandardPanelOriginY,
 			layout::kStandardPanelOriginX + wrapperWidth,
 			layout::kStandardPanelOriginY + wrapperHeight);
+	if(keep_ratio && layout::kStandardKeepAspectRatio) {
+		// Enlarge the standard artwork uniformly; leave KCPAR-off and fullscreen unchanged.
+		constexpr float standardArtworkScale = 1.05f;
+		const irr::s32 enlargedWidth = static_cast<irr::s32>(std::round(rect.getWidth() * standardArtworkScale));
+		const irr::s32 enlargedHeight = static_cast<irr::s32>(std::round(rect.getHeight() * standardArtworkScale));
+		rect.LowerRightCorner.X = rect.UpperLeftCorner.X + enlargedWidth;
+		rect.LowerRightCorner.Y = rect.UpperLeftCorner.Y + enlargedHeight;
+	}
 	wCardImg->setRelativePosition(rect);
 	// Match the artwork child bounds to the resized wrapper. This keeps both
 	// edges synchronized when window_scale.X and window_scale.Y differ.
