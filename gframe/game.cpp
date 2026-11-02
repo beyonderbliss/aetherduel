@@ -3332,23 +3332,21 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
         if (wCardImg) {
             wCardImg->setVisible(true);
             wCardImg->setRelativePosition(fs_rect);
-            wCardImg->bringToFront(); // Pindahkan kontainer ke layer paling depan
         }
         if (imgCard) {
             imgCard->setVisible(true);
             imgCard->setRelativePosition(irr::core::recti(0, 0, card_width, card_height));
             
-            // Hitung manual imageScale dengan casting eksplisit ke CGUIImageButton dan namespace irr:: penuh
-            irr::video::ITexture* tex = ((irr::gui::CGUIImageButton*)imgCard)->getImage();
-            if (tex) {
-                irr::core::dimension2du origSize = tex->getOriginalSize();
+            // Akses langsung member publik 'Image' dari CGUIImageButton untuk scaling penuh
+            irr::gui::CGUIImageButton* btnCard = (irr::gui::CGUIImageButton*)imgCard;
+            if (btnCard->Image) {
+                irr::core::dimension2du origSize = btnCard->Image->getOriginalSize();
                 if (origSize.Width > 0 && origSize.Height > 0) {
                     irr::f32 scaleX = (irr::f32)card_width / (irr::f32)origSize.Width;
                     irr::f32 scaleY = (irr::f32)card_height / (irr::f32)origSize.Height;
-                    ((irr::gui::CGUIImageButton*)imgCard)->setImageScale(irr::core::vector2df(scaleX, scaleY));
+                    btnCard->setImageScale(irr::core::vector2df(scaleX, scaleY));
                 }
             }
-            imgCard->bringToFront(); // Pindahkan tombol gambar ke layer paling depan di atas UI
         }
     } else {
         // Mode Default EDOPro
@@ -3362,7 +3360,8 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
         if (imgCard) {
             imgCard->setVisible(true);
             imgCard->setRelativePosition(irr::core::recti(10, 9, 10 + CARD_IMG_WIDTH, 9 + CARD_IMG_HEIGHT));
-            ((irr::gui::CGUIImageButton*)imgCard)->setImageScale(irr::core::vector2df(1.0f, 1.0f)); // Kembalikan skala normal
+            irr::gui::CGUIImageButton* btnCard = (irr::gui::CGUIImageButton*)imgCard;
+            btnCard->setImageScale(irr::core::vector2df(1.0f, 1.0f)); // Kembalikan skala normal
         }
     }
 }
