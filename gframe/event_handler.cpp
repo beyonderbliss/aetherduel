@@ -156,6 +156,8 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 					}
 					DuelClient::StopClient();
 					mainGame->dInfo.isInDuel = false;
+					mainGame->cardViewFullscreen = false;
+					mainGame->ResizeCardinfoWindow(gGameConfig->keep_cardinfo_aspect_ratio);
 					mainGame->dInfo.isStarted = false;
 					gSoundManager->StopSounds();
 					mainGame->device->setEventReceiver(&mainGame->menuHandler);
@@ -1123,8 +1125,8 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 			hovered_location = 0;
 			irr::core::vector2di pos = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
 			irr::core::vector2di mousepos(event.MouseInput.X, event.MouseInput.Y);
-			if(mainGame->wCardImg->isVisible() &&
-			   mainGame->wCardImg->getAbsolutePosition().isPointInside(mousepos)) {
+			if(mainGame->imgCard->isVisible() &&
+			   mainGame->imgCard->getAbsolutePosition().isPointInside(mousepos)) {
 				mainGame->cardViewFullscreen = !mainGame->cardViewFullscreen;
 				mainGame->ResizeCardinfoWindow(gGameConfig->keep_cardinfo_aspect_ratio);
 				break;
