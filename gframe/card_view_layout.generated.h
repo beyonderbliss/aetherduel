@@ -24,6 +24,7 @@ static constexpr int kFullscreenAspectWidth = 59;
 static constexpr int kFullscreenAspectHeight = 86;
 static constexpr int kFullscreenOriginX = 0;
 static constexpr int kFullscreenOriginY = 0;
+static constexpr bool kFullscreenContain = true;
 
 } // namespace layout
 } // namespace ygo
