@@ -33,6 +33,7 @@
       "x": 0,
       "y": 0
     },
-    "height": "viewport"
+    "height": "viewport",
+    "fit": "contain"
   }
 }
