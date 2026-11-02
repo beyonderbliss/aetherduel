@@ -199,8 +199,23 @@
       ctx.strokeRect(panelX + .5, panelY + .5, panelWidth - 1, panelHeight - 1);
       drawArtwork(artworkX, artworkY, artworkWidth, artworkHeight);
 
-      status.textContent =
-        `STANDARD · viewport ${Math.round(width)}×${Math.round(height)} · panel ${panelWidth.toFixed(1)}×${panelHeight.toFixed(1)} · artwork ${artworkWidth.toFixed(1)}×${artworkHeight.toFixed(1)} · keep ratio: ${layout.keep_aspect_ratio}`;
+      const sourceRatio = layout.artwork_size.width / layout.artwork_size.height;
+      const renderedRatio = artworkWidth / artworkHeight;
+      const stretchX = artworkWidth / layout.artwork_size.width;
+      const stretchY = artworkHeight / layout.artwork_size.height;
+      const distortion = stretchX / stretchY;
+      const shapeResult = Math.abs(distortion - 1) < 0.015
+        ? "proportional"
+        : distortion > 1
+          ? `horizontal stretch ×${distortion.toFixed(2)}`
+          : `vertical stretch ×${(1 / distortion).toFixed(2)}`;
+
+      status.textContent = [
+        `STANDARD · viewport ${Math.round(width)}×${Math.round(height)}`,
+        `panel ${panelWidth.toFixed(1)}×${panelHeight.toFixed(1)} · artwork ${artworkWidth.toFixed(1)}×${artworkHeight.toFixed(1)}`,
+        `artwork ratio ${renderedRatio.toFixed(3)} (source ${sourceRatio.toFixed(3)}) · ${shapeResult}`,
+        `keep wrapper ratio: ${layout.keep_aspect_ratio}`
+      ].join("\\n");
     }
 
     function drawFullscreen(width, height) {
