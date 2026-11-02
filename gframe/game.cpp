@@ -56,6 +56,8 @@
 
 static_assert(ygo::layout::kStandardArtworkWidth == CARD_IMG_WIDTH, "Shared card layout artwork width differs from native texture size");
 static_assert(ygo::layout::kStandardArtworkHeight == CARD_IMG_HEIGHT, "Shared card layout artwork height differs from native texture size");
+static_assert(ygo::layout::kFullscreenAspectWidth * CARD_IMG_HEIGHT == ygo::layout::kFullscreenAspectHeight * CARD_IMG_WIDTH,
+              "Fullscreen artwork aspect ratio must match the native card texture");
 
 constexpr int CARD_IMG_WRAPPER_H_PADDING = ygo::layout::kStandardWrapperPaddingX;
 constexpr int CARD_IMG_WRAPPER_V_PADDING = ygo::layout::kStandardWrapperPaddingY;
@@ -3317,7 +3319,7 @@ void Game::SetMessageWindow() {
 		SetCentered(wACMessage);
 	}
 }
-void Game::ResizeCardinfoWindow(bool keep_ratio) {
+void Game::ResizeCardinfoWindow() {
     // Fullscreen artwork is a duel-only overlay. The resize routine also runs
     // while navigating menus, so never let the fullscreen preference affect
     // menu card previews or menu controls.
@@ -3332,68 +3334,72 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
     if (btnExpandChat) btnExpandChat->setVisible(!hide_ui);
 
     if (fullscreen_overlay) {
-        // Dapatkan tinggi layar dari video driver
-        irr::video::IVideoDriver* driver = env->getVideoDriver();
-        const irr::core::dimension2du screen_size = driver
-            ? driver->getScreenSize()
+        irr::video::IVideoDriver* video_driver = env->getVideoDriver();
+        const irr::core::dimension2du screen_size = video_driver
+            ? video_driver->getScreenSize()
             : irr::core::dimension2du(720, 720);
         const irr::f32 viewport_width = static_cast<irr::f32>(screen_size.Width);
         const irr::f32 viewport_height = static_cast<irr::f32>(screen_size.Height);
-        const irr::f32 card_aspect_width = static_cast<irr::f32>(layout::kFullscreenAspectWidth);
-        const irr::f32 card_aspect_height = static_cast<irr::f32>(layout::kFullscreenAspectHeight);
+        const irr::f32 aspect_width = static_cast<irr::f32>(layout::kFullscreenAspectWidth);
+        const irr::f32 aspect_height = static_cast<irr::f32>(layout::kFullscreenAspectHeight);
 
-        // Match the web lab: contain the complete card in the viewport.
-        // Landscape fills the viewport height; portrait constrains by width.
-        const irr::f32 contain_scale = layout::kFullscreenContain
-            ? std::min(viewport_width / card_aspect_width, viewport_height / card_aspect_height)
-            : viewport_height / card_aspect_height;
-        const int card_width = static_cast<int>(card_aspect_width * contain_scale);
-        const int card_height = static_cast<int>(card_aspect_height * contain_scale);
+        // Use one uniform scale so the native artwork keeps its source ratio.
+        const irr::f32 contain_scale = std::min(viewport_width / aspect_width, viewport_height / aspect_height);
+        const int card_width = static_cast<int>(aspect_width * contain_scale + 0.5f);
+        const int card_height = static_cast<int>(aspect_height * contain_scale + 0.5f);
 
         const int card_x = layout::kFullscreenOriginX;
         const int card_y = (screen_size.Height - card_height) / 2 + layout::kFullscreenOriginY;
-        irr::core::recti fs_rect(card_x, card_y, card_x + card_width, card_y + card_height);
-        
+        const irr::core::recti fullscreen_rect(card_x, card_y, card_x + card_width, card_y + card_height);
+
         if (wCardImg) {
             wCardImg->setVisible(true);
-            wCardImg->setRelativePosition(fs_rect);
+            wCardImg->setRelativePosition(fullscreen_rect);
         }
         if (imgCard) {
             imgCard->setVisible(true);
             imgCard->setRelativePosition(irr::core::recti(0, 0, card_width, card_height));
-            
-            // Gunakan public getter getImage() yang baru saja ditambahkan
-            irr::gui::CGUIImageButton* btnCard = (irr::gui::CGUIImageButton*)imgCard;
-            irr::video::ITexture* tex = btnCard->getImage();
-            if (tex) {
-                irr::core::dimension2du origSize = tex->getOriginalSize();
-                if (origSize.Width > 0 && origSize.Height > 0) {
-                    irr::f32 scaleX = (irr::f32)card_width / (irr::f32)origSize.Width;
-                    irr::f32 scaleY = (irr::f32)card_height / (irr::f32)origSize.Height;
-                    btnCard->setImageScale(irr::core::vector2df(scaleX, scaleY));
+
+            auto* card_button = static_cast<irr::gui::CGUIImageButton*>(imgCard);
+            irr::video::ITexture* texture = card_button->getImage();
+            if (texture) {
+                const irr::core::dimension2du source_size = texture->getOriginalSize();
+                if (source_size.Width > 0 && source_size.Height > 0) {
+                    const irr::f32 image_scale = std::min(
+                        static_cast<irr::f32>(card_width) / source_size.Width,
+                        static_cast<irr::f32>(card_height) / source_size.Height);
+                    card_button->setImageScale(irr::core::vector2df(image_scale, image_scale));
                 }
             }
         }
     } else {
-        // Mode Default EDOPro
+        // Standard mode: fit the complete wrapper without changing its aspect ratio.
         const int panel_x = layout::kStandardPanelOriginX;
         const int panel_y = layout::kStandardPanelOriginY;
-        const auto rect = keep_ratio ?
-            ResizeWithCappedWidth(panel_x, panel_y, panel_x + CARD_IMG_WRAPPER_WIDTH, panel_y + CARD_IMG_WRAPPER_HEIGHT, CARD_IMG_WRAPPER_ASPECT_RATIO) :
-            Resize(panel_x, panel_y, panel_x + CARD_IMG_WRAPPER_WIDTH, panel_y + CARD_IMG_WRAPPER_HEIGHT);
+        const auto rect = ResizeWithCappedWidth(
+            panel_x,
+            panel_y,
+            panel_x + CARD_IMG_WRAPPER_WIDTH,
+            panel_y + CARD_IMG_WRAPPER_HEIGHT,
+            CARD_IMG_WRAPPER_ASPECT_RATIO);
         if (wCardImg) {
             wCardImg->setVisible(true);
             wCardImg->setRelativePosition(rect);
         }
         if (imgCard) {
             imgCard->setVisible(true);
-            imgCard->setRelativePosition(irr::core::recti(
-                layout::kStandardArtworkOriginX,
-                layout::kStandardArtworkOriginY,
-                layout::kStandardArtworkOriginX + layout::kStandardArtworkWidth,
-                layout::kStandardArtworkOriginY + layout::kStandardArtworkHeight));
-            irr::gui::CGUIImageButton* btnCard = (irr::gui::CGUIImageButton*)imgCard;
-            btnCard->setImageScale(irr::core::vector2df(1.0f, 1.0f)); // Kembalikan skala normal
+            // Keep the child hitbox exactly equal to the wrapper's actual resized bounds.
+            imgCard->setRelativePosition(irr::core::recti(0, 0, rect.getWidth(), rect.getHeight()));
+            auto* card_button = static_cast<irr::gui::CGUIImageButton*>(imgCard);
+            irr::video::ITexture* texture = card_button->getImage();
+            if (texture) {
+                const irr::core::dimension2du source_size = texture->getOriginalSize();
+                if (source_size.Width > 0 && source_size.Height > 0) {
+                    const irr::f32 scale_x = static_cast<irr::f32>(rect.getWidth()) / source_size.Width;
+                    const irr::f32 scale_y = static_cast<irr::f32>(rect.getHeight()) / source_size.Height;
+                    card_button->setImageScale(irr::core::vector2df(scale_x, scale_y));
+                }
+            }
         }
     }
 }
@@ -3767,7 +3773,7 @@ void Game::OnResize() {
 	wFileSave->setRelativePosition(ResizeWin(510, 200, 820, 320));
 	stHintMsg->setRelativePosition(ResizeWin(500, 60, 820, 90));
 
-	ResizeCardinfoWindow(gGameConfig->keep_cardinfo_aspect_ratio);
+	ResizeCardinfoWindow();
 	for(auto& window : repoInfoGui) {
 		window.second.progress2->setRelativePosition(Scale(5, 20 + 15, (300 - 8) * window_scale.X, 20 + 30));
 		window.second.history_button2->setRelativePosition(irr::core::recti(ResizeX(200), 5, ResizeX(300 - 5), Scale(20 + 10)));
@@ -3860,12 +3866,12 @@ irr::core::recti Game::ResizeWithCappedWidth(irr::s32 x, irr::s32 y, irr::s32 x2
 
 	const auto dx = x2 - x;
 	const auto dy = y2 - y;
-	const auto incx = static_cast<irr::s32>(dy * targetAspectRatio);
-	if(dx > incx) {
-		x2 = x + incx;
-	} /* else {
-		y2 = y + dx / targetAspectRatio;
-	} */ // This commented out part is left in case it is ever necessary to adjust the height too to maintain the aspect ratio.
+	const auto width_from_height = static_cast<irr::s32>(dy * targetAspectRatio);
+	if(dx > width_from_height) {
+		x2 = x + width_from_height;
+	} else {
+		y2 = y + static_cast<irr::s32>(dx / targetAspectRatio);
+	}
 
 	return scale ? Scale(x, y, x2, y2) : irr::core::recti{ x, y, x2, y2 };
 }
