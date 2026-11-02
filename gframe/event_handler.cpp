@@ -1125,6 +1125,14 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 		case irr::EMIE_LMOUSE_LEFT_UP: {
 			if(!mainGame->dInfo.isInDuel)
 				break;
+			// The card artwork is an IGUIImage, so handle its tap independently
+			// of the old CGUIImageButton click event (ID 1006).
+			if(mainGame->wCardImg->isVisible() && mainGame->imgCard->isVisible()
+			   && mainGame->imgCard->getAbsolutePosition().isPointInside({ event.MouseInput.X, event.MouseInput.Y })) {
+				mainGame->is_fullscreen = !mainGame->is_fullscreen;
+				mainGame->ResizeCardinfoWindow(false);
+				return true;
+			}
 			hovered_location = 0;
 			irr::core::vector2di pos = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
 			irr::core::vector2di mousepos(event.MouseInput.X, event.MouseInput.Y);
