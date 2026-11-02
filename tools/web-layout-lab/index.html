@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AetherDuel · Card Layout Lab</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #17191d;
+      color: #e8eaf0;
+      font: 14px/1.4 system-ui, sans-serif;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 48px;
+      padding: 8px 14px;
+      background: #22252b;
+      border-bottom: 1px solid #3b3f48;
+    }
+    header strong { font-size: 14px; }
+    header span { color: #aeb4c0; font-size: 12px; }
+    label {
+      margin-left: auto;
+      padding: 6px 10px;
+      border: 1px solid #555c68;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    input { display: none; }
+    main { position: relative; flex: 1; min-height: 0; }
+    canvas { display: block; width: 100%; height: 100%; }
+    #status {
+      position: absolute;
+      right: 12px;
+      bottom: 10px;
+      color: #aeb4c0;
+      font-size: 11px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>AetherDuel · Card Layout Lab</strong>
+    <span>Fullscreen card geometry · shared JSON specification</span>
+    <label for="artwork">Load card artwork</label>
+    <input id="artwork" type="file" accept="image/*">
+  </header>
+  <main>
+    <canvas id="preview" aria-label="Fullscreen card layout preview"></canvas>
+    <div id="status">Loading layout specification…</div>
+  </main>
+  <script type="module">
+    const canvas = document.querySelector("#preview");
+    const ctx = canvas.getContext("2d");
+    const status = document.querySelector("#status");
+    const fileInput = document.querySelector("#artwork");
+
+    let spec;
+    let artwork = null;
+
+    async function loadSpec() {
+      const response = await fetch("./layout-spec/card-view.json", { cache: "no-store" });
+      if (!response.ok) throw new Error(`Could not load layout spec (${response.status})`);
+      spec = await response.json();
+      if (spec.schema_version !== 1) throw new Error("Unsupported layout schema");
+      draw();
+    }
+
+    function draw() {
+      if (!spec) return;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      ctx.fillStyle = "#17191d";
+      ctx.fillRect(0, 0, width, height);
+
+      const layout = spec.fullscreen;
+      const cardHeight = height;
+      const cardWidth = cardHeight * layout.artwork_aspect_ratio.width
+        / layout.artwork_aspect_ratio.height;
+      const x = layout.origin.x;
+      const y = layout.origin.y;
+
+      ctx.fillStyle = "#30343b";
+      ctx.fillRect(x, y, cardWidth, cardHeight);
+
+      if (artwork) {
+        ctx.drawImage(artwork, x, y, cardWidth, cardHeight);
+      } else {
+        ctx.strokeStyle = "#68717f";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 0.5, y + 0.5, cardWidth - 1, cardHeight - 1);
+        ctx.fillStyle = "#d7dce5";
+        ctx.textAlign = "center";
+        ctx.font = "13px system-ui, sans-serif";
+        ctx.fillText("Load card artwork", x + cardWidth / 2, cardHeight / 2);
+      }
+
+      status.textContent =
+        `Viewport ${Math.round(width)}×${Math.round(height)} · Card ${Math.round(cardWidth)}×${Math.round(cardHeight)} · ratio ${layout.artwork_aspect_ratio.width}:${layout.artwork_aspect_ratio.height}`;
+    }
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const image = new Image();
+      image.onload = () => {
+        if (artwork) URL.revokeObjectURL(artwork.src);
+        artwork = image;
+        draw();
+      };
+      image.onerror = () => { status.textContent = "Could not read selected image."; };
+      image.src = url;
+    });
+
+    new ResizeObserver(draw).observe(canvas.parentElement);
+    loadSpec().catch(error => {
+      status.textContent = error.message;
+      console.error(error);
+    });
+  </script>
+</body>
+</html>
