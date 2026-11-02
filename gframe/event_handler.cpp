@@ -71,7 +71,6 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 			case 1006: {
                                 mainGame->is_fullscreen = !mainGame->is_fullscreen;
                                 mainGame->ResizeCardinfoWindow(false);
-                                imageManager.ClearTexture(true);
                                 mainGame->ShowCardInfo(mainGame->showingcard, true);
                                 break;
                         }
