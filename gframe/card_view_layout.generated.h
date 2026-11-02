@@ -8,6 +8,18 @@
 namespace ygo {
 namespace layout {
 
+static constexpr int kStandardArtworkWidth = 177;
+static constexpr int kStandardArtworkHeight = 254;
+static constexpr int kStandardPanelOriginX = 1;
+static constexpr int kStandardPanelOriginY = 1;
+static constexpr int kStandardWrapperPaddingX = 10;
+static constexpr int kStandardWrapperPaddingY = 9;
+static constexpr int kStandardArtworkOriginX = 10;
+static constexpr int kStandardArtworkOriginY = 9;
+static constexpr int kStandardResizeReferenceWidth = 1024;
+static constexpr int kStandardResizeReferenceHeight = 640;
+static constexpr bool kStandardKeepAspectRatio = true;
+
 static constexpr int kFullscreenAspectWidth = 59;
 static constexpr int kFullscreenAspectHeight = 86;
 static constexpr int kFullscreenOriginX = 0;
