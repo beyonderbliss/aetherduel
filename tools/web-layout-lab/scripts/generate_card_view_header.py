@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the native C++ constants for the card-view layout from JSON."""
+"""Generate native C++ card-view constants from the shared JSON layout spec."""
 
 import argparse
 import json
@@ -10,28 +10,49 @@ SPEC = ROOT / "tools/web-layout-lab/layout-spec/card-view.json"
 OUTPUT = ROOT / "gframe/card_view_layout.generated.h"
 
 
+def positive_int(value, name):
+    if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+        raise ValueError(f"{name} must be a positive integer")
+
+
+def integer(value, name):
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ValueError(f"{name} must be an integer")
+
+
 def render_header(spec: dict) -> str:
     if spec.get("schema_version") != 1:
         raise ValueError("Unsupported card-view layout schema_version")
 
+    standard = spec["standard"]
     fullscreen = spec["fullscreen"]
+    artwork = standard["artwork_size"]
+    padding = standard["wrapper_padding"]
+    panel_origin = standard["panel_origin"]
+    artwork_origin = standard["artwork_origin"]
     ratio = fullscreen["artwork_aspect_ratio"]
-    origin = fullscreen["origin"]
+    fullscreen_origin = fullscreen["origin"]
 
-    width = ratio["width"]
-    height = ratio["height"]
-    x = origin["x"]
-    y = origin["y"]
+    for key, value in artwork.items():
+        positive_int(value, f"standard.artwork_size.{key}")
+    for key, value in padding.items():
+        integer(value, f"standard.wrapper_padding.{key}")
+        if value < 0:
+            raise ValueError(f"standard.wrapper_padding.{key} cannot be negative")
+    for key, value in panel_origin.items():
+        integer(value, f"standard.panel_origin.{key}")
+    for key, value in artwork_origin.items():
+        integer(value, f"standard.artwork_origin.{key}")
+    for key, value in ratio.items():
+        positive_int(value, f"fullscreen.artwork_aspect_ratio.{key}")
+    for key, value in fullscreen_origin.items():
+        integer(value, f"fullscreen.origin.{key}")
 
-    for name, value in {
-        "aspect width": width,
-        "aspect height": height,
-    }.items():
-        if not isinstance(value, int) or value <= 0:
-            raise ValueError(f"{name} must be a positive integer")
-    for name, value in {"origin x": x, "origin y": y}.items():
-        if not isinstance(value, int):
-            raise ValueError(f"{name} must be an integer")
+    if not isinstance(standard.get("keep_aspect_ratio"), bool):
+        raise ValueError("standard.keep_aspect_ratio must be a boolean")
+    reference = standard["resize_reference"]
+    positive_int(reference["width"], "standard.resize_reference.width")
+    positive_int(reference["height"], "standard.resize_reference.height")
     if fullscreen.get("height") != "viewport":
         raise ValueError('fullscreen.height must be "viewport"')
 
@@ -45,10 +66,22 @@ def render_header(spec: dict) -> str:
 namespace ygo {{
 namespace layout {{
 
-static constexpr int kFullscreenAspectWidth = {width};
-static constexpr int kFullscreenAspectHeight = {height};
-static constexpr int kFullscreenOriginX = {x};
-static constexpr int kFullscreenOriginY = {y};
+static constexpr int kStandardArtworkWidth = {artwork["width"]};
+static constexpr int kStandardArtworkHeight = {artwork["height"]};
+static constexpr int kStandardPanelOriginX = {panel_origin["x"]};
+static constexpr int kStandardPanelOriginY = {panel_origin["y"]};
+static constexpr int kStandardWrapperPaddingX = {padding["x"]};
+static constexpr int kStandardWrapperPaddingY = {padding["y"]};
+static constexpr int kStandardArtworkOriginX = {artwork_origin["x"]};
+static constexpr int kStandardArtworkOriginY = {artwork_origin["y"]};
+static constexpr int kStandardResizeReferenceWidth = {reference["width"]};
+static constexpr int kStandardResizeReferenceHeight = {reference["height"]};
+static constexpr bool kStandardKeepAspectRatio = {str(standard["keep_aspect_ratio"]).lower()};
+
+static constexpr int kFullscreenAspectWidth = {ratio["width"]};
+static constexpr int kFullscreenAspectHeight = {ratio["height"]};
+static constexpr int kFullscreenOriginX = {fullscreen_origin["x"]};
+static constexpr int kFullscreenOriginY = {fullscreen_origin["y"]};
 
 }} // namespace layout
 }} // namespace ygo
