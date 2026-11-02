@@ -43,6 +43,13 @@
     .fields .group-title { color: #8993a2; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
     main { position: relative; flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
     canvas { display: block; width: 100%; height: 100%; }
+    #focusToggle { display: none; position: absolute; z-index: 2; top: 8px; right: 8px; }
+    body.preview-focus { height: 100vh; height: 100dvh; }
+    body.preview-focus > header,
+    body.preview-focus > .toolbar,
+    body.preview-focus > .fields { display: none !important; }
+    body.preview-focus > main { flex: 1 1 100%; min-height: 0; }
+    body.preview-focus #focusToggle { display: block; }
     #status {
       position: absolute; right: 8px; bottom: 8px; max-width: calc(100% - 16px);
       padding: 5px 7px; border-radius: 4px; background: #17191ddd;
@@ -102,6 +109,7 @@
 
   <main>
     <canvas id="preview" aria-label="EDOPro card layout preview"></canvas>
+    <button id="focusToggle" type="button" aria-pressed="false">Exit preview focus</button>
     <div id="status">Loading shared layout specification…</div>
   </main>
 
@@ -115,6 +123,7 @@
     const fullscreenFields = document.querySelector("#fullscreenFields");
     const keepRatio = document.querySelector("#keepRatio");
     const fileInput = document.querySelector("#artwork");
+    const focusToggle = document.querySelector("#focusToggle");
 
     let spec;
     let initialSpec;
@@ -295,13 +304,16 @@
       );
 
       const fit = cardHeight >= viewportHeight - 1 ? "height-fit" : "width-fit · full artwork visible";
+      const visual = window.visualViewport;
+      const drawnWidth = cardWidth * previewScale;
+      const drawnHeight = cardHeight * previewScale;
       status.textContent = [
-        `FULLSCREEN · device viewport ${Math.round(viewportWidth)}×${Math.round(viewportHeight)}`,
-        `native control space: 1024×640 logical · CSS viewport ${Math.round(viewportWidth)}×${Math.round(viewportHeight)}`,
-        `viewport scale X ${(viewportWidth / 1024).toFixed(3)} · Y ${(viewportHeight / 640).toFixed(3)}`,
-        `left overlay · card ${Math.round(cardWidth)}×${Math.round(cardHeight)} · ratio ${ratioW}:${ratioH}`,
+        `FULLSCREEN · browser visual viewport ${Math.round(viewportWidth)}×${Math.round(viewportHeight)} CSS px`,
+        `canvas ${Math.round(width)}×${Math.round(height)} CSS px · fit scale ${previewScale.toFixed(3)}`,
+        `native logical scale X ${(viewportWidth / 1024).toFixed(3)} · Y ${(viewportHeight / 640).toFixed(3)}`,
+        `card in viewport ${Math.round(cardWidth)}×${Math.round(cardHeight)} · actually drawn ${Math.round(drawnWidth)}×${Math.round(drawnHeight)} px`,
         `origin ${layout.origin.x}, ${layout.origin.y} · ${fit}`,
-        `canvas ${Math.round(width)}×${Math.round(height)} · DPR ${(window.devicePixelRatio || 1).toFixed(2)}`
+        `visual viewport offset ${visual ? Math.round(visual.offsetLeft) + "," + Math.round(visual.offsetTop) : "n/a"} · DPR ${(window.devicePixelRatio || 1).toFixed(2)}`
       ].join("\n");
     }
 
@@ -346,6 +358,15 @@
 
     modeSelect.addEventListener("change", syncControls);
     sceneSelect.addEventListener("change", draw);
+    focusToggle.addEventListener("click", () => {
+      const focused = document.body.classList.toggle("preview-focus");
+      focusToggle.textContent = focused ? "Exit preview focus" : "Focus preview";
+      focusToggle.setAttribute("aria-pressed", String(focused));
+      requestAnimationFrame(() => {
+        draw();
+        canvas.parentElement.getBoundingClientRect();
+      });
+    });
     keepRatio.addEventListener("change", () => {
       spec.standard.keep_aspect_ratio = keepRatio.checked;
       draw();
@@ -378,6 +399,8 @@
 
     new ResizeObserver(draw).observe(canvas.parentElement);
     window.visualViewport?.addEventListener("resize", draw);
+    window.visualViewport?.addEventListener("scroll", draw);
+    window.addEventListener("resize", draw);
     window.addEventListener("orientationchange", draw);
     loadSpec().catch(error => {
       status.textContent = error.message;
