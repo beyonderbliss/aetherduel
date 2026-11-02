@@ -3338,7 +3338,7 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
         }
         if (imgCard) {
             imgCard->setVisible(true);
-            imgCard->setRelativePosition(irr::core::recti(card_x, card_y, card_x + card_width, card_y + card_height));
+            imgCard->setRelativePosition(irr::core::recti(0, 0, card_width, card_height));
             
             // Gunakan public getter getImage() yang baru saja ditambahkan
             irr::gui::CGUIImageButton* btnCard = (irr::gui::CGUIImageButton*)imgCard;
