@@ -196,24 +196,9 @@
         ctx.fillStyle = '#f2eaf8'; ctx.font = '12px system-ui, sans-serif';
         ctx.textAlign = 'center'; ctx.fillText(item.label, x + w / 2, y + h / 2 + 4, Math.max(20, w - 8));
       }
-      const x = ox + vw / 1024 * s;
-      const y = oy + 275 * vh / 640 * s;
-      const w = 300 * vw / 1024 * s;
-      const h = 364 * vh / 640 * s;
-      ctx.fillStyle = '#171717'; ctx.fillRect(x, y, w, h);
-      ctx.strokeStyle = '#8a6a45'; ctx.strokeRect(x + .5, y + .5, w - 1, h - 1);
-      const tabs = ['Card info', 'Log', 'Chat', 'Quick Settings', 'Repositories'];
-      const tabWidths = [70, 38, 40, 94, 78];
-      let tx = x;
-      tabs.forEach((label, i) => {
-        const tw = tabWidths[i] * vw / 1024 * s;
-        const th = 32 * vh / 640 * s;
-        ctx.fillStyle = '#302333'; ctx.fillRect(tx, y, tw, th);
-        ctx.strokeStyle = '#9a7b9d'; ctx.strokeRect(tx + .5, y + .5, tw - 1, th - 1);
-        ctx.fillStyle = '#f1eaf4'; ctx.font = '11px system-ui, sans-serif';
-        ctx.textAlign = 'center'; ctx.fillText(label, tx + tw / 2, y + th / 2 + 4);
-        tx += tw;
-      });
+      // Do not invent Info/Log/Chat tab widths. Their native layout is handled
+      // by ResizeCardinfoWindow and the tab system; this preview only draws
+      // controls whose rectangles are verified directly in game.cpp.
     }
     function drawStandard(width, height) {
       drawNativeDuelUi(width, height);
@@ -312,10 +297,11 @@
       const fit = cardHeight >= viewportHeight - 1 ? "height-fit" : "width-fit · full artwork visible";
       status.textContent = [
         `FULLSCREEN · device viewport ${Math.round(viewportWidth)}×${Math.round(viewportHeight)}`,
-        `native duel controls and info tabs · game.cpp coordinates`,
+        `native control space: 1024×640 logical · CSS viewport ${Math.round(viewportWidth)}×${Math.round(viewportHeight)}`,
+        `viewport scale X ${(viewportWidth / 1024).toFixed(3)} · Y ${(viewportHeight / 640).toFixed(3)}`,
         `left overlay · card ${Math.round(cardWidth)}×${Math.round(cardHeight)} · ratio ${ratioW}:${ratioH}`,
         `origin ${layout.origin.x}, ${layout.origin.y} · ${fit}`,
-        `preview canvas ${Math.round(width)}×${Math.round(height)}`
+        `canvas ${Math.round(width)}×${Math.round(height)} · DPR ${(window.devicePixelRatio || 1).toFixed(2)}`
       ].join("\n");
     }
 
