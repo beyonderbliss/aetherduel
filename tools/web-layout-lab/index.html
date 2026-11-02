@@ -168,96 +168,53 @@
       }
     }
 
-    function drawMenuBackdrop(width, height) {
-      // Lightweight menu context: menu controls remain visible around the
-      // ordinary card preview. This is a visual test surface, not native UI.
-      ctx.fillStyle = "#202833";
-      ctx.fillRect(0, 0, width, height);
-      ctx.fillStyle = "#2b3542";
-      ctx.fillRect(width * 0.34, 0, width * 0.66, height);
-      ctx.fillStyle = "#dce3ed";
-      ctx.font = "600 13px system-ui, sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText("EDOPRO MENU", width * 0.38, 26);
+    // Native duel control rectangles copied from gframe/game.cpp (logical 1024x640 units).
+    const nativeControls = [
+      { label: 'Exit', rect: [205, 5, 295, 80] },
+      { label: 'Restart (Single)', rect: [205, 50, 295, 90] },
+      { label: 'Chain: OFF', rect: [205, 100, 295, 135] },
+      { label: 'Always pause', rect: [205, 140, 295, 175] },
+      { label: 'Chain: ON', rect: [205, 180, 295, 215] }
+    ];
 
-      const gap = 8;
-      const left = width * 0.38;
-      const available = Math.max(0, width - left - 14);
-      const columns = width < 520 ? 2 : 3;
-      const buttonW = (available - gap * (columns - 1)) / columns;
-      const buttonH = 34;
-      const labels = ["Duel", "Deck", "Replay", "Settings", "Servers", "Exit"];
-      labels.forEach((label, index) => {
-        const col = index % columns;
-        const row = Math.floor(index / columns);
-        const x = left + col * (buttonW + gap);
-        const y = 48 + row * (buttonH + gap);
-        ctx.fillStyle = "#394656";
-        ctx.fillRect(x, y, buttonW, buttonH);
-        ctx.strokeStyle = "#64748b";
-        ctx.strokeRect(x + .5, y + .5, buttonW - 1, buttonH - 1);
-        ctx.fillStyle = "#e6edf6";
-        ctx.font = "11px system-ui, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(label, x + buttonW / 2, y + 21);
-      });
-    }
-
-    function drawDuelBackdrop(width, height) {
-      // Duel field and standard controls are intentionally drawn first.
-      // Fullscreen artwork is then painted over them to test real overlay
-      // coverage rather than displaying the card against an empty canvas.
-      ctx.fillStyle = "#18252a";
-      ctx.fillRect(0, 0, width, height);
-      const fieldX = width * 0.22;
-      const fieldW = width * 0.75;
-      const fieldY = height * 0.12;
-      const fieldH = height * 0.76;
-      ctx.fillStyle = "#263d3b";
-      ctx.fillRect(fieldX, fieldY, fieldW, fieldH);
-      ctx.strokeStyle = "#607d75";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(fieldX + .5, fieldY + .5, fieldW - 1, fieldH - 1);
-
-      const zones = 5;
-      for (let row = 0; row < 2; row++) {
-        for (let col = 0; col < zones; col++) {
-          const x = fieldX + 10 + col * ((fieldW - 20) / zones);
-          const y = fieldY + 12 + row * (fieldH * .48);
-          const w = (fieldW - 28) / zones;
-          const h = fieldH * .28;
-          ctx.strokeStyle = "#77938a";
-          ctx.strokeRect(x, y, w, h);
-        }
+    function drawNativeDuelUi(width, height) {
+      const vw = window.visualViewport?.width || window.innerWidth;
+      const vh = window.visualViewport?.height || window.innerHeight;
+      const s = Math.min(width / vw, height / vh);
+      const ox = (width - vw * s) / 2;
+      const oy = (height - vh * s) / 2;
+      for (const item of nativeControls) {
+        const r = item.rect;
+        const x = ox + r[0] * vw / 1024 * s;
+        const y = oy + r[1] * vh / 640 * s;
+        const w = (r[2] - r[0]) * vw / 1024 * s;
+        const h = (r[3] - r[1]) * vh / 640 * s;
+        ctx.fillStyle = '#30213f'; ctx.fillRect(x, y, w, h);
+        ctx.strokeStyle = '#9b7ab7'; ctx.strokeRect(x + .5, y + .5, w - 1, h - 1);
+        ctx.fillStyle = '#f2eaf8'; ctx.font = '12px system-ui, sans-serif';
+        ctx.textAlign = 'center'; ctx.fillText(item.label, x + w / 2, y + h / 2 + 4, Math.max(20, w - 8));
       }
-
-      const controls = ["LOG", "CHAT", "PHASE", "MENU", "SURRENDER"];
-      const controlH = 30;
-      const controlGap = 6;
-      const controlW = Math.min(82, Math.max(48, (width * .20)));
-      controls.forEach((label, index) => {
-        const x = 8;
-        // Keep test controls inside the artwork's expected vertical
-        // coverage in both portrait and landscape previewports.
-        const y = height * 0.25 + index * (controlH + controlGap);
-        ctx.fillStyle = "#aab5c4";
-        ctx.fillRect(x, y, controlW, controlH);
-        ctx.strokeStyle = "#e1e7ef";
-        ctx.strokeRect(x + .5, y + .5, controlW - 1, controlH - 1);
-        ctx.fillStyle = "#17202b";
-        ctx.font = "600 10px system-ui, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(label, x + controlW / 2, y + 19);
+      const x = ox + vw / 1024 * s;
+      const y = oy + 275 * vh / 640 * s;
+      const w = 300 * vw / 1024 * s;
+      const h = 364 * vh / 640 * s;
+      ctx.fillStyle = '#171717'; ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = '#8a6a45'; ctx.strokeRect(x + .5, y + .5, w - 1, h - 1);
+      const tabs = ['Card info', 'Log', 'Chat', 'Quick Settings', 'Repositories'];
+      const tabWidths = [70, 38, 40, 94, 78];
+      let tx = x;
+      tabs.forEach((label, i) => {
+        const tw = tabWidths[i] * vw / 1024 * s;
+        const th = 32 * vh / 640 * s;
+        ctx.fillStyle = '#302333'; ctx.fillRect(tx, y, tw, th);
+        ctx.strokeStyle = '#9a7b9d'; ctx.strokeRect(tx + .5, y + .5, tw - 1, th - 1);
+        ctx.fillStyle = '#f1eaf4'; ctx.font = '11px system-ui, sans-serif';
+        ctx.textAlign = 'center'; ctx.fillText(label, tx + tw / 2, y + th / 2 + 4);
+        tx += tw;
       });
-
-      ctx.fillStyle = "#dce6e2";
-      ctx.font = "600 12px system-ui, sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText("DUEL FIELD", fieldX + 8, Math.max(14, fieldY - 8));
     }
-
     function drawStandard(width, height) {
-      drawMenuBackdrop(width, height);
+      drawNativeDuelUi(width, height);
       const layout = spec.standard;
       const baseW = layout.artwork_size.width + layout.wrapper_padding.x * 2;
       const baseH = layout.artwork_size.height + layout.wrapper_padding.y * 2;
@@ -298,17 +255,6 @@
       ctx.strokeRect(panelX + .5, panelY + .5, panelWidth - 1, panelHeight - 1);
       drawArtwork(artworkX, artworkY, artworkWidth, artworkHeight);
 
-      // Standard card information remains below the small thumbnail.
-      const infoY = panelY + panelHeight + 18;
-      ctx.fillStyle = "#edf1f7";
-      ctx.textAlign = "left";
-      ctx.font = "600 12px system-ui, sans-serif";
-      ctx.fillText("CARD NAME", panelX, infoY);
-      ctx.fillStyle = "#aeb9c8";
-      ctx.font = "10px system-ui, sans-serif";
-      ctx.fillText("Monster · Effect", panelX, infoY + 18);
-      ctx.fillText("Card information appears here", panelX, infoY + 35);
-      ctx.fillText("and remains visible in Standard mode.", panelX, infoY + 49);
 
       const sourceRatio = layout.artwork_size.width / layout.artwork_size.height;
       const renderedRatio = artworkWidth / artworkHeight;
@@ -331,7 +277,7 @@
     }
 
     function drawFullscreen(width, height) {
-      drawDuelBackdrop(width, height);
+      ctx.fillStyle = '#18252a'; ctx.fillRect(0, 0, width, height);\n      drawNativeDuelUi(width, height);
       const layout = spec.fullscreen;
       const ratioW = layout.artwork_aspect_ratio.width;
       const ratioH = layout.artwork_aspect_ratio.height;
@@ -363,7 +309,7 @@
       const fit = cardHeight >= viewportHeight - 1 ? "height-fit" : "width-fit · full artwork visible";
       status.textContent = [
         `FULLSCREEN · device viewport ${Math.round(viewportWidth)}×${Math.round(viewportHeight)}`,
-        `duel controls behind artwork: covered by overlay`,
+        `native duel controls and info tabs · game.cpp coordinates`,
         `left overlay · card ${Math.round(cardWidth)}×${Math.round(cardHeight)} · ratio ${ratioW}:${ratioH}`,
         `origin ${layout.origin.x}, ${layout.origin.y} · ${fit}`,
         `preview canvas ${Math.round(width)}×${Math.round(height)}`
