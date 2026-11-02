@@ -205,7 +205,8 @@ protected:
 	IGUISpriteBank* SpriteBank;
 	IGUIFont* OverrideFont;
 
-	video::ITexture* Image;
+	    video::ITexture* getImage() const { return Image; }
+        video::ITexture* Image;
 	video::ITexture* PressedImage;
 
 	core::rect<s32> ImageRect;

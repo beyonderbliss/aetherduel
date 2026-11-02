@@ -3337,10 +3337,11 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
             imgCard->setVisible(true);
             imgCard->setRelativePosition(irr::core::recti(0, 0, card_width, card_height));
             
-            // Akses langsung member publik 'Image' dari CGUIImageButton untuk scaling penuh
+            // Gunakan public getter getImage() yang baru saja ditambahkan
             irr::gui::CGUIImageButton* btnCard = (irr::gui::CGUIImageButton*)imgCard;
-            if (btnCard->Image) {
-                irr::core::dimension2du origSize = btnCard->Image->getOriginalSize();
+            irr::video::ITexture* tex = btnCard->getImage();
+            if (tex) {
+                irr::core::dimension2du origSize = tex->getOriginalSize();
                 if (origSize.Width > 0 && origSize.Height > 0) {
                     irr::f32 scaleX = (irr::f32)card_width / (irr::f32)origSize.Width;
                     irr::f32 scaleY = (irr::f32)card_height / (irr::f32)origSize.Height;
