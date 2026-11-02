@@ -2,7 +2,8 @@ name: AetherDuel Android APK (Startup-ready)
 
 on:
   push:
-  pull_request:
+    branches:
+      - feat/card-view-original-clean
   workflow_dispatch:
 
 permissions:
