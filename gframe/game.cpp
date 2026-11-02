@@ -3318,8 +3318,11 @@ void Game::SetMessageWindow() {
 	}
 }
 void Game::ResizeCardinfoWindow(bool keep_ratio) {
-    // [AetherDuel] Fullscreen Left-Side Card View with Toggle & Clean Panel Coverage
-    bool hide_ui = is_fullscreen;
+    // Fullscreen artwork is a duel-only overlay. The resize routine also runs
+    // while navigating menus, so never let the fullscreen preference affect
+    // menu card previews or menu controls.
+    const bool fullscreen_overlay = is_fullscreen && dInfo.isInDuel;
+    const bool hide_ui = fullscreen_overlay;
 
     if (stName) stName->setVisible(!hide_ui);
     if (stInfo) stInfo->setVisible(!hide_ui);
@@ -3328,7 +3331,7 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
     if (btnClearChat) btnClearChat->setVisible(!hide_ui);
     if (btnExpandChat) btnExpandChat->setVisible(!hide_ui);
 
-    if (is_fullscreen) {
+    if (fullscreen_overlay) {
         // Dapatkan tinggi layar dari video driver
         irr::video::IVideoDriver* driver = env->getVideoDriver();
         const irr::core::dimension2du screen_size = driver
