@@ -237,7 +237,9 @@
       const controlW = Math.min(82, Math.max(48, (width * .20)));
       controls.forEach((label, index) => {
         const x = 8;
-        const y = 12 + index * (controlH + controlGap);
+        // Keep test controls inside the artwork's expected vertical
+        // coverage in both portrait and landscape previewports.
+        const y = height * 0.25 + index * (controlH + controlGap);
         ctx.fillStyle = "#aab5c4";
         ctx.fillRect(x, y, controlW, controlH);
         ctx.strokeStyle = "#e1e7ef";
@@ -295,6 +297,18 @@
       ctx.lineWidth = 1;
       ctx.strokeRect(panelX + .5, panelY + .5, panelWidth - 1, panelHeight - 1);
       drawArtwork(artworkX, artworkY, artworkWidth, artworkHeight);
+
+      // Standard card information remains below the small thumbnail.
+      const infoY = panelY + panelHeight + 18;
+      ctx.fillStyle = "#edf1f7";
+      ctx.textAlign = "left";
+      ctx.font = "600 12px system-ui, sans-serif";
+      ctx.fillText("CARD NAME", panelX, infoY);
+      ctx.fillStyle = "#aeb9c8";
+      ctx.font = "10px system-ui, sans-serif";
+      ctx.fillText("Monster · Effect", panelX, infoY + 18);
+      ctx.fillText("Card information appears here", panelX, infoY + 35);
+      ctx.fillText("and remains visible in Standard mode.", panelX, infoY + 49);
 
       const sourceRatio = layout.artwork_size.width / layout.artwork_size.height;
       const renderedRatio = artworkWidth / artworkHeight;
