@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/card-view-original-clean
+      - integrate/verified-card-cutout-spacing
   workflow_dispatch:
 
 permissions:
@@ -43,6 +44,25 @@ jobs:
           test -f android-wrapper/deps/edopro/gframe/game.cpp
           echo "AetherDuel source revision: $GITHUB_SHA"
           echo "AetherDuel source revision staged for Android build."
+
+      - name: Remove legacy Android maximum aspect ratio cap
+        working-directory: android-wrapper
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          manifest = Path("src/main/AndroidManifest.xml")
+          text = manifest.read_text()
+          pattern = r'\s*<meta-data\s+android:name="android\.max_aspect"\s+android:value="2\.1"\s*/>'
+          updated, count = re.subn(pattern, "", text, count=1)
+          assert count == 1, "Expected exactly one legacy android.max_aspect=2.1 entry"
+          assert "android.max_aspect" not in updated, "Legacy aspect-ratio cap remains"
+          manifest.write_text(updated)
+          print("Removed legacy 2.1 maximum aspect ratio cap.")
+          PY
+          ! grep -q 'android.max_aspect' src/main/AndroidManifest.xml
 
       - name: Set up Java 17
         uses: actions/setup-java@v5

@@ -339,9 +339,9 @@ void DuelClient::HandleSTOCPacketLanSync(std::vector<uint8_t>&& data) {
 	switch(pktType) {
 		case STOC_CHAT_2: {
 			auto pkt = BufferIO::getStruct<STOC_Chat2>(pdata, data.size());
-			if(pkt.type == STOC_Chat2::PTYPE_DUELIST && (mainGame->dInfo.player_type >= 7 || !pkt.is_team) && mainGame->tabSettings.chkIgnoreOpponents->isChecked())
+			if(pkt.type == STOC_Chat2::PTYPE_DUELIST && (mainGame->dInfo.player_type >= 7 || !pkt.is_team) && mainGame->gSettings.chkIgnoreOpponents->isChecked())
 				return;
-			if(pkt.type == STOC_Chat2::PTYPE_OBS && mainGame->tabSettings.chkIgnoreSpectators->isChecked())
+			if(pkt.type == STOC_Chat2::PTYPE_OBS && mainGame->gSettings.chkIgnoreSpectators->isChecked())
 				return;
 			wchar_t name[20];
 			BufferIO::DecodeUTF16(pkt.client_name, name, 20);
@@ -658,8 +658,10 @@ void DuelClient::HandleSTOCPacketLanAsync(const std::vector<uint8_t>& data) {
 			mainGame->HideElement(mainGame->wANNumber);
 		if(mainGame->wANCard->isVisible())
 			mainGame->HideElement(mainGame->wANCard);
-		if(mainGame->dInfo.player_type < 7)
+		if(mainGame->dInfo.player_type < 7) {
 			mainGame->btnLeaveGame->setVisible(false);
+			mainGame->btnSettingsMenu->setVisible(false);
+		}
 		mainGame->btnSpectatorSwap->setVisible(false);
 		mainGame->btnChainIgnore->setVisible(false);
 		mainGame->btnChainAlways->setVisible(false);
@@ -991,6 +993,7 @@ void DuelClient::HandleSTOCPacketLanAsync(const std::vector<uint8_t>& data) {
 			mainGame->dInfo.player_type = 7;
 			mainGame->btnLeaveGame->setText(gDataManager->GetSysString(1350).data());
 			mainGame->btnLeaveGame->setVisible(true);
+			mainGame->btnSettingsMenu->setVisible(true);
 			mainGame->btnSpectatorSwap->setVisible(true);
 			mainGame->dInfo.isFirst = true;
 			mainGame->dInfo.isTeam1 = true;
@@ -1008,8 +1011,10 @@ void DuelClient::HandleSTOCPacketLanAsync(const std::vector<uint8_t>& data) {
 		gSoundManager->StopSounds();
 		{
 			std::unique_lock<epro::mutex> lock(mainGame->gMutex);
-			if(mainGame->dInfo.player_type < 7)
+			if(mainGame->dInfo.player_type < 7) {
 				mainGame->btnLeaveGame->setVisible(false);
+				mainGame->btnSettingsMenu->setVisible(false);
+			}
 			mainGame->btnSpectatorSwap->setVisible(false);
 			mainGame->btnChainIgnore->setVisible(false);
 			mainGame->btnChainAlways->setVisible(false);
@@ -1091,15 +1096,15 @@ void DuelClient::HandleSTOCPacketLanAsync(const std::vector<uint8_t>& data) {
 			if((!mainGame->dInfo.isFirst && mainGame->dInfo.isTeam1) ||
 			   (mainGame->dInfo.isFirst && !mainGame->dInfo.isTeam1))
 				type = 1 - type;
-			if(((type == 1 && mainGame->dInfo.isTeam1) || (type == 0 && !mainGame->dInfo.isTeam1)) && mainGame->tabSettings.chkIgnoreOpponents->isChecked())
+			if(((type == 1 && mainGame->dInfo.isTeam1) || (type == 0 && !mainGame->dInfo.isTeam1)) && mainGame->gSettings.chkIgnoreOpponents->isChecked())
 				return;
 		} else {
 			type = 2;
 			if(player == 8) { //system custom message.
-				if(mainGame->tabSettings.chkIgnoreOpponents->isChecked())
+				if(mainGame->gSettings.chkIgnoreOpponents->isChecked())
 					return;
 			} else if(player < 11 || player > 19) {
-				if(mainGame->tabSettings.chkIgnoreSpectators->isChecked())
+				if(mainGame->gSettings.chkIgnoreSpectators->isChecked())
 					return;
 				player = 10;
 			}
@@ -2186,14 +2191,14 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		if(!select_trigger && !mainGame->dField.chain_forced && (ignore_chain || ((count == 0 || specount == 0) && !always_chain)) && (count == 0 || !chain_when_avail)) {
 			SetResponseI(-1);
 			mainGame->dField.ClearChainSelect();
-			if(mainGame->tabSettings.chkNoChainDelay->isChecked() && !ignore_chain) {
+			if(mainGame->gSettings.chkNoChainDelay->isChecked() && !ignore_chain) {
 				std::unique_lock<epro::mutex> tmp(mainGame->gMutex);
 				mainGame->WaitFrameSignal(20, tmp);
 			}
 			DuelClient::SendResponse();
 			return true;
 		}
-		if(mainGame->tabSettings.chkAutoChainOrder->isChecked() && mainGame->dField.chain_forced && !(always_chain || chain_when_avail)) {
+		if(mainGame->gSettings.chkAutoChainOrder->isChecked() && mainGame->dField.chain_forced && !(always_chain || chain_when_avail)) {
 			SetResponseI(0);
 			mainGame->dField.ClearChainSelect();
 			DuelClient::SendResponse();
@@ -2495,7 +2500,7 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 			mainGame->dField.selectable_cards.push_back(pcard);
 			mainGame->dField.sort_list.push_back(0);
 		}
-		if (mainGame->tabSettings.chkAutoChainOrder->isChecked() && mainGame->dInfo.curMsg == MSG_SORT_CHAIN) {
+		if (mainGame->gSettings.chkAutoChainOrder->isChecked() && mainGame->dInfo.curMsg == MSG_SORT_CHAIN) {
 			mainGame->dField.sort_list.clear();
 			SetResponseI(-1);
 			DuelClient::SendResponse();
@@ -2934,9 +2939,10 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		if(!mainGame->dInfo.isReplay && !mainGame->dInfo.isSingleMode && mainGame->dInfo.player_type < (mainGame->dInfo.team1 + mainGame->dInfo.team2)) {
 			mainGame->btnLeaveGame->setText(gDataManager->GetSysString(1351).data());
 			mainGame->btnLeaveGame->setVisible(true);
+			mainGame->btnSettingsMenu->setVisible(true);
 		}
 		if(!mainGame->dInfo.isReplay && mainGame->dInfo.player_type < 7) {
-			if(!mainGame->tabSettings.chkHideChainButtons->isChecked()) {
+			if(!mainGame->gSettings.chkHideChainButtons->isChecked()) {
 				mainGame->btnChainIgnore->setVisible(true);
 				mainGame->btnChainAlways->setVisible(true);
 				mainGame->btnChainWhenAvail->setVisible(true);
@@ -4640,8 +4646,10 @@ void DuelClient::ReplayPrompt(bool local_stream) {
 	replay_stream.clear();
 	std::unique_lock<epro::mutex> lock(mainGame->gMutex);
 	mainGame->wPhase->setVisible(false);
-	if(mainGame->dInfo.player_type < 7)
+	if(mainGame->dInfo.player_type < 7) {
 		mainGame->btnLeaveGame->setVisible(false);
+		mainGame->btnSettingsMenu->setVisible(false);
+	}
 	mainGame->btnChainIgnore->setVisible(false);
 	mainGame->btnChainAlways->setVisible(false);
 	mainGame->btnChainWhenAvail->setVisible(false);
