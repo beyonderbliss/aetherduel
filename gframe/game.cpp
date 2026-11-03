@@ -42,6 +42,11 @@
 #include "porting.h"
 #include "fmt.h"
 
+#if EDOPRO_ANDROID
+#include <android_native_app_glue.h>
+#include <android/native_window.h>
+#endif
+
 #if EDOPRO_ANDROID || EDOPRO_IOS
 #include "CGUICustomComboBox/CGUICustomComboBox.h"
 #define DispatchQueue() porting::dispatchQueuedMessages()
@@ -145,6 +150,19 @@ void Game::Initialize() {
 	linePatternGL = 0x0f0f;
 	menuHandler.prev_sel = -1;
 	driver = device->getVideoDriver();
+#if EDOPRO_ANDROID
+	if(porting::app_global) {
+		auto* app = porting::app_global;
+		const auto nativeWidth = app->window ? ANativeWindow_getWidth(app->window) : 0;
+		const auto nativeHeight = app->window ? ANativeWindow_getHeight(app->window) : 0;
+		const auto viewport = driver->getScreenSize();
+		ErrorLog("CUTOUT_DIAG init native={}x{} content=[{},{},{},{}] viewport={}x{}",
+			nativeWidth, nativeHeight,
+			app->contentRect.left, app->contentRect.top,
+			app->contentRect.right, app->contentRect.bottom,
+			viewport.Width, viewport.Height);
+	}
+#endif
 	imageManager.SetDevice(device.get());
 	imageManager.Initial();
 	RefreshAiDecks();
