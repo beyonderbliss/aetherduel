@@ -658,10 +658,8 @@ void DuelClient::HandleSTOCPacketLanAsync(const std::vector<uint8_t>& data) {
 			mainGame->HideElement(mainGame->wANNumber);
 		if(mainGame->wANCard->isVisible())
 			mainGame->HideElement(mainGame->wANCard);
-		if(mainGame->dInfo.player_type < 7) {
+		if(mainGame->dInfo.player_type < 7)
 			mainGame->btnLeaveGame->setVisible(false);
-			mainGame->btnSettingsMenu->setVisible(false);
-		}
 		mainGame->btnSpectatorSwap->setVisible(false);
 		mainGame->btnChainIgnore->setVisible(false);
 		mainGame->btnChainAlways->setVisible(false);
@@ -989,11 +987,11 @@ void DuelClient::HandleSTOCPacketLanAsync(const std::vector<uint8_t>& data) {
 		for(; i < mainGame->dInfo.team1 + mainGame->dInfo.team2; i++) {
 			mainGame->dInfo.opponames.push_back(mainGame->stHostPrepDuelist[i]->getText());
 		}
+		mainGame->btnSettingsMenu->setVisible(true);
 		if(selftype >= mainGame->dInfo.team1 + mainGame->dInfo.team2) {
 			mainGame->dInfo.player_type = 7;
 			mainGame->btnLeaveGame->setText(gDataManager->GetSysString(1350).data());
 			mainGame->btnLeaveGame->setVisible(true);
-			mainGame->btnSettingsMenu->setVisible(true);
 			mainGame->btnSpectatorSwap->setVisible(true);
 			mainGame->dInfo.isFirst = true;
 			mainGame->dInfo.isTeam1 = true;
@@ -2939,7 +2937,6 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		if(!mainGame->dInfo.isReplay && !mainGame->dInfo.isSingleMode && mainGame->dInfo.player_type < (mainGame->dInfo.team1 + mainGame->dInfo.team2)) {
 			mainGame->btnLeaveGame->setText(gDataManager->GetSysString(1351).data());
 			mainGame->btnLeaveGame->setVisible(true);
-			mainGame->btnSettingsMenu->setVisible(true);
 		}
 		if(!mainGame->dInfo.isReplay && mainGame->dInfo.player_type < 7) {
 			if(!mainGame->gSettings.chkHideChainButtons->isChecked()) {

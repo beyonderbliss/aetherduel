@@ -63,6 +63,7 @@ void DeckBuilder::Initialize(bool refresh) {
 	mainGame->wFilter->setVisible(true);
 	mainGame->wSort->setVisible(true);
 	mainGame->btnLeaveGame->setVisible(true);
+	mainGame->btnSettingsMenu->setVisible(true);
 	mainGame->btnLeaveGame->setText(gDataManager->GetSysString(1306).data());
 	mainGame->btnSideOK->setVisible(false);
 	mainGame->btnSideShuffle->setVisible(false);
@@ -107,6 +108,7 @@ void DeckBuilder::Terminate(bool showmenu) {
 		mainGame->wCardImg->setVisible(false);
 		mainGame->wInfos->setVisible(false);
 		mainGame->btnLeaveGame->setVisible(false);
+		mainGame->btnSettingsMenu->setVisible(false);
 		mainGame->PopupElement(mainGame->wMainMenu);
 		mainGame->ClearTextures();
 		mainGame->ClearCardInfo(0);

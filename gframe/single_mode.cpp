@@ -215,6 +215,7 @@ restart:
 	mainGame->wCardImg->setVisible(true);
 	mainGame->wInfos->setVisible(true);
 	mainGame->btnLeaveGame->setVisible(true);
+	mainGame->btnSettingsMenu->setVisible(true);
 	mainGame->btnLeaveGame->setText(gDataManager->GetSysString(1210).data());
 	mainGame->btnRestartSingle->setVisible(true);
 	mainGame->wPhase->setVisible(true);
