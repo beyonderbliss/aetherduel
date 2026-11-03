@@ -637,7 +637,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		const irr::core::recti search_result_rect{ 810, 165, 995, 626 };
 		switch(event.TouchInput.Event) {
 		case irr::ETIE_PRESSED_DOWN: {
-			if(is_draging || event.TouchInput.touchedCount != 1 || !search_result_rect.isPointInside(touch_pos)) {
+			if(event.TouchInput.touchedCount != 1 || !search_result_rect.isPointInside(touch_pos)) {
 				touch_scroll_active = false;
 				touch_scroll_moved = false;
 				return false;
