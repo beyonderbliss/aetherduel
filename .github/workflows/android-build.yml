@@ -59,7 +59,7 @@ jobs:
 
           manifest = Path("src/main/AndroidManifest.xml")
           text = manifest.read_text()
-          pattern = r'\\s*<meta-data\\s+android:name="android\\.max_aspect"\\s+android:value="2\\.1"\\s*/>'
+          pattern = r'\s*<meta-data\s+android:name="android\.max_aspect"\s+android:value="2\.1"\s*/>'
           updated, count = re.subn(pattern, "", text, count=1)
           assert count == 1, "Expected exactly one legacy android.max_aspect=2.1 entry"
           assert "android.max_aspect" not in updated, "Legacy aspect-ratio cap remains"
