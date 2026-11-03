@@ -637,6 +637,7 @@ void DuelClient::HandleSTOCPacketLanAsync(const std::vector<uint8_t>& data) {
 		mainGame->wChat->setVisible(false);
 		mainGame->wPhase->setVisible(false);
 		mainGame->wDeckEdit->setVisible(false);
+		mainGame->btnSettingsMenu->setVisible(true);
 		mainGame->wFilter->setVisible(false);
 		mainGame->wSort->setVisible(false);
 		mainGame->stTip->setVisible(false);
