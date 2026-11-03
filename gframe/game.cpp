@@ -265,7 +265,7 @@ void Game::Initialize() {
 	int mainMenuWidth = std::max(280, static_cast<int>(titleWidth / dpi_scale + 15));
 	mainMenuLeftX = 510 - mainMenuWidth / 2;
 	mainMenuRightX = 510 + mainMenuWidth / 2;
-	wMainMenu = env->addWindow(Scale(mainMenuLeftX, 200, mainMenuRightX, 450), false, EDOPRO_VERSION_STRING);
+	wMainMenu = env->addWindow(Scale(mainMenuLeftX, 200, mainMenuRightX, 485), false, EDOPRO_VERSION_STRING);
 	wMainMenu->getCloseButton()->setVisible(false);
 	//wMainMenu->setVisible(!is_from_discord);
 #define OFFSET(x1, y1, x2, y2) Scale(10, 30 + offset, mainMenuWidth - 10, 60 + offset)
@@ -288,6 +288,15 @@ void Game::Initialize() {
 	btnModeExit = env->addButton(OFFSET(10, 170, 270, 200), wMainMenu, BUTTON_MODE_EXIT, gDataManager->GetSysString(1210).data());
 	defaultStrings.emplace_back(btnModeExit, 1210);
 	offset += 35;
+#if EDOPRO_ANDROID
+	btnDiagnose = env->addButton(OFFSET(10, 205, 270, 235), wMainMenu, BUTTON_DIAGNOSE, L"Diagnose");
+	wDiagnose = env->addWindow(Scale(170, 100, 850, 500), false, L"Android Diagnose");
+	wDiagnose->getCloseButton()->setVisible(false);
+	wDiagnose->setVisible(false);
+	stDiagnoseReport = env->addStaticText(L"", Scale(15, 35, 665, 330), false, true, wDiagnose);
+	btnDiagnoseCopy = env->addButton(Scale(390, 350, 510, 385), wDiagnose, BUTTON_DIAGNOSE_COPY, L"Copy Report");
+	btnDiagnoseClose = env->addButton(Scale(530, 350, 650, 385), wDiagnose, BUTTON_DIAGNOSE_CLOSE, L"Close");
+#endif
 #undef OFFSET
 	//lan mode
 	wLanWindow = env->addWindow(Scale(220, 100, 800, 520), false, gDataManager->GetSysString(1200).data());

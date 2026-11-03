@@ -182,6 +182,12 @@ struct main_menu_panel_elements {
 	irr::gui::IGUIButton* btnTestMode;
 	irr::gui::IGUIButton* btnDeckEdit;
 	irr::gui::IGUIButton* btnModeExit;
+	irr::gui::IGUIButton* btnDiagnose;
+	irr::gui::IGUIWindow* wDiagnose;
+	irr::gui::IGUIStaticText* stDiagnoseReport;
+	irr::gui::IGUIButton* btnDiagnoseCopy;
+	irr::gui::IGUIButton* btnDiagnoseClose;
+	std::wstring diagnoseReport;
 	irr::gui::IGUIButton* btnCommitLogExit;
 	irr::gui::IGUIStaticText* stCommitLog;
 	irr::gui::IGUICheckBox* chkCommitLogExpand;
