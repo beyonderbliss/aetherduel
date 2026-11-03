@@ -32,60 +32,8 @@ jobs:
           path: android-wrapper
           submodules: recursive
 
-      - name: Apply Android 15 cutout safe insets (keep target SDK 36)
-        working-directory: android-wrapper
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-
-          activity = Path("src/main/java/io.github.edo9300.edopro/EpNativeActivity.java")
-          text = activity.read_text()
-
-          import_anchor = "import android.view.DisplayCutout;\n"
-          if import_anchor not in text:
-              view_import = "import android.view.View;\n"
-              assert text.count(view_import) == 1, "Could not locate View import"
-              text = text.replace(view_import, view_import + import_anchor, 1)
-
-          call_anchor = "\t\tgetWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);\n"
-          call = call_anchor + "\t\tapplyCutoutSafeInsets();\n"
-          assert text.count(call_anchor) == 1, "Could not locate onCreate window setup"
-          assert "applyCutoutSafeInsets();" not in text
-          text = text.replace(call_anchor, call, 1)
-
-          method_anchor = "\n\t@Override\n\tprotected void onResume() {"
-          method = """
-          private void applyCutoutSafeInsets() {
-          \tif (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
-          \t\treturn;
-
-          \tfinal View content = findViewById(android.R.id.content);
-          \tif (content == null)
-          \t\treturn;
-
-          \tcontent.setOnApplyWindowInsetsListener((view, insets) -> {
-          \t\tfinal DisplayCutout cutout = insets.getDisplayCutout();
-          \t\tfinal int left = cutout != null ? cutout.getSafeInsetLeft() : 0;
-          \t\tfinal int top = cutout != null ? cutout.getSafeInsetTop() : 0;
-          \t\tfinal int right = cutout != null ? cutout.getSafeInsetRight() : 0;
-          \t\tfinal int bottom = cutout != null ? cutout.getSafeInsetBottom() : 0;
-          \t\tview.setPadding(left, top, right, bottom);
-          \t\treturn insets;
-          \t});
-          \tcontent.requestApplyInsets();
-          }
-          """
-          assert text.count(method_anchor) == 1, "Could not locate lifecycle insertion point"
-          text = text.replace(method_anchor, "\n" + method + method_anchor, 1)
-
-          assert text.count("applyCutoutSafeInsets();") == 1
-          assert text.count("private void applyCutoutSafeInsets()") == 1
-          assert "getSafeInsetLeft()" in text
-          activity.write_text(text)
-          print("Applied runtime DisplayCutout safe insets to NativeActivity content.")
-          PY
-          grep -nE 'DisplayCutout|applyCutoutSafeInsets|getSafeInset' src/main/java/io.github.edo9300.edopro/EpNativeActivity.java
+      - name: Keep native window geometry unchanged for diagnostic build
+        run: echo "Collect native window and Irrlicht viewport dimensions from AetherDuel error.log."
 
       - name: Overlay clean AetherDuel source into Android wrapper
         run: |
