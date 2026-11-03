@@ -64,10 +64,10 @@ void DeckBuilder::Initialize(bool refresh) {
 	mainGame->wSort->setVisible(true);
 	mainGame->btnLeaveGame->setVisible(true);
 	mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 40));
-	mainGame->btnHandTest->setRelativePosition(mainGame->Resize(205, 45, 295, 80));
-	mainGame->btnHandTestSettings->setRelativePosition(mainGame->Resize(205, 85, 295, 120));
-	mainGame->btnYdkeManage->setRelativePosition(mainGame->Resize(205, 125, 295, 160));
-	mainGame->btnSettingsMenu->setRelativePosition(mainGame->Resize(205, 165, 295, 200));
+	mainGame->btnHandTest->setRelativePosition(mainGame->Resize(205, 50, 295, 85));
+	mainGame->btnHandTestSettings->setRelativePosition(mainGame->Resize(205, 95, 295, 130));
+	mainGame->btnYdkeManage->setRelativePosition(mainGame->Resize(205, 140, 295, 175));
+	mainGame->btnSettingsMenu->setRelativePosition(mainGame->Resize(205, 185, 295, 220));
 	mainGame->btnSettingsMenu->setVisible(true);
 	mainGame->btnLeaveGame->setText(gDataManager->GetSysString(1306).data());
 	mainGame->btnSideOK->setVisible(false);
