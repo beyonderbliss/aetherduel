@@ -201,7 +201,7 @@ restart:
 				mainGame->deckBuilder.Initialize(false);
 			}
 		} else
-			mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 80));
+			mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 40));
 		is_restarting = false;
 		return 0;
 	}
@@ -259,7 +259,7 @@ restart:
 		open_file = false;
 		is_restarting = false;
 		mainGame->gMutex.lock();
-		mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 80));
+		mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 40));
 		mainGame->gMutex.unlock();
 		return 0;
 	}
@@ -310,7 +310,7 @@ restart:
 			mainGame->closeDuelWindow = true;
 			mainGame->closeDoneSignal.Wait(lock);
 		}
-		mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 80));
+		mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 40));
 		if(!hand_test) {
 			mainGame->ShowElement(mainGame->wSinglePlay);
 			mainGame->stTip->setVisible(false);
