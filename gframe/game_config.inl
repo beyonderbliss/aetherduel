@@ -78,6 +78,7 @@ OPTION(bool, ctrlClickIsRMB, false)
 #endif
 #if EDOPRO_ANDROID
 OPTION(float, dpi_scale, 2.2f)
+OPTION(bool, android_ui_scale_220_migrated, false)
 #else
 OPTION(float, dpi_scale, 1.f)
 #endif
