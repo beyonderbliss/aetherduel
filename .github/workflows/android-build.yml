@@ -5,6 +5,7 @@ on:
     branches:
       - feat/card-view-original-clean
       - experiment/target-sdk-36-cutout-insets
+      - experiment/sdk-36-right-edge-optimization
   workflow_dispatch:
 
 permissions:
