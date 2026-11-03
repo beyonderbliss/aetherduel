@@ -28,6 +28,12 @@
 #include "address.h"
 #include "fmt.h"
 #include "localtime.h"
+#include <sstream>
+#if EDOPRO_ANDROID
+#include "Android/porting_android.h"
+#include <android_native_app_glue.h>
+#include <android/native_window.h>
+#endif
 
 namespace ygo {
 
@@ -136,6 +142,42 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 		}
 		case irr::gui::EGET_BUTTON_CLICKED: {
 			switch(id) {
+#if EDOPRO_ANDROID
+			case BUTTON_DIAGNOSE: {
+				std::wostringstream report;
+				auto* app = porting::app_global;
+				const int nativeWidth = app && app->window ? ANativeWindow_getWidth(app->window) : 0;
+				const int nativeHeight = app && app->window ? ANativeWindow_getHeight(app->window) : 0;
+				const auto viewport = mainGame->device->getVideoDriver()->getScreenSize();
+				report << L"Build: SDK28\n";
+				report << L"Native window: " << nativeWidth << L" x " << nativeHeight << L"\n";
+				if(app) {
+					report << L"Android contentRect: "
+						<< app->contentRect.left << L", " << app->contentRect.top << L", "
+						<< app->contentRect.right << L", " << app->contentRect.bottom << L"\n";
+				} else {
+					report << L"Android contentRect: N/A\n";
+				}
+				report << L"Irrlicht viewport: " << viewport.Width << L" x " << viewport.Height << L"\n";
+				report << L"Safe insets: N/A (not exposed by current native bridge)\n";
+				report << L"W_safe: N/A\nX_center: N/A";
+				mainGame->diagnoseReport = report.str();
+				mainGame->stDiagnoseReport->setText(mainGame->diagnoseReport.c_str());
+				mainGame->HideElement(mainGame->wMainMenu);
+				mainGame->ShowElement(mainGame->wDiagnose);
+				break;
+			}
+			case BUTTON_DIAGNOSE_COPY: {
+				if(!mainGame->diagnoseReport.empty())
+					porting::setTextToClipboard(mainGame->diagnoseReport);
+				break;
+			}
+			case BUTTON_DIAGNOSE_CLOSE: {
+				mainGame->HideElement(mainGame->wDiagnose);
+				mainGame->ShowElement(mainGame->wMainMenu);
+				break;
+			}
+#endif
 			case BUTTON_MODE_EXIT: {
 				mainGame->device->closeDevice();
 				break;
