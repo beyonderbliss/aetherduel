@@ -30,6 +30,25 @@ jobs:
           path: android-wrapper
           submodules: recursive
 
+      - name: Apply isolated Android 15 cutout experiment (target SDK 28)
+        working-directory: android-wrapper
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          gradle = Path("build.gradle")
+          text = gradle.read_text()
+          pattern = r"(?m)^(\\s*targetSdkVersion\\s+)36(\\s*)$"
+          updated, count = re.subn(pattern, r"\\g<1>28\\2", text)
+          assert count == 1, f"Expected exactly one targetSdkVersion 36, found {count}"
+          gradle.write_text(updated)
+          assert re.search(r"(?m)^\\s*compileSdk\\s*=\\s*36\\s*$", updated)
+          assert re.search(r"(?m)^\\s*targetSdkVersion\\s+28\\s*$", updated)
+          print("Experiment configuration: compileSdk=36, targetSdk=28")
+          PY
+
       - name: Overlay clean AetherDuel source into Android wrapper
         run: |
           set -euo pipefail
