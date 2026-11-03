@@ -1,8 +1,6 @@
 name: AetherDuel Android APK (Startup-ready)
 
 on:
-  push:
-  pull_request:
   workflow_dispatch:
 
 permissions:
