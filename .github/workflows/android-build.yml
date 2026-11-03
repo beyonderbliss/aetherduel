@@ -6,6 +6,12 @@ on:
       - feat/card-view-original-clean
       - integrate/verified-card-cutout-spacing
   workflow_dispatch:
+    inputs:
+      deck_search_test_fixture:
+        description: "Enable 30 temporary Dark Magician Girl results for Deck Search swipe testing"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -193,6 +199,13 @@ jobs:
       - name: Build native libraries
         working-directory: android-wrapper
         run: |
+          set -euo pipefail
+          if [[ "${{ inputs.deck_search_test_fixture }}" == "true" ]]; then
+            printf '\nAPP_CPPFLAGS += -DAETHERDUEL_DECK_SEARCH_TEST_FIXTURE\n' >> jni/Application.mk
+            echo "Temporary Deck Search fixture enabled (30 in-memory entries)."
+          else
+            echo "Temporary Deck Search fixture disabled."
+          fi
           export PATH="$ANDROID_SDK_ROOT/ndk/21.4.7075529:$PATH"
           ndk-build
 
