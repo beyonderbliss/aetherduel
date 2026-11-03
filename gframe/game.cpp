@@ -851,15 +851,15 @@ void Game::Initialize() {
 	ebChatInput = env->addEditBox(L"", Scale(3, 2, 710, 22), true, wChat, EDITBOX_CHAT);
 	ebChatInput->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_LOWERRIGHT, irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_LOWERRIGHT);
 	//swap
-	btnSpectatorSwap = AlignElementWithParent(env->addButton(Scale(205, 100, 295, 135), 0, BUTTON_REPLAY_SWAP, gDataManager->GetSysString(1346).data()));
+	btnSpectatorSwap = AlignElementWithParent(env->addButton(Scale(205, 45, 295, 80), 0, BUTTON_REPLAY_SWAP, gDataManager->GetSysString(1346).data()));
 	defaultStrings.emplace_back(btnSpectatorSwap, 1346);
 	btnSpectatorSwap->setVisible(false);
 	//chain buttons
-	btnChainIgnore = AlignElementWithParent(env->addButton(Scale(205, 100, 295, 135), 0, BUTTON_CHAIN_IGNORE, gDataManager->GetSysString(1292).data()));
+	btnChainIgnore = AlignElementWithParent(env->addButton(Scale(205, 85, 295, 120), 0, BUTTON_CHAIN_IGNORE, gDataManager->GetSysString(1292).data()));
 	defaultStrings.emplace_back(btnChainIgnore, 1292);
-	btnChainAlways = AlignElementWithParent(env->addButton(Scale(205, 140, 295, 175), 0, BUTTON_CHAIN_ALWAYS, gDataManager->GetSysString(1293).data()));
+	btnChainAlways = AlignElementWithParent(env->addButton(Scale(205, 125, 295, 160), 0, BUTTON_CHAIN_ALWAYS, gDataManager->GetSysString(1293).data()));
 	defaultStrings.emplace_back(btnChainAlways, 1293);
-	btnChainWhenAvail = AlignElementWithParent(env->addButton(Scale(205, 180, 295, 215), 0, BUTTON_CHAIN_WHENAVAIL, gDataManager->GetSysString(1294).data()));
+	btnChainWhenAvail = AlignElementWithParent(env->addButton(Scale(205, 165, 295, 200), 0, BUTTON_CHAIN_WHENAVAIL, gDataManager->GetSysString(1294).data()));
 	defaultStrings.emplace_back(btnChainWhenAvail, 1294);
 	btnChainIgnore->setIsPushButton(true);
 	btnChainAlways->setIsPushButton(true);
@@ -872,17 +872,17 @@ void Game::Initialize() {
 	defaultStrings.emplace_back(btnShuffle, 1307);
 	btnShuffle->setVisible(false);
 	//settings shortcut in the duel action stack
-	btnSettingsMenu = AlignElementWithParent(env->addButton(Scale(205, 220, 295, 255), 0, BUTTON_SHOW_SETTINGS, L"Setting"));
+	btnSettingsMenu = AlignElementWithParent(env->addButton(Scale(205, 205, 295, 240), 0, BUTTON_SHOW_SETTINGS, L"Setting"));
 	btnSettingsMenu->setVisible(false);
 	//cancel or finish
-	btnCancelOrFinish = AlignElementWithParent(env->addButton(Scale(205, 260, 295, 295), 0, BUTTON_CANCEL_OR_FINISH, gDataManager->GetSysString(1295).data()));
+	btnCancelOrFinish = AlignElementWithParent(env->addButton(Scale(205, 245, 295, 280), 0, BUTTON_CANCEL_OR_FINISH, gDataManager->GetSysString(1295).data()));
 	defaultStrings.emplace_back(btnCancelOrFinish, 1295);
 	btnCancelOrFinish->setVisible(false);
 	//leave/surrender/exit
-	btnLeaveGame = AlignElementWithParent(env->addButton(Scale(205, 5, 295, 80), 0, BUTTON_LEAVE_GAME, L""));
+	btnLeaveGame = AlignElementWithParent(env->addButton(Scale(205, 5, 295, 40), 0, BUTTON_LEAVE_GAME, L""));
 	btnLeaveGame->setVisible(false);
 	//restart single
-	btnRestartSingle = AlignElementWithParent(env->addButton(Scale(205, 50, 295, 90), 0, BUTTON_RESTART_SINGLE, gDataManager->GetSysString(1366).data()));
+	btnRestartSingle = AlignElementWithParent(env->addButton(Scale(205, 45, 295, 80), 0, BUTTON_RESTART_SINGLE, gDataManager->GetSysString(1366).data()));
 	defaultStrings.emplace_back(btnRestartSingle, 1366);
 	btnRestartSingle->setVisible(false);
 	//tip
