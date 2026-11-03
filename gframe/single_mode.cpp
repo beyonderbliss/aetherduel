@@ -79,7 +79,7 @@ int SingleMode::SinglePlayThread(DuelOptions&& duelOptions) {
 		last_replay.Flush();
 		new_replay.Write<uint64_t>(opt);
 	};
-	mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 45));
+	mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 40));
 	is_continuing = false;
 	is_restarting = false;
 	auto rnd = Utils::GetRandomNumberGenerator();
@@ -182,7 +182,7 @@ restart:
 				mainGame->closeDuelWindow = true;
 				mainGame->closeDoneSignal.Wait(lock);
 			}
-			mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 80));
+			mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 40));
 			if(!hand_test) {
 				mainGame->ShowElement(mainGame->wSinglePlay);
 				mainGame->stTip->setVisible(false);
