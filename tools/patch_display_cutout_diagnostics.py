@@ -26,6 +26,10 @@ method = """
 \t\tif (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
 \t\t\treturn;
 
+\t\tfinal WindowManager.LayoutParams windowAttributes = getWindow().getAttributes();
+\t\twindowAttributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
+\t\tgetWindow().setAttributes(windowAttributes);
+
 \t\tfinal View decorView = getWindow().getDecorView();
 \t\tdecorView.setOnApplyWindowInsetsListener((view, insets) -> {
 \t\t\tfinal DisplayCutout cutout = insets.getDisplayCutout();
@@ -33,7 +37,6 @@ method = """
 \t\t\tfinal int top = cutout == null ? 0 : cutout.getSafeInsetTop();
 \t\t\tfinal int right = cutout == null ? 0 : cutout.getSafeInsetRight();
 \t\t\tfinal int bottom = cutout == null ? 0 : cutout.getSafeInsetBottom();
-\t\t\tview.setPadding(left, top, right, bottom);
 \t\t\tfinal int[] location = new int[2];
 \t\t\tview.getLocationOnScreen(location);
 \t\t\treportDisplayCutoutInsets(left, top, right, bottom,
@@ -45,4 +48,4 @@ method = """
 """
 source = source.replace(method_anchor, method + method_anchor, 1)
 wrapper.write_text(source)
-print("Display-cutout diagnostics added to pinned NativeActivity wrapper.")
+print("Android window constrained to the display-cutout safe area.")
