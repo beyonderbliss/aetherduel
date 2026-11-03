@@ -62,8 +62,8 @@ OPTION(bool, draw_field_spell, true)
 OPTION(bool, quick_animation, false)
 OPTION(bool, alternative_phase_layout, false)
 OPTION(bool, topdown_view, false)
-OPTION(bool, keep_aspect_ratio, false)
-OPTION(bool, keep_cardinfo_aspect_ratio, false)
+OPTION(bool, keep_aspect_ratio, true)
+OPTION(bool, keep_cardinfo_aspect_ratio, true)
 OPTION(bool, showFPS, true)
 OPTION(bool, hidePasscodeScope, false)
 OPTION(bool, showScopeLabel, true)
@@ -77,7 +77,7 @@ OPTION(bool, ctrlClickIsRMB, true)
 OPTION(bool, ctrlClickIsRMB, false)
 #endif
 #if EDOPRO_ANDROID
-OPTION(float, dpi_scale, 2.f)
+OPTION(float, dpi_scale, 2.2f)
 #else
 OPTION(float, dpi_scale, 1.f)
 #endif
