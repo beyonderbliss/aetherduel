@@ -111,6 +111,9 @@ jobs:
           PY
           ! grep -R -nE 'libwindbot|WindBot\.(initAndroid|runAndroid|addDatabase)' build.gradle src/main/java
 
+      - name: Instrument Android display-cutout insets
+        run: python3 aetherduel-source/tools/patch_display_cutout_diagnostics.py
+
       - name: Restrict native build to Android ARM64
         working-directory: android-wrapper
         run: |

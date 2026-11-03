@@ -137,6 +137,13 @@ extern "C" {
 		JNIEnv* env, jclass thiz) {
 		error_dialog_returned = true;
 	}
+
+	JNIEXPORT void JNICALL Java_io_github_edo9300_edopro_EpNativeActivity_reportDisplayCutoutInsets(
+		JNIEnv* env, jclass thiz, jint left, jint top, jint right, jint bottom,
+		jint viewX, jint viewY, jint viewWidth, jint viewHeight) {
+		LOGI("DisplayCutout safeInsets(px): L=%d T=%d R=%d B=%d; decorView(screen px): x=%d y=%d w=%d h=%d",
+			 left, top, right, bottom, viewX, viewY, viewWidth, viewHeight);
+	}
 }
 
 namespace porting {
