@@ -16,6 +16,14 @@ GameConfig::GameConfig() {
 	Load(epro::format("{}/system.conf", porting::internal_storage));
 #endif
 	Load(EPRO_TEXT("./config/system.conf"));
+#if EDOPRO_ANDROID
+	// Migrate the legacy 100% default once, while preserving other saved UI scales.
+	if(!android_ui_scale_220_migrated) {
+		if(dpi_scale == 1.0f)
+			dpi_scale = 2.2f;
+		android_ui_scale_220_migrated = true;
+	}
+#endif
 	if(configs.empty()) {
 		{
 			FileStream conf_file{ EPRO_TEXT("./config/configs.json"), FileStream::in };
