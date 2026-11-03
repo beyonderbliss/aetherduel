@@ -113,6 +113,7 @@ void DeckBuilder::Terminate(bool showmenu) {
 		mainGame->wCardImg->setVisible(false);
 		mainGame->wInfos->setVisible(false);
 		mainGame->btnLeaveGame->setVisible(false);
+		mainGame->btnSettingsMenu->setVisible(false);
 		mainGame->PopupElement(mainGame->wMainMenu);
 		mainGame->ClearTextures();
 		mainGame->ClearCardInfo(0);
