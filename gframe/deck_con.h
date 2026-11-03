@@ -6,6 +6,7 @@
 #include <IEventReceiver.h>
 #include <map>
 #include <vector>
+#include <cstddef>
 #include "deck.h"
 
 namespace ygo {
@@ -127,7 +128,7 @@ private:
 	irr::core::vector2di mouse_pos;
 	bool touch_scroll_active = false;
 	bool touch_scroll_moved = false;
-	size_t touch_scroll_id = 0;
+	std::size_t touch_scroll_id = 0;
 	irr::s32 touch_scroll_start_y = 0;
 	irr::s32 touch_scroll_last_y = 0;
 
