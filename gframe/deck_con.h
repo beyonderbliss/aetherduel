@@ -125,6 +125,11 @@ private:
 #undef DECLARE_WITH_CACHE
 
 	irr::core::vector2di mouse_pos;
+	bool touch_scroll_active = false;
+	bool touch_scroll_moved = false;
+	size_t touch_scroll_id = 0;
+	irr::s32 touch_scroll_start_y = 0;
+	irr::s32 touch_scroll_last_y = 0;
 
 	uint16_t main_and_extra_legend_count_monster;
 	uint16_t main_legend_count_spell;
