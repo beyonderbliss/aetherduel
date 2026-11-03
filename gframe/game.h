@@ -152,9 +152,7 @@ struct info_panel_elements {
 	irr::gui::IGUIButton* btnExpandChat;
 	irr::gui::IGUITab* tabRepositories;
 	irr::gui::IGUIContextMenu* mTabRepositories;
-	irr::gui::Panel* tabSystem;
-	SettingsPane tabSettings;
-	irr::gui::IGUIButton* btnTabShowSettings;
+	irr::gui::IGUIButton* btnSettingsMenu;
 };
 
 struct main_menu_panel_elements {

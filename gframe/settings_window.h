@@ -19,31 +19,6 @@ class Panel;
 
 namespace ygo {
 
-struct SettingsPane {
-	irr::gui::IGUICheckBox* chkIgnoreOpponents;
-	irr::gui::IGUICheckBox* chkIgnoreSpectators;
-	irr::gui::IGUICheckBox* chkQuickAnimation;
-	irr::gui::IGUICheckBox* chkTopdown;
-	irr::gui::IGUICheckBox* chkKeepFieldRatio;
-	irr::gui::IGUICheckBox* chkAlternativePhaseLayout;
-	irr::gui::IGUICheckBox* chkHideChainButtons;
-	irr::gui::IGUICheckBox* chkAutoChainOrder;
-	// audio
-	irr::gui::IGUICheckBox* chkEnableSound;
-	irr::gui::IGUIStaticText* stSoundVolume;
-	irr::gui::IGUIScrollBar* scrSoundVolume;
-	irr::gui::IGUICheckBox* chkEnableMusic;
-	irr::gui::IGUIStaticText* stMusicVolume;
-	irr::gui::IGUIScrollBar* scrMusicVolume;
-	irr::gui::IGUIStaticText* stNoAudioBackend;
-
-	irr::gui::IGUICheckBox* chkNoChainDelay;
-
-	irr::gui::IGUICheckBox* chkIgnoreDeckContents;
-
-	void DisableAudio();
-};
-
 struct SettingsWindow {
 	irr::gui::CGUIWindowedTabControl* tabcontrolwindow;
 	irr::gui::IGUIWindow* window;

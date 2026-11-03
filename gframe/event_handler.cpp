@@ -171,6 +171,7 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 					mainGame->wInfos->setVisible(false);
 					mainGame->wPhase->setVisible(false);
 					mainGame->btnLeaveGame->setVisible(false);
+					mainGame->btnSettingsMenu->setVisible(false);
 					mainGame->btnSpectatorSwap->setVisible(false);
 					mainGame->wChat->setVisible(false);
 					mainGame->btnCreateHost->setEnabled(true);
@@ -857,7 +858,7 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 			}
 			case CHECKBOX_CHAIN_BUTTONS: {
 				if(mainGame->dInfo.isStarted && !mainGame->dInfo.isReplay && mainGame->dInfo.player_type < 7) {
-					const bool checked = !mainGame->tabSettings.chkHideChainButtons->isChecked();
+					const bool checked = !mainGame->gSettings.chkHideChainButtons->isChecked();
 					mainGame->btnChainIgnore->setVisible(checked);
 					mainGame->btnChainAlways->setVisible(checked);
 					mainGame->btnChainWhenAvail->setVisible(checked);
@@ -1951,11 +1952,11 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 				return true;
 			}
 			case CHECKBOX_QUICK_ANIMATION: {
-				gGameConfig->quick_animation = mainGame->tabSettings.chkQuickAnimation->isChecked();
+				gGameConfig->quick_animation = mainGame->gSettings.chkQuickAnimation->isChecked();
 				return true;
 			}
 			case CHECKBOX_ALTERNATIVE_PHASE_LAYOUT: {
-				gGameConfig->alternative_phase_layout = mainGame->tabSettings.chkAlternativePhaseLayout->isChecked();
+				gGameConfig->alternative_phase_layout = mainGame->gSettings.chkAlternativePhaseLayout->isChecked();
 				mainGame->SetPhaseButtons(true);
 				return true;
 			}
@@ -2242,11 +2243,6 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 		case irr::KEY_KEY_4: {
 			if (event.KeyInput.Control && !event.KeyInput.PressedDown)
 				mainGame->wInfos->setActiveTab(3);
-			break;
-		}
-		case irr::KEY_KEY_5: {
-			if (event.KeyInput.Control && !event.KeyInput.PressedDown)
-				mainGame->wInfos->setActiveTab(4);
 			break;
 		}
 		default: break;
