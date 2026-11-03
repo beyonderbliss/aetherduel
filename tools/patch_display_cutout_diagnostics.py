@@ -33,6 +33,7 @@ method = """
 \t\t\tfinal int top = cutout == null ? 0 : cutout.getSafeInsetTop();
 \t\t\tfinal int right = cutout == null ? 0 : cutout.getSafeInsetRight();
 \t\t\tfinal int bottom = cutout == null ? 0 : cutout.getSafeInsetBottom();
+\t\t\tview.setPadding(left, top, right, bottom);
 \t\t\tfinal int[] location = new int[2];
 \t\t\tview.getLocationOnScreen(location);
 \t\t\treportDisplayCutoutInsets(left, top, right, bottom,
