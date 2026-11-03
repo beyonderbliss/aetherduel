@@ -186,6 +186,44 @@ jobs:
           sed -i 's/applicationId "io.github.edo9300.edopro"/applicationId "io.github.beyonderbliss.aetherduel"/' build.gradle
           grep -q 'applicationId "io.github.beyonderbliss.aetherduel"' build.gradle
 
+      - name: Apply Android 15 edge-to-edge opt-out for cutout compatibility
+        working-directory: android-wrapper
+        run: |
+          set -euo pipefail
+          mkdir -p src/main/res/values-v35 src/main/res/values-v36
+
+          cat > src/main/res/values-v35/styles.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="AppTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
+                  <item name="android:windowAnimationStyle">@null</item>
+                  <item name="android:windowBackground">@drawable/bg</item>
+                  <item name="android:windowFullscreen">true</item>
+                  <item name="android:windowContentOverlay">@null</item>
+                  <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+              </style>
+          </resources>
+          XML
+
+          # Android 16 disables this opt-out for targetSdk 36. Override the
+          # API-35 style without the attribute to avoid carrying it onto API 36.
+          cat > src/main/res/values-v36/styles.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="AppTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
+                  <item name="android:windowAnimationStyle">@null</item>
+                  <item name="android:windowBackground">@drawable/bg</item>
+                  <item name="android:windowFullscreen">true</item>
+                  <item name="android:windowContentOverlay">@null</item>
+              </style>
+          </resources>
+          XML
+
+          grep -q 'windowOptOutEdgeToEdgeEnforcement' src/main/res/values-v35/styles.xml
+          ! grep -q 'windowOptOutEdgeToEdgeEnforcement' src/main/res/values-v36/styles.xml
+          grep -q 'android:theme="@style/AppTheme"' src/main/AndroidManifest.xml
+          echo "API 35: edge-to-edge opt-out enabled; API 36+: opt-out omitted."
+          
       - name: Build debug APK
         working-directory: android-wrapper
         run: ./gradlew assembleDebug
