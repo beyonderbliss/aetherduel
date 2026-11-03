@@ -626,7 +626,74 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		}
 		break;
 	}
+	case irr::EET_TOUCH_INPUT_EVENT: {
+#if IRRLICHT_VERSION_MAJOR == 1 && IRRLICHT_VERSION_MINOR == 9
+		if(!mainGame->scrFilter->isVisible() || mainGame->wCategories->isVisible() || mainGame->wQuery->isVisible()) {
+			touch_scroll_active = false;
+			touch_scroll_moved = false;
+			break;
+		}
+		const auto touch_pos = mainGame->Resize(event.TouchInput.X, event.TouchInput.Y, true);
+		const irr::core::recti search_result_rect{ 810, 165, 995, 626 };
+		switch(event.TouchInput.Event) {
+		case irr::ETIE_PRESSED_DOWN: {
+			if(is_draging || event.TouchInput.touchedCount != 1 || !search_result_rect.isPointInside(touch_pos)) {
+				touch_scroll_active = false;
+				touch_scroll_moved = false;
+				return false;
+			}
+			touch_scroll_active = true;
+			touch_scroll_moved = false;
+			touch_scroll_id = event.TouchInput.ID;
+			touch_scroll_start_y = touch_pos.Y;
+			touch_scroll_last_y = touch_pos.Y;
+			mouse_pos.set(event.TouchInput.X, event.TouchInput.Y);
+			GetHoveredCard();
+			return false;
+		}
+		case irr::ETIE_MOVED: {
+			if(!touch_scroll_active)
+				return false;
+			if(event.TouchInput.touchedCount != 1 || event.TouchInput.ID != touch_scroll_id) {
+				touch_scroll_active = false;
+				touch_scroll_moved = false;
+				return false;
+			}
+			const irr::s32 movement = touch_pos.Y - touch_scroll_start_y;
+			if(!touch_scroll_moved && (movement > 8 || movement < -8)) {
+				touch_scroll_moved = true;
+				is_draging = false;
+				click_pos = 0;
+				dragging_pointer = nullptr;
+			}
+			const irr::s32 delta_y = touch_scroll_last_y - touch_pos.Y;
+			touch_scroll_last_y = touch_pos.Y;
+			if(touch_scroll_moved && delta_y != 0) {
+				const irr::s32 next_pos = std::clamp(mainGame->scrFilter->getPos() + delta_y, 0, mainGame->scrFilter->getMax());
+				mainGame->scrFilter->setPos(next_pos);
+				mouse_pos.set(event.TouchInput.X, event.TouchInput.Y);
+				GetHoveredCard();
+				return true;
+			}
+			return false;
+		}
+		case irr::ETIE_LEFT_UP: {
+			if(!touch_scroll_active || event.TouchInput.ID != touch_scroll_id)
+				return false;
+			const bool consumed = touch_scroll_moved;
+			touch_scroll_active = false;
+			touch_scroll_moved = false;
+			return consumed;
+		}
+		default:
+			return false;
+		}
+#endif
+		break;
+	}
 	case irr::EET_MOUSE_INPUT_EVENT: {
+		if(touch_scroll_active && touch_scroll_moved)
+			return true;
 		bool isroot = mainGame->env->getRootGUIElement()->getElementFromPoint(mouse_pos) == mainGame->env->getRootGUIElement();
 		const bool forceInput = gGameConfig->ignoreDeckContents || event.MouseInput.Shift;
 		switch(event.MouseInput.Event) {
@@ -1185,6 +1252,18 @@ void DeckBuilder::FilterCards(bool force_refresh) {
 	SortList();
 	auto ip = std::unique(results.begin(), results.end());
 	results.resize(std::distance(results.begin(), ip));
+#ifdef AETHERDUEL_DECK_SEARCH_TEST_FIXTURE
+	// Test-only copies live in memory; they never enter DataManager or cards.cdb.
+	static std::vector<CardDataC> fixture_cards;
+	fixture_cards.clear();
+	if(results.size() == 1) {
+		fixture_cards.reserve(29);
+		for(int i = 0; i < 29; ++i) {
+			fixture_cards.push_back(*results.front());
+			results.push_back(&fixture_cards.back());
+		}
+	}
+#endif
 	result_string = epro::to_wstring(results.size());
 	scroll_pos = 0;
 	if(results.size() > 7) {
