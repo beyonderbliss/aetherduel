@@ -3256,6 +3256,22 @@ int Game::GetDeckPanelLeft() const {
 		static_cast<irr::s32>(availableHeight * aspect));
 	return Resize(inset + cardWidth, 0, true).X + kUiEdgeMargin;
 }
+DeckGridLayout Game::GetDeckGridLayout() const {
+	constexpr int panelRight = 800;
+	constexpr int horizontalInset = 8;
+	constexpr int horizontalGap = 10;
+	constexpr int verticalGap = 18;
+	constexpr int gridTop = 205;
+	constexpr int gridBottom = 627;
+	const int panelLeft = GetDeckPanelLeft();
+	const int usableWidth = std::max(5, panelRight - panelLeft - horizontalInset * 2);
+	const int slotWidth = std::max(1, usableWidth / 5);
+	const int cardWidth = std::max(1, (usableWidth - horizontalGap * 4) / 5);
+	const int cardHeight = std::max(1, (cardWidth * 86 + 29) / 59);
+	const int gridHeight = cardHeight * 2 + verticalGap;
+	const int firstRowY = gridTop + std::max(0, (gridBottom - gridTop - gridHeight) / 2);
+	return { panelLeft, slotWidth, firstRowY, cardHeight + verticalGap, cardWidth, cardHeight };
+}
 void Game::UpdateDeckMenuLayout() {
 	if(!wDeckEdit || !ebDeckname)
 		return;
