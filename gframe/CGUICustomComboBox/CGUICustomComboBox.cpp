@@ -71,6 +71,12 @@ CGUICustomComboBox::CGUICustomComboBox(IGUIEnvironment* environment, IGUIElement
 }
 
 
+void CGUICustomComboBox::setTouchWholeArea(bool enabled) {
+	TouchWholeArea = enabled;
+	ListButton->setVisible(!enabled);
+	updateListButtonWidth(Environment->getSkin() ? Environment->getSkin()->getSize(EGDS_SCROLLBAR_SIZE) : 15);
+}
+
 void CGUICustomComboBox::setTextAlignment(EGUI_ALIGNMENT horizontal, EGUI_ALIGNMENT vertical) {
 	HAlign = horizontal;
 	VAlign = vertical;
@@ -292,6 +298,10 @@ bool CGUICustomComboBox::OnEvent(const SEvent& event) {
 			}
 			case EMIE_LMOUSE_LEFT_UP:
 			{
+				if(TouchWholeArea && !ListBox) {
+					openCloseMenu();
+					return true;
+				}
 				core::position2d<s32> p(event.MouseInput.X, event.MouseInput.Y);
 
 				// send to list box
@@ -348,6 +358,11 @@ void CGUICustomComboBox::sendSelectionChangedEvent() {
 }
 
 void CGUICustomComboBox::updateListButtonWidth(s32 width) {
+	if(TouchWholeArea) {
+		ListButton->setRelativePosition(core::recti(0, 0, 0, 0));
+		SelectedText->setRelativePosition(core::recti(2, 2, RelativeRect.getWidth() - 2, RelativeRect.getHeight() - 2));
+		return;
+	}
 	if(ListButton->getRelativePosition().getWidth() != width) {
 		core::rect<s32> r;
 		r.UpperLeftCorner.X = RelativeRect.getWidth() - width - 2;
