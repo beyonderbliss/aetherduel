@@ -1,4 +1,5 @@
 #include "game_config.h"
+#include <algorithm>
 #include <irrlicht.h>
 #include "game.h"
 #include "materials.h"
