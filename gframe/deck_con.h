@@ -74,11 +74,14 @@ public:
 	void SetCurrentDeck(Deck new_deck) {
 		current_deck = std::move(new_deck);
 		main_deck_scroll_offset = 0.0f;
+		main_deck_scroll_velocity = 0.0f;
+		main_deck_scroll_inertia = false;
 		RefreshLimitationStatus();
 	}
 	void CancelDeckNameInput();
 	void StartFilter(bool force_refresh = false);
 	void RefreshCurrentDeck();
+	void UpdateMainDeckScroll(uint32_t deltaTime);
 private:
 	void GetHoveredCard();
 	bool FiltersChanged();
@@ -147,8 +150,13 @@ public:
 	bool is_draging;
 	bool drag_pending = false;
 	int drag_start_seq = -1;
+	bool drag_source_in_deck = false;
 	int scroll_pos;
 	float main_deck_scroll_offset = 0.0f;
+	float main_deck_scroll_velocity = 0.0f;
+	bool main_deck_scroll_inertia = false;
+	int deck_scroll_last_y = 0;
+	uint32_t deck_scroll_last_time = 0;
 	bool deck_scroll_pending = false;
 	bool deck_scroll_active = false;
 	bool deck_scroll_free = false;
