@@ -201,7 +201,7 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${{ inputs.deck_editor_test_fixture }}" == "true" ]]; then
-            printf '\\nAPP_CPPFLAGS += -DAETHERDUEL_DECK_EDITOR_TEST_FIXTURE\\n' >> jni/Application.mk
+            printf '\nAPP_CPPFLAGS += -DAETHERDUEL_DECK_EDITOR_TEST_FIXTURE\n' >> jni/Application.mk
             echo "Temporary Deck Editor fixture enabled (Main 20, Extra 15, Side 15; search up to 30)."
           else
             echo "Temporary Deck Editor fixture disabled."
