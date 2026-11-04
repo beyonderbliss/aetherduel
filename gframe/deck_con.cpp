@@ -198,7 +198,8 @@ void DeckBuilder::Initialize(bool refresh) {
 	drag_start_seq = -1;
 	deck_scroll_pending = false;
 	deck_scroll_active = false;
-	main_deck_scroll_row = 0;
+	deck_scroll_free = false;
+	main_deck_scroll_offset = 0.0f;
 	prev_deck = mainGame->cbDBDecks->getSelected();
 	prev_operation = 0;
 	mainGame->SetMessageWindow();
