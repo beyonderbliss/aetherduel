@@ -3745,6 +3745,14 @@ void Game::OnResize() {
 		static_cast<irr::s32>(std::lround(window_size.Height / layoutScale))
 	);
 	deckEditorLayout = deck_editor::Calculate(deckEditorViewport);
+
+	// Capture the original filter child rectangles before legacy resize code
+	// applies the old 1024x640 scaling to selected labels.
+	if(deckEditorFilterBaseRects.empty() && wFilter) {
+		deckEditorFilterBaseWidth = std::max<irr::s32>(1, wFilter->getRelativePosition().getWidth());
+		for(auto it = wFilter->getChildren().begin(); it != wFilter->getChildren().end(); ++it)
+			deckEditorFilterBaseRects.emplace(*it, (*it)->getRelativePosition());
+	}
 	{
 		const auto waboutcorner = wAbout->getAbsolutePosition().UpperLeftCorner;
 		using std::min;
