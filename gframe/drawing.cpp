@@ -1362,11 +1362,14 @@ void Game::DrawDeckBd() {
 			const int panelLeft = GetDeckPanelLeft();
 			const int panelRight = 800;
 			const int gridRight = grid.gridLeft + grid.slotWidth * 5;
+			const int leftTrackRight = grid.gridLeft + (grid.slotWidth - grid.cardWidth) / 2;
+			const int rightTrackLeft = grid.gridLeft + 4 * grid.slotWidth +
+				(grid.slotWidth - grid.cardWidth) / 2 + grid.cardWidth;
 			const int trackTop = grid.firstRowY;
 			const int trackBottom = viewportBottom;
 			const int trackHeight = trackBottom - trackTop;
-			const int leftTrackWidth = grid.gridLeft - panelLeft;
-			const int rightTrackWidth = panelRight - gridRight;
+			const int leftTrackWidth = leftTrackRight - panelLeft;
+			const int rightTrackWidth = panelRight - rightTrackLeft;
 			const int totalRows = static_cast<int>((activeDeck->size() + 4) / 5);
 			const float maxScroll = static_cast<float>(std::max(0, totalRows - 3));
 			const int thumbHeight = std::max(12, static_cast<int>(std::round(
@@ -1383,7 +1386,7 @@ void Game::DrawDeckBd() {
 				driver->draw2DRectangle(0xffc7d7e8, Resize(indicatorLeft, thumbTop, indicatorLeft + indicatorWidth, thumbTop + thumbHeight));
 			};
 			drawTrackIndicator(panelLeft, leftTrackWidth);
-			drawTrackIndicator(gridRight, rightTrackWidth);
+			drawTrackIndicator(rightTrackLeft, rightTrackWidth);
 		}
 	}
 	//search result
