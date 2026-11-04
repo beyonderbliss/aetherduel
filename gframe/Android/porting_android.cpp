@@ -349,6 +349,14 @@ void displayKeyboard(bool pShow) {
 	jnienv->DeleteLocalRef(lDecorView);
 }
 
+void setDeckNameInputMode(bool active) {
+	jobject activity = app_global->activity->clazz;
+	jmethodID method = jnienv->GetMethodID(nativeActivity, "setDeckNameInputMode", "(Z)V");
+	if(method == 0)
+		assert("porting::setDeckNameInputMode unable to find java setDeckNameInputMode method" == 0);
+	jnienv->CallVoidMethod(activity, method, active ? JNI_TRUE : JNI_FALSE);
+}
+
 void showInputDialog(epro::path_stringview current) {
 	jmethodID showdialog = jnienv->GetMethodID(nativeActivity, "showDialog", JPARAMS(JSTRING)JVOID);
 
