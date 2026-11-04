@@ -270,26 +270,12 @@ jobs:
             done
             test -s "$A/textures/$name.png" -o -s "$A/textures/$name.jpg"
           done
-          curl -fL https://images.ygoprodeck.com/images/cards/38033121.jpg -o "$A/pics/38033121.jpg"
-          python3 - <<'PY'
-          import sqlite3
-          db = sqlite3.connect("src/main/assets/defaults/cards.cdb")
-          db.executescript("""
-          CREATE TABLE datas(id INTEGER PRIMARY KEY, ot INTEGER, alias INTEGER, setcode INTEGER, type INTEGER, atk INTEGER, def INTEGER, level INTEGER, race INTEGER, attribute INTEGER, category INTEGER);
-          CREATE TABLE texts(id INTEGER PRIMARY KEY, name TEXT, desc TEXT, str1 TEXT, str2 TEXT, str3 TEXT, str4 TEXT, str5 TEXT, str6 TEXT, str7 TEXT, str8 TEXT, str9 TEXT, str10 TEXT, str11 TEXT, str12 TEXT, str13 TEXT, str14 TEXT, str15 TEXT, str16 TEXT);
-          """)
-          db.execute("INSERT INTO datas VALUES(?,?,?,?,?,?,?,?,?,?,?)", (
-              38033121, 1, 0, 0, 0x21, 2000, 1700, 6, 0x2, 0x20, 0
-          ))
-          desc = "Gains 300 ATK for every 'Dark Magician' or 'Magician of Black Chaos' in the GY."
-          db.execute("INSERT INTO texts VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (
-              38033121, "Dark Magician Girl", desc, *([""] * 16)
-          ))
-          db.commit()
-          db.close()
-          PY
+          # Use the real Project Ignis card database instead of a one-card synthetic CDB.
+          curl -fL https://raw.githubusercontent.com/ProjectIgnis/BabelCDB/master/cards.cdb -o "$A/cards.cdb"
           test -s "$A/cards.cdb"
-          test -s "$A/pics/38033121.jpg"
+          python3 deps/edopro/tools/prepare-dark-test-cards.py "$A"
+          test "$(wc -l < "$A/dark-test-cards.txt")" -eq 41
+          test "$(find "$A/pics" -maxdepth 1 -name '*.jpg' | wc -l)" -ge 40
           du -sh "$A"
 
       - name: Finalize indexed app assets
