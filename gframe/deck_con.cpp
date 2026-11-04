@@ -281,7 +281,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		const int deltaY = logicalY - deck_scroll_start_y;
 		const int rowsMoved = deltaY / std::max(1, grid.rowStep);
 		main_deck_scroll_offset = std::clamp(
-			static_cast<float>(static_cast<int>(deck_scroll_start_offset) - rowsMoved),
+			static_cast<float>(static_cast<int>(std::round(deck_scroll_start_offset)) - rowsMoved),
 			0.0f, getMainDeckMaxScroll());
 	};
 	const auto updateMainDeckFreeScroll = [this, &getMainDeckMaxScroll](int logicalY) {
@@ -803,6 +803,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			if(!releaseIsRoot) {
 				deck_scroll_pending = false;
 				deck_scroll_active = false;
+				deck_scroll_free = false;
 				if(!is_draging) {
 					drag_pending = false;
 					drag_start_seq = -1;
@@ -836,12 +837,15 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			}
 			if(deck_scroll_pending) {
 				deck_scroll_pending = false;
+				if(deck_scroll_free) {
+					deck_scroll_free = false;
+					drag_pending = false;
+					drag_start_seq = -1;
+					dragging_pointer = nullptr;
+					GetHoveredCard();
+					break;
+				}
 				deck_scroll_free = false;
-				drag_pending = false;
-				drag_start_seq = -1;
-				dragging_pointer = nullptr;
-				GetHoveredCard();
-				break;
 			}
 			// Some touch drivers report the final position only on release.
 			if(drag_pending) {
@@ -1033,8 +1037,9 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			if(active_deck_tab == 0 && current_deck.main.size() > 15 &&
 			   logicalMouse.X >= grid.gridLeft && logicalMouse.X < grid.gridLeft + grid.slotWidth * 5 &&
 			   logicalMouse.Y >= grid.firstRowY && logicalMouse.Y < gridBottom) {
-				main_deck_scroll_offset = std::clamp(main_deck_scroll_offset +
-					(event.MouseInput.Wheel < 0 ? 1.0f : -1.0f), 0.0f, getMainDeckMaxScroll());
+				main_deck_scroll_offset = std::clamp(
+					std::round(main_deck_scroll_offset) + (event.MouseInput.Wheel < 0 ? 1.0f : -1.0f),
+					0.0f, getMainDeckMaxScroll());
 				GetHoveredCard();
 				return true;
 			}
