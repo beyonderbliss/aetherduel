@@ -6,6 +6,12 @@ on:
       - feat/card-view-original-clean
       - integrate/verified-card-cutout-spacing
   workflow_dispatch:
+    inputs:
+      deck_editor_test_fixture:
+        description: "Enable temporary 20/15/15 deck contents and 30 Dark Magician Girl search results for Deck Editor scrolling tests"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -193,6 +199,13 @@ jobs:
       - name: Build native libraries
         working-directory: android-wrapper
         run: |
+          set -euo pipefail
+          if [[ "${{ inputs.deck_editor_test_fixture }}" == "true" ]]; then
+            printf '\\nAPP_CPPFLAGS += -DAETHERDUEL_DECK_EDITOR_TEST_FIXTURE\\n' >> jni/Application.mk
+            echo "Temporary Deck Editor fixture enabled (Main 20, Extra 15, Side 15; search up to 30)."
+          else
+            echo "Temporary Deck Editor fixture disabled."
+          fi
           export PATH="$ANDROID_SDK_ROOT/ndk/21.4.7075529:$PATH"
           ndk-build
 

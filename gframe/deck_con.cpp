@@ -76,6 +76,18 @@ void DeckBuilder::Initialize(bool refresh) {
 	filterList = &gdeckManager->_lfList[mainGame->cbDBLFList->getSelected()];
 	if(refresh) {
 		ClearSearch();
+#ifdef AETHERDUEL_DECK_EDITOR_TEST_FIXTURE
+		// Temporary visual fixture: seed all three deck tabs without modifying cards.cdb.
+		if(const CardDataC* testCard = gDataManager->GetCardData(38033121)) {
+			current_deck.clear();
+			current_deck.main.assign(20, testCard);
+			current_deck.extra.assign(15, testCard);
+			current_deck.side.assign(15, testCard);
+			active_deck_tab = 0;
+			deck_scroll_rows = { 0, 0, 0 };
+			RefreshLimitationStatus();
+		}
+#endif
 	} else if(results.size()) {
 		auto oldscrpos = scroll_pos;
 		auto oldscrbpos = mainGame->scrFilter->getPos();
@@ -1217,6 +1229,18 @@ void DeckBuilder::FilterCards(bool force_refresh) {
 	SortList();
 	auto ip = std::unique(results.begin(), results.end());
 	results.resize(std::distance(results.begin(), ip));
+#ifdef AETHERDUEL_DECK_EDITOR_TEST_FIXTURE
+	// Search-only duplicates are held in memory and never enter DataManager or cards.cdb.
+	static std::vector<CardDataC> fixture_cards;
+	fixture_cards.clear();
+	if(results.size() == 1 && results.front()->code == 38033121) {
+		fixture_cards.reserve(29);
+		for(int i = 0; i < 29; ++i) {
+			fixture_cards.push_back(*results.front());
+			results.push_back(&fixture_cards.back());
+		}
+	}
+#endif
 	result_string = epro::to_wstring(results.size());
 	scroll_pos = 0;
 	if(results.size() > 7) {
@@ -1647,6 +1671,10 @@ bool DeckBuilder::push_main(const CardDataC* pointer, int seq, bool forced) {
 	return true;
 }
 bool DeckBuilder::push_extra(const CardDataC* pointer, int seq, bool forced) {
+#ifdef AETHERDUEL_DECK_EDITOR_TEST_FIXTURE
+	// Allow the single fixture monster to be repositioned in the visual-only Extra tab.
+	if(pointer->code != 38033121) {
+#endif
 	if(pointer->isRitualMonster()) {
 		if(mainGame->is_siding) {
 			if(!mainGame->dInfo.HasFieldFlag(DUEL_EXTRA_DECK_RITUAL))
@@ -1658,6 +1686,9 @@ bool DeckBuilder::push_extra(const CardDataC* pointer, int seq, bool forced) {
 			return false;
 	} else if((pointer->type & (TYPE_FUSION | TYPE_SYNCHRO | TYPE_XYZ)) == 0)
 		return false;
+#ifdef AETHERDUEL_DECK_EDITOR_TEST_FIXTURE
+	}
+#endif
 	auto& container = current_deck.extra;
 	if(!forced && !mainGame->is_siding) {
 		if(main_and_extra_legend_count_monster >= 1 && (pointer->ot & SCOPE_LEGEND))
