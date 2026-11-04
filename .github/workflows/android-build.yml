@@ -270,12 +270,16 @@ jobs:
             done
             test -s "$A/textures/$name.png" -o -s "$A/textures/$name.jpg"
           done
-          # Use the real Project Ignis card database instead of a one-card synthetic CDB.
-          curl -fL https://raw.githubusercontent.com/ProjectIgnis/BabelCDB/master/cards.cdb -o "$A/cards.cdb"
+          # Download the full CDB only as a temporary source; never package it.
+          SOURCE_CDB="$RUNNER_TEMP/babel-cards-source.cdb"
+          curl -fL https://raw.githubusercontent.com/ProjectIgnis/BabelCDB/master/cards.cdb -o "$SOURCE_CDB"
+          test -s "$SOURCE_CDB"
+          python3 deps/edopro/tools/prepare-dark-test-cards.py "$SOURCE_CDB" "$A"
+          test "$(wc -l < "$A/dark-test-cards.txt")" -eq 41
+          test "$(find "$A/pics" -maxdepth 1 -name '*.jpg' | wc -l)" -eq 40
           test -s "$A/cards.cdb"
-          python3 deps/edopro/tools/prepare-dark-test-cards.py "$A"
-          test "$(wc -l < "$A/dark-test-cards.txt")" -ge 41
-          test "$(find "$A/pics" -maxdepth 1 -name '*.jpg' | wc -l)" -ge 40
+          test ! -e "$A/babel-cards-source.cdb"
+          rm -f "$SOURCE_CDB"
           du -sh "$A"
 
       - name: Finalize indexed app assets
