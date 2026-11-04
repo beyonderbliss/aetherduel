@@ -1256,105 +1256,53 @@ void Game::DrawDeckBd() {
 	};
 	const auto& current_deck = deckBuilder.GetCurrentDeck();
 
-	//main deck
+	// One shared deck area with Main / Extra / Side tabs.
 	{
-		DRAWRECT(MAIN_INFO, 310, 137, 797, 157);
-		DRAWOUTLINE(MAIN_INFO, 309, 136, 797, 157);
+		const int panelLeft = Resize(wCardImg->getRelativePosition().LowerRightCorner.X, 0, true).X + kUiEdgeMargin;
+		constexpr int panelRight = 800;
+		constexpr int panelTop = 135;
+		constexpr int panelBottom = 635;
+		const auto panel = Resize(panelLeft, panelTop, panelRight, panelBottom);
+		driver->draw2DRectangle(panel, skin::DECK_WINDOW_MAIN_TOP_LEFT_VAL,
+			skin::DECK_WINDOW_MAIN_TOP_RIGHT_VAL, skin::DECK_WINDOW_MAIN_BOTTOM_LEFT_VAL,
+			skin::DECK_WINDOW_MAIN_BOTTOM_RIGHT_VAL);
+		driver->draw2DRectangleOutline(panel, skin::DECK_WINDOW_MAIN_OUTLINE_VAL);
 
-		DrawShadowText(textFont, gDataManager->GetSysString(1330), Resize(314, 136, 409, 156), Resize(1, 1, 1, 1), 0xffffffff, 0xff000000, false, true);
-
-		const auto main_deck_size_str = GetDeckSizeStr(current_deck.main, gdeckManager->pre_deck.main);
-		DrawShadowText(numFont, main_deck_size_str, Resize(379, 137, 439, 157), Resize(1, 1, 1, 1), 0xffffffff, 0xff000000, false, true);
-
-		const auto main_types_count_str = epro::format(L"{} {} {} {} {} {}",
-													  gDataManager->GetSysString(1312), deckBuilder.main_monster_count,
-													  gDataManager->GetSysString(1313), deckBuilder.main_spell_count,
-													  gDataManager->GetSysString(1314), deckBuilder.main_trap_count);
-
-		const auto mainpos = Resize(310, 137, 797, 157);
-		const auto mainDeckTypeSize = textFont->getDimensionustring(main_types_count_str);
-		const auto pos = irr::core::recti(mainpos.LowerRightCorner.X - mainDeckTypeSize.Width - 5, mainpos.UpperLeftCorner.Y,
-										  mainpos.LowerRightCorner.X, mainpos.LowerRightCorner.Y);
-
-		DrawShadowText(textFont, main_types_count_str, pos, irr::core::recti{ 1, 1, 1, 1 }, 0xffffffff, 0xff000000, false, true);
-
-		DRAWRECT(MAIN, 310, 160, 797, 436);
-		DRAWOUTLINE(MAIN, 309, 159, 797, 436);
-
-		const int cards_per_row = (current_deck.main.size() > 40) ? static_cast<int>((current_deck.main.size() - 41) / 4 + 11) : 10;
-		const float dx = 436.0f / (cards_per_row - 1);
-
-		for(int i = 0; i < static_cast<int>(current_deck.main.size()); ++i) {
-			DrawThumb(current_deck.main[i], irr::core::vector2di(314 + (i % cards_per_row) * dx, 164 + (i / cards_per_row) * 68), deckBuilder.filterList);
-			if(deckBuilder.hovered_pos == 1 && deckBuilder.hovered_seq == i)
-				driver->draw2DRectangleOutline(Resize(313 + (i % cards_per_row) * dx, 163 + (i / cards_per_row) * 68, 359 + (i % cards_per_row) * dx, 228 + (i / cards_per_row) * 68), skin::DECK_WINDOW_HOVERED_CARD_OUTLINE_VAL);
+		const Deck::Vector* activeDeck = deckBuilder.active_deck_tab == 0 ? &current_deck.main :
+			(deckBuilder.active_deck_tab == 1 ? &current_deck.extra : &current_deck.side);
+		const wchar_t* tabNames[] = {
+			gDataManager->GetSysString(1330).data(),
+			gDataManager->GetSysString(1331).data(),
+			gDataManager->GetSysString(1332).data()
+		};
+		const Deck::Vector* tabDecks[] = { &current_deck.main, &current_deck.extra, &current_deck.side };
+		const int tabWidth = (panelRight - panelLeft) / 3;
+		for(int tab = 0; tab < 3; ++tab) {
+			const int left = panelLeft + tab * tabWidth;
+			const int right = tab == 2 ? panelRight : left + tabWidth;
+			const auto tabRect = Resize(left, 140, right, 172);
+			const auto tabColor = tab == deckBuilder.active_deck_tab ? 0xff46566a : 0xff252f3b;
+			driver->draw2DRectangle(tabRect, tabColor);
+			driver->draw2DRectangleOutline(tabRect, 0xff9099a5);
+			const auto label = epro::format(L"{} ({})", tabNames[tab], tabDecks[tab]->size());
+			DrawShadowText(textFont, label, tabRect, Resize(1, 1, 1, 1),
+				0xffffffff, 0xff000000, false, true);
 		}
-	}
-	//extra deck
-	{
-		DRAWRECT(EXTRA_INFO, 310, 440, 797, 460);
-		DRAWOUTLINE(EXTRA_INFO, 309, 439, 797, 460);
 
-		DrawShadowText(textFont, gDataManager->GetSysString(1331), Resize(314, 439, 409, 459), Resize(1, 1, 1, 1), 0xffffffff, 0xff000000, false, true);
-
-		const auto extra_deck_size_str = GetDeckSizeStr(current_deck.extra, gdeckManager->pre_deck.extra);
-		DrawShadowText(numFont, extra_deck_size_str, Resize(379, 440, 439, 460), Resize(1, 1, 1, 1), 0xffffffff, 0xff000000, false, true);
-
-		const auto extra_types_count_str = epro::format(L"{} {} {} {} {} {} {} {} {} {}",
-													   gDataManager->GetSysString(1056), deckBuilder.extra_fusion_count,
-													   gDataManager->GetSysString(1073), deckBuilder.extra_xyz_count,
-													   gDataManager->GetSysString(1063), deckBuilder.extra_synchro_count,
-													   gDataManager->GetSysString(1076), deckBuilder.extra_link_count,
-													   gDataManager->GetSysString(1057), deckBuilder.extra_rush_ritual_count);
-
-		const auto extrapos = Resize(310, 440, 797, 460);
-		const auto extraDeckTypeSize = textFont->getDimensionustring(extra_types_count_str);
-		const auto pos = irr::core::recti(extrapos.LowerRightCorner.X - extraDeckTypeSize.Width - 5, extrapos.UpperLeftCorner.Y,
-										  extrapos.LowerRightCorner.X, extrapos.LowerRightCorner.Y);
-
-		DrawShadowText(textFont, extra_types_count_str, pos, irr::core::recti{ 1, 1, 1, 1 }, 0xffffffff, 0xff000000, false, true);
-
-		DRAWRECT(EXTRA, 310, 463, 797, 533);
-		DRAWOUTLINE(EXTRA, 309, 462, 797, 533);
-
-		const float dx = (current_deck.extra.size() <= 10) ? (436.0f / 9.0f) : (436.0f / (current_deck.extra.size() - 1));
-
-		for(size_t i = 0; i < current_deck.extra.size(); ++i) {
-			DrawThumb(current_deck.extra[i], irr::core::vector2di(314 + i * dx, 466), deckBuilder.filterList);
-			if(deckBuilder.hovered_pos == 2 && deckBuilder.hovered_seq == (int)i)
-				driver->draw2DRectangleOutline(Resize(313 + i * dx, 465, 359 + i * dx, 531), skin::DECK_WINDOW_HOVERED_CARD_OUTLINE_VAL);
-		}
-	}
-	//side deck
-	{
-		DRAWRECT(SIDE_INFO, 310, 537, 797, 557);
-		DRAWOUTLINE(SIDE_INFO, 309, 536, 797, 557);
-
-		DrawShadowText(textFont, gDataManager->GetSysString(1332), Resize(314, 536, 409, 556), Resize(1, 1, 1, 1), 0xffffffff, 0xff000000, false, true);
-
-		const auto side_deck_size_str = GetDeckSizeStr(current_deck.side, gdeckManager->pre_deck.side);
-		DrawShadowText(numFont, side_deck_size_str, Resize(379, 536, 439, 556), Resize(1, 1, 1, 1), 0xffffffff, 0xff000000, false, true);
-
-		const auto side_types_count_str = epro::format(L"{} {} {} {} {} {}",
-													  gDataManager->GetSysString(1312), deckBuilder.side_monster_count,
-													  gDataManager->GetSysString(1313), deckBuilder.side_spell_count,
-													  gDataManager->GetSysString(1314), deckBuilder.side_trap_count);
-
-		const auto sidepos = Resize(310, 537, 797, 557);
-		const auto sideDeckTypeSize = textFont->getDimensionustring(side_types_count_str);
-		const auto pos = irr::core::recti(sidepos.LowerRightCorner.X - sideDeckTypeSize.Width - 5, sidepos.UpperLeftCorner.Y,
-										  sidepos.LowerRightCorner.X, sidepos.LowerRightCorner.Y);
-
-		DrawShadowText(textFont, side_types_count_str, pos, irr::core::recti{ 1, 1, 1, 1 }, 0xffffffff, 0xff000000, false, true);
-		DRAWRECT(SIDE, 310, 560, 797, 640 - kUiEdgeMargin);
-		DRAWOUTLINE(SIDE, 309, 559, 797, 640 - kUiEdgeMargin);
-
-		const float dx = (current_deck.side.size() <= 10) ? (436.0f / 9.0f) : (436.0f / (current_deck.side.size() - 1));
-
-		for(size_t i = 0; i < current_deck.side.size(); ++i) {
-			DrawThumb(current_deck.side[i], irr::core::vector2di(314 + i * dx, 564), deckBuilder.filterList);
-			if(deckBuilder.hovered_pos == 3 && deckBuilder.hovered_seq == (int)i)
-				driver->draw2DRectangleOutline(Resize(313 + i * dx, 563, 359 + i * dx, 629), skin::DECK_WINDOW_HOVERED_CARD_OUTLINE_VAL);
+		constexpr int firstRowY = 190;
+		constexpr int rowStep = 78;
+		const float slotWidth = static_cast<float>(panelRight - panelLeft) / 5.0f;
+		for(int i = 0; i < std::min<int>(10, activeDeck->size()); ++i) {
+			const int row = i / 5;
+			const int col = i % 5;
+			const int cardX = static_cast<int>(panelLeft + col * slotWidth + (slotWidth - CARD_THUMB_WIDTH) * 0.5f);
+			const int cardY = firstRowY + row * rowStep;
+			DrawThumb((*activeDeck)[i], irr::core::vector2di(cardX, cardY), deckBuilder.filterList);
+			if(deckBuilder.hovered_pos == deckBuilder.active_deck_tab + 1 && deckBuilder.hovered_seq == i) {
+				driver->draw2DRectangleOutline(
+					Resize(cardX - 1, cardY - 1, cardX + CARD_THUMB_WIDTH + 1, cardY + CARD_THUMB_HEIGHT + 1),
+					skin::DECK_WINDOW_HOVERED_CARD_OUTLINE_VAL);
+			}
 		}
 	}
 	//search result
