@@ -63,7 +63,7 @@ void DeckBuilder::Initialize(bool refresh) {
 	mainGame->wFilter->setVisible(true);
 	mainGame->wSort->setVisible(true);
 	mainGame->btnLeaveGame->setVisible(true);
-	mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 40));
+	mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, kUiEdgeMargin, 295, 40));
 	mainGame->btnHandTest->setRelativePosition(mainGame->Resize(205, 50, 295, 85));
 	mainGame->btnHandTestSettings->setRelativePosition(mainGame->Resize(205, 95, 295, 130));
 	mainGame->btnYdkeManage->setRelativePosition(mainGame->Resize(205, 140, 295, 175));
@@ -785,7 +785,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		case irr::EMIE_MOUSE_WHEEL: {
 			if(!mainGame->scrFilter->isVisible())
 				break;
-			if(!mainGame->Resize(805, 160, 1020, 630).isPointInside(mouse_pos))
+			if(!mainGame->Resize(805, 160, 1024 - kUiEdgeMargin, 640 - kUiEdgeMargin).isPointInside(mouse_pos))
 				break;
 			if(event.MouseInput.Wheel < 0) {
 				if(mainGame->scrFilter->getPos() < mainGame->scrFilter->getMax())
@@ -920,7 +920,7 @@ void DeckBuilder::GetHoveredCard() {
 	auto relative_mouse_pos = mainGame->Resize(mouse_pos.X, mouse_pos.Y, true);
 	auto x = relative_mouse_pos.X;
 	auto y = relative_mouse_pos.Y;
-	const irr::core::recti searchResultRect{ 810, 165, 995, 626 };
+	const irr::core::recti searchResultRect{ 810, 165, 995, 631 };
 	auto pre_code = hovered_code;
 	hovered_seq = -1;
 	hovered_pos = 0;
