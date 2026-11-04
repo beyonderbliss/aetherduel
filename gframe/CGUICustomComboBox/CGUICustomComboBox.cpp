@@ -299,6 +299,7 @@ bool CGUICustomComboBox::OnEvent(const SEvent& event) {
 			case EMIE_LMOUSE_LEFT_UP:
 			{
 				if(TouchWholeArea && !ListBox) {
+					Environment->setFocus(this);
 					openCloseMenu();
 					return true;
 				}
