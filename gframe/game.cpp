@@ -3260,21 +3260,35 @@ DeckGridLayout Game::GetDeckGridLayout() const {
 	constexpr int panelRight = 800;
 	constexpr int horizontalInset = 8;
 	constexpr int horizontalGap = 10;
-	constexpr int verticalGap = 18;
+	constexpr int verticalGap = 12;
 	constexpr int gridTop = 205;
 	constexpr int gridBottom = 627;
+	constexpr int columns = 5;
+	constexpr int rows = 3;
 	const int panelLeft = GetDeckPanelLeft();
-	const int usableWidth = std::max(5, panelRight - panelLeft - horizontalInset * 2);
-	const int cardWidth = std::max(1, (usableWidth - horizontalGap * 4) / 5);
-	const int slotWidth = cardWidth + horizontalGap;
+	const int panelWidth = std::max(5, panelRight - panelLeft);
+	const int usableWidth = std::max(5, panelWidth - horizontalInset * 2);
+	const int maxCardWidth = std::max(1, (usableWidth - horizontalGap * columns) / columns);
+
 	// Resize() scales X and Y independently. Compensate in logical height so
 	// the rendered thumbnail keeps the physical 59:86 card-art aspect ratio.
+	const float scaleX = std::max(0.001f, window_scale.X);
 	const float scaleY = std::max(0.001f, window_scale.Y);
+	const int availableHeight = gridBottom - gridTop;
+	const int maxCardHeight = std::max(1, (availableHeight - verticalGap * (rows - 1)) / rows);
+	const int heightLimitedWidth = std::max(1, static_cast<int>(std::floor(
+		maxCardHeight * 59.0f / 86.0f * scaleY / scaleX)));
+	const int cardWidth = std::min(maxCardWidth, heightLimitedWidth);
 	const int cardHeight = std::max(1, static_cast<int>(std::round(
-		cardWidth * 86.0f / 59.0f * window_scale.X / scaleY)));
-	const int gridHeight = cardHeight * 2 + verticalGap;
-	const int firstRowY = gridTop + std::max(0, (gridBottom - gridTop - gridHeight) / 2);
-	return { panelLeft, slotWidth, firstRowY, cardHeight + verticalGap, cardWidth, cardHeight };
+		cardWidth * 86.0f / 59.0f * scaleX / scaleY)));
+	const int slotWidth = cardWidth + horizontalGap;
+	const int gridWidth = slotWidth * columns;
+	// Center the complete five-slot grid, including its outer half-gaps,
+	// so the visible card margins are balanced on both sides.
+	const int gridLeft = panelLeft + (panelWidth - gridWidth) / 2;
+	const int gridHeight = cardHeight * rows + verticalGap * (rows - 1);
+	const int firstRowY = gridTop + std::max(0, (availableHeight - gridHeight) / 2);
+	return { gridLeft, slotWidth, firstRowY, cardHeight + verticalGap, cardWidth, cardHeight };
 }
 void Game::UpdateDeckMenuLayout() {
 	if(!wDeckEdit || !ebDeckname)
