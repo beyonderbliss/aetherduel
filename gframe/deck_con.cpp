@@ -61,6 +61,8 @@ void DeckBuilder::Initialize(bool refresh) {
 	mainGame->wInfos->setVisible(true);
 	mainGame->wCardImg->setVisible(true);
 	mainGame->wDeckEdit->setVisible(true);
+	deck_name_input_mode = 0;
+	mainGame->UpdateDeckMenuLayout();
 	mainGame->wFilter->setVisible(true);
 	mainGame->wSort->setVisible(true);
 	mainGame->btnLeaveGame->setVisible(true);
@@ -176,6 +178,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		if(mainGame->imgCard->getAbsolutePosition().isPointInside(tap)) {
 			mainGame->cardViewFullscreen = !mainGame->cardViewFullscreen;
 			mainGame->ResizeCardinfoWindow(gGameConfig->keep_cardinfo_aspect_ratio);
+			mainGame->UpdateDeckMenuLayout();
 			return true;
 		}
 	}
@@ -183,7 +186,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 	   event.MouseInput.Event == irr::EMIE_LMOUSE_LEFT_UP && !is_draging &&
 	   !mainGame->wCategories->isVisible() && !mainGame->wQuery->isVisible()) {
 		const auto pos = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
-		const int panelLeft = mainGame->Resize(mainGame->wCardImg->getRelativePosition().LowerRightCorner.X, 0, true).X + kUiEdgeMargin;
+		const int panelLeft = mainGame->GetDeckPanelLeft();
 		if(pos.X >= panelLeft && pos.X < 800 && pos.Y >= 140 && pos.Y <= 172) {
 			const int tabWidth = (800 - panelLeft) / 3;
 			active_deck_tab = std::min(2, (pos.X - panelLeft) / std::max(1, tabWidth));
@@ -306,30 +309,55 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				break;
 			}
 			case BUTTON_SAVE_DECK_AS: {
-				epro::wstringview dname(mainGame->ebDeckname->getText());
-				if(dname.empty())
+				if(deck_name_input_mode == 0) {
+					deck_name_input_mode = 1;
+					mainGame->ebDeckname->setText(L"");
+					mainGame->UpdateDeckMenuLayout();
+					mainGame->env->setFocus(mainGame->ebDeckname);
 					break;
-				int sel = -1;
-				{
-					const auto upper = Utils::ToUpperNoAccents(dname);
-					for(irr::u32 i = 0; i < mainGame->cbDBDecks->getItemCount(); ++i) {
-						if(Utils::EqualIgnoreCaseFirst<epro::wstringview>(upper, mainGame->cbDBDecks->getItem(i))) {
-							sel = i;
-							break;
-						}
+				}
+				const wchar_t* dname = mainGame->ebDeckname->getText();
+				if(!*dname)
+					break;
+				int duplicate = -1;
+				const auto upper = Utils::ToUpperNoAccents(epro::wstringview(dname));
+				for(irr::u32 i = 0; i < mainGame->cbDBDecks->getItemCount(); ++i) {
+					if(Utils::EqualIgnoreCaseFirst<epro::wstringview>(upper, mainGame->cbDBDecks->getItem(i))) {
+						duplicate = static_cast<int>(i);
+						break;
 					}
 				}
-				if(sel >= 0) {
+				const int current = mainGame->cbDBDecks->getSelected();
+				if(duplicate >= 0 && (deck_name_input_mode != 2 || duplicate != current)) {
 					mainGame->stACMessage->setText(gDataManager->GetSysString(1339).data());
 					mainGame->PopupElement(mainGame->wACMessage, 40);
 					break;
-				} else {
-					mainGame->cbDBDecks->addItem(dname.data());
-					mainGame->cbDBDecks->setSelected(mainGame->cbDBDecks->getItemCount() - 1);
 				}
-				if(DeckManager::SaveDeck(Utils::ToPathString(dname), current_deck)) {
-					mainGame->stACMessage->setText(gDataManager->GetSysString(1335).data());
-					mainGame->PopupElement(mainGame->wACMessage, 20);
+				if(deck_name_input_mode == 1) {
+					if(DeckManager::SaveDeck(Utils::ToPathString(dname), current_deck)) {
+						mainGame->cbDBDecks->addItem(dname);
+						mainGame->cbDBDecks->setSelected(mainGame->cbDBDecks->getItemCount() - 1);
+						deck_name_input_mode = 0;
+						mainGame->UpdateDeckMenuLayout();
+						mainGame->stACMessage->setText(gDataManager->GetSysString(1335).data());
+						mainGame->PopupElement(mainGame->wACMessage, 20);
+					} else {
+						mainGame->stACMessage->setText(gDataManager->GetSysString(1364).data());
+						mainGame->PopupElement(mainGame->wACMessage, 30);
+					}
+				} else if(current >= 0) {
+					if(wcscmp(dname, mainGame->cbDBDecks->getItem(current)) == 0) {
+						deck_name_input_mode = 0;
+						mainGame->UpdateDeckMenuLayout();
+					} else if(DeckManager::RenameDeck(Utils::ToPathString(mainGame->cbDBDecks->getItem(current)), Utils::ToPathString(dname))) {
+						mainGame->cbDBDecks->removeItem(current);
+						mainGame->cbDBDecks->setSelected(mainGame->cbDBDecks->addItem(dname));
+						deck_name_input_mode = 0;
+						mainGame->UpdateDeckMenuLayout();
+					} else {
+						mainGame->stACMessage->setText(gDataManager->GetSysString(1364).data());
+						mainGame->PopupElement(mainGame->wACMessage, 30);
+					}
 				}
 				break;
 			}
@@ -344,25 +372,20 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				break;
 			}
 			case BUTTON_RENAME_DECK: {
-				int sel = mainGame->cbDBDecks->getSelected();
-				const wchar_t* dname = mainGame->ebDeckname->getText();
-				if(sel == -1 || *dname == 0 || !wcscmp(dname, mainGame->cbDBDecks->getItem(sel)))
+				if(deck_name_input_mode != 0) {
+					deck_name_input_mode = 0;
+					mainGame->ebDeckname->setText(L"");
+					mainGame->UpdateDeckMenuLayout();
+					mainGame->env->setFocus(mainGame->cbDBDecks);
 					break;
-				for(auto i = 0; i < static_cast<int>(mainGame->cbDBDecks->getItemCount()); ++i) {
-					if(i == sel)continue;
-					if(!wcscmp(dname, mainGame->cbDBDecks->getItem(i))) {
-						mainGame->stACMessage->setText(gDataManager->GetSysString(1339).data());
-						mainGame->PopupElement(mainGame->wACMessage, 30);
-						return false;
-					}
 				}
-				if(DeckManager::RenameDeck(Utils::ToPathString(mainGame->cbDBDecks->getItem(sel)), Utils::ToPathString(dname))) {
-					mainGame->cbDBDecks->removeItem(sel);
-					mainGame->cbDBDecks->setSelected(mainGame->cbDBDecks->addItem(dname));
-				} else {
-					mainGame->stACMessage->setText(gDataManager->GetSysString(1364).data());
-					mainGame->PopupElement(mainGame->wACMessage, 30);
-				}
+				const int selected = mainGame->cbDBDecks->getSelected();
+				if(selected < 0)
+					break;
+				deck_name_input_mode = 2;
+				mainGame->ebDeckname->setText(mainGame->cbDBDecks->getItem(selected));
+				mainGame->UpdateDeckMenuLayout();
+				mainGame->env->setFocus(mainGame->ebDeckname);
 				break;
 			}
 			case BUTTON_LEAVE_GAME: {
@@ -833,6 +856,13 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		break;
 	}
 	case irr::EET_KEY_INPUT_EVENT: {
+		if(event.KeyInput.PressedDown && event.KeyInput.Key == irr::KEY_ESCAPE && deck_name_input_mode != 0) {
+			deck_name_input_mode = 0;
+			mainGame->ebDeckname->setText(L"");
+			mainGame->UpdateDeckMenuLayout();
+			mainGame->env->setFocus(mainGame->cbDBDecks);
+			return true;
+		}
 		if(event.KeyInput.PressedDown && !mainGame->HasFocus(irr::gui::EGUIET_EDIT_BOX)) {
 			switch(event.KeyInput.Key) {
 			case irr::KEY_KEY_C: {
@@ -975,7 +1005,7 @@ void DeckBuilder::GetHoveredCard() {
 			return;
 		}
 
-		const int panelLeft = mainGame->Resize(mainGame->wCardImg->getRelativePosition().LowerRightCorner.X, 0, true).X + kUiEdgeMargin;
+		const int panelLeft = mainGame->GetDeckPanelLeft();
 		constexpr int panelRight = 800;
 		constexpr int firstRowY = 190;
 		constexpr int rowStep = 78;
