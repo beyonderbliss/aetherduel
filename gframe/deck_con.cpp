@@ -58,6 +58,11 @@ void DeckBuilder::StartDeckNameInput(int mode) {
 		if(selected < 0)
 			return;
 		mainGame->ebDeckname->setText(mainGame->cbDBDecks->getItem(selected));
+		irr::SEvent cursorEvent{};
+		cursorEvent.EventType = irr::EET_KEY_INPUT_EVENT;
+		cursorEvent.KeyInput.Key = irr::KEY_END;
+		cursorEvent.KeyInput.PressedDown = true;
+		mainGame->ebDeckname->OnEvent(cursorEvent);
 	} else {
 		mainGame->ebDeckname->setText(L"");
 	}
