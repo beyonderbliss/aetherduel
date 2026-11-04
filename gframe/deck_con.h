@@ -73,7 +73,7 @@ public:
 	bool SetCurrentDeckFromFile(epro::path_stringview file, bool separated = false, RITUAL_LOCATION rituals_in_extra = RITUAL_LOCATION::DEFAULT);
 	void SetCurrentDeck(Deck new_deck) {
 		current_deck = std::move(new_deck);
-		main_deck_scroll_row = 0;
+		main_deck_scroll_offset = 0.0f;
 		RefreshLimitationStatus();
 	}
 	void CancelDeckNameInput();
@@ -148,12 +148,13 @@ public:
 	bool drag_pending = false;
 	int drag_start_seq = -1;
 	int scroll_pos;
-	int main_deck_scroll_row = 0;
+	float main_deck_scroll_offset = 0.0f;
 	bool deck_scroll_pending = false;
 	bool deck_scroll_active = false;
+	bool deck_scroll_free = false;
 	int deck_scroll_start_x = 0;
 	int deck_scroll_start_y = 0;
-	int deck_scroll_start_row = 0;
+	float deck_scroll_start_offset = 0.0f;
 	int dragx;
 	int dragy;
 	const CardDataC* dragging_pointer;
