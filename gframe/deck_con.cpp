@@ -1094,9 +1094,10 @@ void DeckBuilder::GetHoveredCard() {
 		if(x < panelLeft || x >= panelRight)
 			return;
 
+		if(y < grid.firstRowY)
+			return;
 		const int row = (y - grid.firstRowY) / grid.rowStep;
-		if(row < 0 || row >= 3 ||
-			y >= grid.firstRowY + row * grid.rowStep + grid.cardHeight)
+		if(row >= 3 || y >= grid.firstRowY + row * grid.rowStep + grid.cardHeight)
 			return;
 
 		hovered_pos = active_deck_tab + 1;
