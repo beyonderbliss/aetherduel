@@ -1150,7 +1150,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					if(hovered_pos == 3)
 						push_side(dragging_pointer, hovered_seq + is_lastcard, true);
 					else {
-						push_main(dragging_pointer, hovered_seq, true) || push_extra(dragging_pointer, hovered_seq + is_lastcard, true);
+						push_main(dragging_pointer, hovered_seq + is_lastcard, true) || push_extra(dragging_pointer, hovered_seq + is_lastcard, true);
 					}
 					is_draging = false;
 				}
