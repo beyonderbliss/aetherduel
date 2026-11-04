@@ -195,6 +195,9 @@ void DeckBuilder::Initialize(bool refresh) {
 	is_draging = false;
 	drag_pending = false;
 	drag_start_seq = -1;
+	deck_scroll_pending = false;
+	deck_scroll_active = false;
+	main_deck_scroll_row = 0;
 	prev_deck = mainGame->cbDBDecks->getSelected();
 	prev_operation = 0;
 	mainGame->SetMessageWindow();
@@ -280,7 +283,8 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 	// Keep the shared card viewer interactive in both editor and duel modes.
 	if(event.EventType == irr::EET_MOUSE_INPUT_EVENT &&
 	   event.MouseInput.Event == irr::EMIE_LMOUSE_LEFT_UP &&
-	   mainGame->wCardImg->isVisible() && mainGame->imgCard->isVisible()) {
+	   mainGame->wCardImg->isVisible() && mainGame->imgCard->isVisible() &&
+	   !deck_scroll_pending && !deck_scroll_active) {
 		const irr::core::vector2di tap(event.MouseInput.X, event.MouseInput.Y);
 		if(mainGame->imgCard->getAbsolutePosition().isPointInside(tap)) {
 			mainGame->cardViewFullscreen = !mainGame->cardViewFullscreen;
@@ -291,6 +295,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 	}
 	if(event.EventType == irr::EET_MOUSE_INPUT_EVENT &&
 	   event.MouseInput.Event == irr::EMIE_LMOUSE_LEFT_UP && !is_draging &&
+	   !deck_scroll_pending && !deck_scroll_active &&
 	   !mainGame->wCategories->isVisible() && !mainGame->wQuery->isVisible()) {
 		const auto pos = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
 		const int panelLeft = mainGame->GetDeckPanelLeft();
