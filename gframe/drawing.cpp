@@ -1179,7 +1179,7 @@ void Game::WaitFrameSignal(int frame, std::unique_lock<epro::mutex>& _lck) {
 	signalFrame = (gGameConfig->quick_animation && frame >= 12) ? 12 * 1000 / 60 : frame * 1000 / 60;
 	frameSignal.Wait(_lck);
 }
-void Game::DrawThumb(const CardDataC* cp, irr::core::vector2di pos, LFList* lflist, bool drag, const irr::core::recti* cliprect, bool load_image) {
+void Game::DrawThumb(const CardDataC* cp, irr::core::vector2di pos, LFList* lflist, bool drag, const irr::core::recti* cliprect, bool load_image, int thumbWidth, int thumbHeight) {
 	auto code = cp->code;
 	auto flit = lflist->GetLimitationIterator(cp);
 	int count = 3;
@@ -1192,13 +1192,20 @@ void Game::DrawThumb(const CardDataC* cp, irr::core::vector2di pos, LFList* lfli
 	if (!img)
 		return;
 	irr::core::dimension2du size = img->getOriginalSize();
-	irr::core::recti dragloc = Resize(pos.X, pos.Y, pos.X + CARD_THUMB_WIDTH, pos.Y + CARD_THUMB_HEIGHT);
-	irr::core::recti limitloc = Resize(pos.X, pos.Y, pos.X + 20, pos.Y + 20);
-	irr::core::recti otloc = Resize(pos.X + 7, pos.Y + 50, pos.X + 37, pos.Y + 65);
+	const float thumbScale = static_cast<float>(thumbWidth) / CARD_THUMB_WIDTH;
+	const int limitSize = std::max(1, static_cast<int>(std::round(20 * thumbScale)));
+	const int otLeft = static_cast<int>(std::round(7 * thumbScale));
+	const int otTop = static_cast<int>(std::round(50 * thumbScale));
+	const int otRight = static_cast<int>(std::round(37 * thumbScale));
+	const int otBottom = static_cast<int>(std::round(65 * thumbScale));
+	irr::core::recti dragloc = Resize(pos.X, pos.Y, pos.X + thumbWidth, pos.Y + thumbHeight);
+	irr::core::recti limitloc = Resize(pos.X, pos.Y, pos.X + limitSize, pos.Y + limitSize);
+	irr::core::recti otloc = Resize(pos.X + otLeft, pos.Y + otTop, pos.X + otRight, pos.Y + otBottom);
 	if(drag) {
-		dragloc = irr::core::recti(pos.X, pos.Y, pos.X + Scale(CARD_THUMB_WIDTH * window_scale.X), pos.Y + Scale(CARD_THUMB_HEIGHT * window_scale.Y));
-		limitloc = irr::core::recti(pos.X, pos.Y, pos.X + Scale(20 * window_scale.X), pos.Y + Scale(20 * window_scale.Y));
-		otloc = irr::core::recti(pos.X + 7, pos.Y + 50 * window_scale.Y, pos.X + 37 * window_scale.X, pos.Y + 65 * window_scale.Y);
+		dragloc = irr::core::recti(pos.X, pos.Y, pos.X + Scale(thumbWidth * window_scale.X), pos.Y + Scale(thumbHeight * window_scale.Y));
+		limitloc = irr::core::recti(pos.X, pos.Y, pos.X + Scale(limitSize * window_scale.X), pos.Y + Scale(limitSize * window_scale.Y));
+		otloc = irr::core::recti(pos.X + Scale(otLeft * window_scale.X), pos.Y + Scale(otTop * window_scale.Y),
+			pos.X + Scale(otRight * window_scale.X), pos.Y + Scale(otBottom * window_scale.Y));
 	}
 	driver->draw2DImage(img, dragloc, irr::core::recti(0, 0, size.Width, size.Height), cliprect);
 	if(!is_siding) {
@@ -1311,18 +1318,20 @@ void Game::DrawDeckBd() {
 		DrawShadowText(textFont, categoryStats, statsRect, Resize(1, 1, 1, 1),
 			0xffffffff, 0xff000000, false, true);
 
-		constexpr int firstRowY = 210;
-		constexpr int rowStep = 78;
-		const float slotWidth = static_cast<float>(panelRight - panelLeft) / 5.0f;
+		// Separate the category summary from the card grid.
+		driver->draw2DRectangle(0xff65717f, Resize(panelLeft + 8, 198, panelRight - 8, 199));
+
+		const auto grid = GetDeckGridLayout();
 		for(int i = 0; i < std::min<int>(10, activeDeck->size()); ++i) {
 			const int row = i / 5;
 			const int col = i % 5;
-			const int cardX = static_cast<int>(panelLeft + col * slotWidth + (slotWidth - CARD_THUMB_WIDTH) * 0.5f);
-			const int cardY = firstRowY + row * rowStep;
-			DrawThumb((*activeDeck)[i], irr::core::vector2di(cardX, cardY), deckBuilder.filterList);
+			const int cardX = grid.panelLeft + 8 + col * grid.slotWidth + (grid.slotWidth - grid.cardWidth) / 2;
+			const int cardY = grid.firstRowY + row * grid.rowStep;
+			DrawThumb((*activeDeck)[i], irr::core::vector2di(cardX, cardY), deckBuilder.filterList,
+				false, nullptr, true, grid.cardWidth, grid.cardHeight);
 			if(deckBuilder.hovered_pos == deckBuilder.active_deck_tab + 1 && deckBuilder.hovered_seq == i) {
 				driver->draw2DRectangleOutline(
-					Resize(cardX - 1, cardY - 1, cardX + CARD_THUMB_WIDTH + 1, cardY + CARD_THUMB_HEIGHT + 1),
+					Resize(cardX - 1, cardY - 1, cardX + grid.cardWidth + 1, cardY + grid.cardHeight + 1),
 					skin::DECK_WINDOW_HOVERED_CARD_OUTLINE_VAL);
 			}
 		}
