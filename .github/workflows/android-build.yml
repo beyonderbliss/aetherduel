@@ -146,8 +146,8 @@ jobs:
           set -euo pipefail
           A=src/main/assets/defaults
           mkdir -p "$A/config" "$A/fonts" "$A/textures" "$A/pics" "$A/deck"
-          test -d ../deps/edopro/deck
-          cp -a ../deps/edopro/deck/. "$A/deck/"
+          test -d deps/edopro/deck
+          cp -a deps/edopro/deck/. "$A/deck/"
           test -s "$A/deck/[TEST] Dark Magician.ydk"
           test -s "$A/deck/[TEST] Blue-Eyes.ydk"
           BASE=https://raw.githubusercontent.com/ProjectIgnis/Distribution/master
