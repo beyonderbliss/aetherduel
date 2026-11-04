@@ -1258,11 +1258,7 @@ void Game::DrawDeckBd() {
 
 	// One shared deck area with Main / Extra / Side tabs.
 	{
-		// Keep the deck panel at its normal fixed column beside the standard card preview.
-		// Only fullscreen mode follows the enlarged card's right edge with the 5-unit gap.
-		const int panelLeft = cardViewFullscreen
-			? Resize(wCardImg->getRelativePosition().LowerRightCorner.X, 0, true).X + kUiEdgeMargin
-			: 310;
+		const int panelLeft = GetDeckPanelLeft();
 		constexpr int panelRight = 800;
 		constexpr int panelTop = 135;
 		constexpr int panelBottom = 635;
