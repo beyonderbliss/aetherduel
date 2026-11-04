@@ -1346,8 +1346,8 @@ void Game::DrawDeckBd() {
 										  sidepos.LowerRightCorner.X, sidepos.LowerRightCorner.Y);
 
 		DrawShadowText(textFont, side_types_count_str, pos, irr::core::recti{ 1, 1, 1, 1 }, 0xffffffff, 0xff000000, false, true);
-		DRAWRECT(SIDE, 310, 560, 797, 630);
-		DRAWOUTLINE(SIDE, 309, 559, 797, 630);
+		DRAWRECT(SIDE, 310, 560, 797, 640 - kUiEdgeMargin);
+		DRAWOUTLINE(SIDE, 309, 559, 797, 640 - kUiEdgeMargin);
 
 		const float dx = (current_deck.side.size() <= 10) ? (436.0f / 9.0f) : (436.0f / (current_deck.side.size() - 1));
 
@@ -1369,8 +1369,8 @@ void Game::DrawDeckBd() {
 		const auto pos = irr::core::recti(ResizeX(809) + size, ResizeY(136), ResizeX(809) + size + 10, ResizeY(156));
 		DrawShadowText(numFont, deckBuilder.result_string, pos, Resize(0, 1, 0, 1), 0xffffffff, 0xff000000, false, true);
 
-		DRAWRECT(SEARCH_RESULT, 805, 160, 1020, 630);
-		DRAWOUTLINE(SEARCH_RESULT, 804, 159, 1020, 630);
+		DRAWRECT(SEARCH_RESULT, 805, 160, 1024 - kUiEdgeMargin, 640 - kUiEdgeMargin);
+		DRAWOUTLINE(SEARCH_RESULT, 804, 159, 1024 - kUiEdgeMargin, 640 - kUiEdgeMargin);
 
 		const int prev_pos = deckBuilder.scroll_pos;
 		deckBuilder.scroll_pos = floor(scrFilter->getPos() / DECK_SEARCH_SCROLL_STEP);
@@ -1378,7 +1378,7 @@ void Game::DrawDeckBd() {
 		const bool draw_thumb = std::abs(prev_pos - deckBuilder.scroll_pos) < (10.0f * 60.0f / 1000.0f) * delta_time;
 		const int card_position = deckBuilder.scroll_pos;
 		const int height_offset = (scrFilter->getPos() % DECK_SEARCH_SCROLL_STEP) * -1.f * 0.65f;
-		const irr::core::recti rect = Resize(805, 160, 1020, 630);
+		const irr::core::recti rect = Resize(805, 160, 1024 - kUiEdgeMargin, 640 - kUiEdgeMargin);
 
 		//loads the thumb of one card before and one after to make the scroll smoother
 		int i = (card_position > 0) ? -1 : 0;
