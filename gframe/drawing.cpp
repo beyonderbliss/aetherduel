@@ -1322,14 +1322,21 @@ void Game::DrawDeckBd() {
 		driver->draw2DRectangle(0xff65717f, Resize(panelLeft + 8, 198, panelRight - 8, 199));
 
 		const auto grid = GetDeckGridLayout();
-		for(int i = 0; i < std::min<int>(15, activeDeck->size()); ++i) {
+		int firstCardIndex = 0;
+		if(deckBuilder.active_deck_tab == 0) {
+			const int totalRows = static_cast<int>((activeDeck->size() + 4) / 5);
+			deckBuilder.main_deck_scroll_row = std::clamp(deckBuilder.main_deck_scroll_row, 0, std::max(0, totalRows - 3));
+			firstCardIndex = deckBuilder.main_deck_scroll_row * 5;
+		}
+		for(int i = 0; i < 15 && firstCardIndex + i < static_cast<int>(activeDeck->size()); ++i) {
+			const int cardIndex = firstCardIndex + i;
 			const int row = i / 5;
 			const int col = i % 5;
 			const int cardX = grid.gridLeft + col * grid.slotWidth + (grid.slotWidth - grid.cardWidth) / 2;
 			const int cardY = grid.firstRowY + row * grid.rowStep;
-			DrawThumb((*activeDeck)[i], irr::core::vector2di(cardX, cardY), deckBuilder.filterList,
+			DrawThumb((*activeDeck)[cardIndex], irr::core::vector2di(cardX, cardY), deckBuilder.filterList,
 				false, nullptr, true, grid.cardWidth, grid.cardHeight);
-			if(deckBuilder.hovered_pos == deckBuilder.active_deck_tab + 1 && deckBuilder.hovered_seq == i) {
+			if(deckBuilder.hovered_pos == deckBuilder.active_deck_tab + 1 && deckBuilder.hovered_seq == cardIndex) {
 				driver->draw2DRectangleOutline(
 					Resize(cardX - 1, cardY - 1, cardX + grid.cardWidth + 1, cardY + grid.cardHeight + 1),
 					skin::DECK_WINDOW_HOVERED_CARD_OUTLINE_VAL);
