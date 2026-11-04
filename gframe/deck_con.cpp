@@ -1089,26 +1089,25 @@ void DeckBuilder::GetHoveredCard() {
 		}
 
 		const auto grid = mainGame->GetDeckGridLayout();
-		const int panelRight = 800;
-		const int gridLeft = grid.panelLeft + 8;
-		const int gridRight = panelRight - 8;
-		if(x < gridLeft || x >= gridRight)
+		const int panelLeft = grid.gridLeft;
+		const int panelRight = panelLeft + grid.slotWidth * 5;
+		if(x < panelLeft || x >= panelRight)
 			return;
 
-		const int row = (y >= grid.firstRowY && y < grid.firstRowY + grid.cardHeight) ? 0 :
-			((y >= grid.firstRowY + grid.rowStep && y < grid.firstRowY + grid.rowStep + grid.cardHeight) ? 1 : -1);
-		if(row < 0)
+		const int row = (y - grid.firstRowY) / grid.rowStep;
+		if(row < 0 || row >= 3 ||
+			y >= grid.firstRowY + row * grid.rowStep + grid.cardHeight)
 			return;
 
 		hovered_pos = active_deck_tab + 1;
 		const Deck::Vector* activeDeck = active_deck_tab == 0 ? &current_deck.main :
 			(active_deck_tab == 1 ? &current_deck.extra : &current_deck.side);
-		const int col = std::min(4, (x - gridLeft) / grid.slotWidth);
+		const int col = (x - panelLeft) / grid.slotWidth;
 		const int seq = row * 5 + col;
 		if(seq < static_cast<int>(activeDeck->size())) {
 			hovered_seq = seq;
 			hovered_code = (*activeDeck)[seq]->code;
-			const int cardLeft = gridLeft + col * grid.slotWidth + (grid.slotWidth - grid.cardWidth) / 2;
+			const int cardLeft = grid.gridLeft + col * grid.slotWidth + (grid.slotWidth - grid.cardWidth) / 2;
 			is_lastcard = x >= cardLeft + grid.cardWidth / 2;
 		} else {
 			hovered_seq = activeDeck->empty() ? -1 : static_cast<int>(activeDeck->size()) - 1;
