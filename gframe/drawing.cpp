@@ -1270,10 +1270,10 @@ void Game::DrawDeckBd() {
 
 		const Deck::Vector* activeDeck = deckBuilder.active_deck_tab == 0 ? &current_deck.main :
 			(deckBuilder.active_deck_tab == 1 ? &current_deck.extra : &current_deck.side);
-		const wchar_t* tabNames[] = {
-			gDataManager->GetSysString(1330).data(),
-			gDataManager->GetSysString(1331).data(),
-			gDataManager->GetSysString(1332).data()
+		const auto tabNames[] = {
+			gDataManager->GetSysString(1330),
+			gDataManager->GetSysString(1331),
+			gDataManager->GetSysString(1332)
 		};
 		const Deck::Vector* tabDecks[] = { &current_deck.main, &current_deck.extra, &current_deck.side };
 		const int tabWidth = (panelRight - panelLeft) / 3;
