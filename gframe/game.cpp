@@ -552,10 +552,16 @@ void Game::Initialize() {
 	defaultStrings.emplace_back(stBanlist, 1300);
 	cbDBLFList = AlignElementWithParent(AddComboBox(env, Scale(80, 5, 220, 30), wDeckEdit, COMBOBOX_DBLFLIST));
 	cbDBLFList->setMaxSelectionRows(10);
+#if EDOPRO_ANDROID || EDOPRO_IOS
+	static_cast<irr::gui::CGUICustomComboBox*>(cbDBLFList)->setTouchWholeArea(true);
+#endif
 	stDeck = env->addStaticText(gDataManager->GetSysString(1301).data(), Scale(10, 39, 100, 59), false, false, wDeckEdit);
 	defaultStrings.emplace_back(stDeck, 1301);
 	cbDBDecks = AlignElementWithParent(AddComboBox(env, Scale(80, 35, 220, 60), wDeckEdit, COMBOBOX_DBDECKS));
 	cbDBDecks->setMaxSelectionRows(15);
+#if EDOPRO_ANDROID || EDOPRO_IOS
+	static_cast<irr::gui::CGUICustomComboBox*>(cbDBDecks)->setTouchWholeArea(true);
+#endif
 
 	btnSaveDeck = AlignElementWithParent(env->addButton(Scale(225, 35, 290, 60), wDeckEdit, BUTTON_SAVE_DECK, gDataManager->GetSysString(1302).data()));
 	defaultStrings.emplace_back(btnSaveDeck, 1302);
@@ -3281,7 +3287,7 @@ void Game::UpdateDeckMenuLayout() {
 	btnSaveDeckAs->setVisible(true);
 	btnRenameDeck->setVisible(true);
 	if(inputMode) {
-		ebDeckname->setRelativePosition(localRect(36, 35, right, 60));
+		ebDeckname->setRelativePosition(localRect(62, 35, right, 60));
 		const int contentLeft = 5;
 		const int contentRight = right;
 		const int gap = 2;
@@ -3295,8 +3301,8 @@ void Game::UpdateDeckMenuLayout() {
 	}
 	stBanlist->setRelativePosition(localRect(5, 8, 60, 28));
 	cbDBLFList->setRelativePosition(localRect(62, 5, right, 30));
-	stDeck->setRelativePosition(localRect(5, 38, 34, 58));
-	cbDBDecks->setRelativePosition(localRect(36, 35, right, 60));
+	stDeck->setRelativePosition(localRect(5, 38, 60, 58));
+	cbDBDecks->setRelativePosition(localRect(62, 35, right, 60));
 	const int contentLeft = 5;
 	const int contentRight = right;
 	const int gap = 2;
@@ -3321,10 +3327,10 @@ void Game::UpdateDeckMenuLayout() {
 	btnRenameDeck->setText(L"Rename");
 	btnSaveDeck->setText(gDataManager->GetSysString(1302).data());
 	btnSaveDeckAs->setText(gDataManager->GetSysString(1303).data());
-	btnShuffleDeck->setText(L"Shf");
+	btnShuffleDeck->setText(L"Shuffle");
 	btnSortDeck->setText(L"Sort");
-	btnClearDeck->setText(L"Clr");
-	btnDeleteDeck->setText(L"Del");
+	btnClearDeck->setText(L"Clear");
+	btnDeleteDeck->setText(L"Delete");
 	btnShuffleDeck->setToolTipText(L"Shuffle");
 	btnSortDeck->setToolTipText(L"Sort");
 	btnClearDeck->setToolTipText(L"Clear");
