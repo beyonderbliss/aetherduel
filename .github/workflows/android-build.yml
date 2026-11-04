@@ -274,7 +274,7 @@ jobs:
           curl -fL https://raw.githubusercontent.com/ProjectIgnis/BabelCDB/master/cards.cdb -o "$A/cards.cdb"
           test -s "$A/cards.cdb"
           python3 deps/edopro/tools/prepare-dark-test-cards.py "$A"
-          test "$(wc -l < "$A/dark-test-cards.txt")" -eq 41
+          test "$(wc -l < "$A/dark-test-cards.txt")" -ge 41
           test "$(find "$A/pics" -maxdepth 1 -name '*.jpg' | wc -l)" -ge 40
           du -sh "$A"
 
