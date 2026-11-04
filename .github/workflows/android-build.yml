@@ -222,7 +222,7 @@ jobs:
           \t}
           """
           assert text.count(old_back) == 1, "Could not uniquely locate Android Back handler"
-          text = text.replace(old_back, input_mode_java + "\\n" + new_back)
+          text = text.replace(old_back, input_mode_java + "\n" + new_back)
 
           oncreate_anchor = "\t\tsuper.onCreate(savedInstanceState);\n"
           assert text.count(oncreate_anchor) == 1, "Could not locate Activity onCreate"
