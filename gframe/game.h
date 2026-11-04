@@ -17,6 +17,7 @@
 #include "image_manager.h"
 #include "client_field.h"
 #include "deck_con.h"
+#include "deck_editor_layout.h"
 #include "menu_handler.h"
 #include "discord_wrapper.h"
 #include "windbot_panel.h"
@@ -697,6 +698,7 @@ public:
 
 	irr::core::dimension2d<irr::u32> window_size;
 	irr::core::vector2d<irr::f32> window_scale;
+	deck_editor::Layout deckEditorLayout;
 
 	CGUISkinSystem* skinSystem;
 

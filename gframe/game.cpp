@@ -3599,6 +3599,16 @@ void Game::ReloadElementsStrings() {
 }
 void Game::OnResize() {
 	env->getRootGUIElement()->setRelativePosition(irr::core::recti(0, 0, window_size.Width, window_size.Height));
+
+	// Step 1: compute Deck Editor geometry in logical viewport units.
+	// The existing Android window/cutout policy remains the source of the drawable viewport.
+	const auto layoutScale = std::max(dpi_scale, 0.01f);
+	const irr::core::recti deckEditorViewport(
+		0, 0,
+		static_cast<irr::s32>(std::lround(window_size.Width / layoutScale)),
+		static_cast<irr::s32>(std::lround(window_size.Height / layoutScale))
+	);
+	deckEditorLayout = deck_editor::Calculate(deckEditorViewport);
 	{
 		const auto waboutcorner = wAbout->getAbsolutePosition().UpperLeftCorner;
 		using std::min;
