@@ -72,8 +72,8 @@ void DeckBuilder::StartDeckNameInput(int mode) {
 		mainGame->ebDeckname->OnEvent(cursorEvent);
 	}
 #if EDOPRO_ANDROID
-	porting::setDeckNameInputMode(true);
 	porting::displayKeyboard(true);
+	porting::setDeckNameInputMode(true);
 #endif
 }
 
