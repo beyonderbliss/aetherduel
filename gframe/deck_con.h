@@ -17,6 +17,8 @@ struct CardString;
 
 class DeckBuilder final : public irr::IEventReceiver {
 public:
+	// 0 = normal menu, 1 = Save As input, 2 = Rename input.
+	int deck_name_input_mode = 0;
 	enum limitation_search_filters {
 		LIMITATION_FILTER_NONE,
 		LIMITATION_FILTER_BANNED,
