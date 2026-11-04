@@ -132,6 +132,27 @@ jobs:
           assert text.count(anchor) == 1, "Could not locate native callback declarations"
           assert "putBackKeyEvent" not in text, "Back callback already exists"
           text = text.replace(anchor, anchor + declaration)
+          input_mode_java = """\tprivate int deckNamePreviousSystemUiVisibility = -1;
+
+          \tpublic void setDeckNameInputMode(boolean active) {
+          \t\trunOnUiThread(() -> {
+          \t\t\tandroid.view.View decor = getWindow().getDecorView();
+          \t\t\tif (active) {
+          \t\t\t\tif (deckNamePreviousSystemUiVisibility < 0)
+          \t\t\t\t\tdeckNamePreviousSystemUiVisibility = decor.getSystemUiVisibility();
+          \t\t\t\tdecor.setSystemUiVisibility(
+          \t\t\t\t\t\tdeckNamePreviousSystemUiVisibility
+          \t\t\t\t\t\t| android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+          \t\t\t\t\t\t| android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+          \t\t\t} else if (deckNamePreviousSystemUiVisibility >= 0) {
+          \t\t\t\tdecor.setSystemUiVisibility(deckNamePreviousSystemUiVisibility);
+          \t\t\t\tdeckNamePreviousSystemUiVisibility = -1;
+          \t\t\t}
+          \t\t});
+          \t}
+          """
+          assert "setDeckNameInputMode(boolean active)" not in text, "Deck-name immersive method already exists"
+          text = text.replace(declaration, declaration + input_mode_java)
 
           old_back = """\t@Override
           \tpublic boolean onKeyDown(int keyCode, KeyEvent event) {
