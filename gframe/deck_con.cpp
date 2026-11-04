@@ -11,6 +11,7 @@
 #include "deck_manager.h"
 #include "image_manager.h"
 #include "game.h"
+#include "porting.h"
 #include "duelclient.h"
 #include "single_mode.h"
 #include "client_card.h"
@@ -49,6 +50,92 @@ static int parse_filter(const wchar_t* pstr, uint32_t& type) {
 	}
 	type = 0;
 	return 0;
+}
+
+void DeckBuilder::StartDeckNameInput(int mode) {
+	if(mode == 2) {
+		const int selected = mainGame->cbDBDecks->getSelected();
+		if(selected < 0)
+			return;
+		mainGame->ebDeckname->setText(mainGame->cbDBDecks->getItem(selected));
+	} else {
+		mainGame->ebDeckname->setText(L"");
+	}
+	deck_name_input_mode = mode;
+	mainGame->UpdateDeckMenuLayout();
+	mainGame->env->setFocus(mainGame->ebDeckname);
+#if EDOPRO_ANDROID
+	porting::displayKeyboard(true);
+#endif
+}
+
+void DeckBuilder::CancelDeckNameInput() {
+	if(deck_name_input_mode == 0)
+		return;
+#if EDOPRO_ANDROID
+	porting::displayKeyboard(false);
+#endif
+	deck_name_input_mode = 0;
+	mainGame->ebDeckname->setText(L"");
+	mainGame->UpdateDeckMenuLayout();
+	mainGame->env->setFocus(mainGame->cbDBDecks);
+}
+
+void DeckBuilder::CommitDeckNameInput() {
+	if(deck_name_input_mode == 0)
+		return;
+	const std::wstring deckName = mainGame->ebDeckname->getText();
+	if(deckName.empty()) {
+#if EDOPRO_ANDROID
+		porting::displayKeyboard(true);
+#endif
+		return;
+	}
+	const int current = mainGame->cbDBDecks->getSelected();
+	int duplicate = -1;
+	const auto upper = Utils::ToUpperNoAccents(epro::wstringview(deckName));
+	for(irr::u32 i = 0; i < mainGame->cbDBDecks->getItemCount(); ++i) {
+		if(Utils::EqualIgnoreCaseFirst<epro::wstringview>(upper, mainGame->cbDBDecks->getItem(i))) {
+			duplicate = static_cast<int>(i);
+			break;
+		}
+	}
+	if(duplicate >= 0 && (deck_name_input_mode != 2 || duplicate != current)) {
+		mainGame->stACMessage->setText(gDataManager->GetSysString(1339).data());
+		mainGame->PopupElement(mainGame->wACMessage, 40);
+#if EDOPRO_ANDROID
+		porting::displayKeyboard(true);
+#endif
+		return;
+	}
+	if(deck_name_input_mode == 1) {
+		if(DeckManager::SaveDeck(Utils::ToPathString(deckName), current_deck)) {
+			mainGame->cbDBDecks->setSelected(mainGame->cbDBDecks->addItem(deckName.c_str()));
+			CancelDeckNameInput();
+			mainGame->stACMessage->setText(gDataManager->GetSysString(1335).data());
+			mainGame->PopupElement(mainGame->wACMessage, 20);
+		} else {
+			mainGame->stACMessage->setText(gDataManager->GetSysString(1364).data());
+			mainGame->PopupElement(mainGame->wACMessage, 30);
+#if EDOPRO_ANDROID
+			porting::displayKeyboard(true);
+#endif
+		}
+	} else if(current < 0) {
+		CancelDeckNameInput();
+	} else if(wcscmp(deckName.c_str(), mainGame->cbDBDecks->getItem(current)) == 0) {
+		CancelDeckNameInput();
+	} else if(DeckManager::RenameDeck(Utils::ToPathString(mainGame->cbDBDecks->getItem(current)), Utils::ToPathString(deckName))) {
+		mainGame->cbDBDecks->removeItem(current);
+		mainGame->cbDBDecks->setSelected(mainGame->cbDBDecks->addItem(deckName.c_str()));
+		CancelDeckNameInput();
+	} else {
+		mainGame->stACMessage->setText(gDataManager->GetSysString(1364).data());
+		mainGame->PopupElement(mainGame->wACMessage, 30);
+#if EDOPRO_ANDROID
+		porting::displayKeyboard(true);
+#endif
+	}
 }
 
 void DeckBuilder::Initialize(bool refresh) {
@@ -309,56 +396,10 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				break;
 			}
 			case BUTTON_SAVE_DECK_AS: {
-				if(deck_name_input_mode == 0) {
-					deck_name_input_mode = 1;
-					mainGame->ebDeckname->setText(L"");
-					mainGame->UpdateDeckMenuLayout();
-					mainGame->env->setFocus(mainGame->ebDeckname);
-					break;
-				}
-				const wchar_t* dname = mainGame->ebDeckname->getText();
-				if(!*dname)
-					break;
-				int duplicate = -1;
-				const auto upper = Utils::ToUpperNoAccents(epro::wstringview(dname));
-				for(irr::u32 i = 0; i < mainGame->cbDBDecks->getItemCount(); ++i) {
-					if(Utils::EqualIgnoreCaseFirst<epro::wstringview>(upper, mainGame->cbDBDecks->getItem(i))) {
-						duplicate = static_cast<int>(i);
-						break;
-					}
-				}
-				const int current = mainGame->cbDBDecks->getSelected();
-				if(duplicate >= 0 && (deck_name_input_mode != 2 || duplicate != current)) {
-					mainGame->stACMessage->setText(gDataManager->GetSysString(1339).data());
-					mainGame->PopupElement(mainGame->wACMessage, 40);
-					break;
-				}
-				if(deck_name_input_mode == 1) {
-					if(DeckManager::SaveDeck(Utils::ToPathString(dname), current_deck)) {
-						mainGame->cbDBDecks->addItem(dname);
-						mainGame->cbDBDecks->setSelected(mainGame->cbDBDecks->getItemCount() - 1);
-						deck_name_input_mode = 0;
-						mainGame->UpdateDeckMenuLayout();
-						mainGame->stACMessage->setText(gDataManager->GetSysString(1335).data());
-						mainGame->PopupElement(mainGame->wACMessage, 20);
-					} else {
-						mainGame->stACMessage->setText(gDataManager->GetSysString(1364).data());
-						mainGame->PopupElement(mainGame->wACMessage, 30);
-					}
-				} else if(current >= 0) {
-					if(wcscmp(dname, mainGame->cbDBDecks->getItem(current)) == 0) {
-						deck_name_input_mode = 0;
-						mainGame->UpdateDeckMenuLayout();
-					} else if(DeckManager::RenameDeck(Utils::ToPathString(mainGame->cbDBDecks->getItem(current)), Utils::ToPathString(dname))) {
-						mainGame->cbDBDecks->removeItem(current);
-						mainGame->cbDBDecks->setSelected(mainGame->cbDBDecks->addItem(dname));
-						deck_name_input_mode = 0;
-						mainGame->UpdateDeckMenuLayout();
-					} else {
-						mainGame->stACMessage->setText(gDataManager->GetSysString(1364).data());
-						mainGame->PopupElement(mainGame->wACMessage, 30);
-					}
-				}
+				if(deck_name_input_mode == 0)
+					StartDeckNameInput(1);
+				else
+					CommitDeckNameInput();
 				break;
 			}
 			case BUTTON_DELETE_DECK: {
@@ -372,20 +413,10 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				break;
 			}
 			case BUTTON_RENAME_DECK: {
-				if(deck_name_input_mode != 0) {
-					deck_name_input_mode = 0;
-					mainGame->ebDeckname->setText(L"");
-					mainGame->UpdateDeckMenuLayout();
-					mainGame->env->setFocus(mainGame->cbDBDecks);
-					break;
-				}
-				const int selected = mainGame->cbDBDecks->getSelected();
-				if(selected < 0)
-					break;
-				deck_name_input_mode = 2;
-				mainGame->ebDeckname->setText(mainGame->cbDBDecks->getItem(selected));
-				mainGame->UpdateDeckMenuLayout();
-				mainGame->env->setFocus(mainGame->ebDeckname);
+				if(deck_name_input_mode != 0)
+					CancelDeckNameInput();
+				else
+					StartDeckNameInput(2);
 				break;
 			}
 			case BUTTON_LEAVE_GAME: {
@@ -537,6 +568,10 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			case EDITBOX_SCALE:
 			case EDITBOX_KEYWORD: {
 				StartFilter();
+				break;
+			}
+			case EDITBOX_DECK_NAME: {
+				CommitDeckNameInput();
 				break;
 			}
 			}
@@ -857,10 +892,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 	}
 	case irr::EET_KEY_INPUT_EVENT: {
 		if(event.KeyInput.PressedDown && event.KeyInput.Key == irr::KEY_ESCAPE && deck_name_input_mode != 0) {
-			deck_name_input_mode = 0;
-			mainGame->ebDeckname->setText(L"");
-			mainGame->UpdateDeckMenuLayout();
-			mainGame->env->setFocus(mainGame->cbDBDecks);
+			CancelDeckNameInput();
 			return true;
 		}
 		if(event.KeyInput.PressedDown && !mainGame->HasFocus(irr::gui::EGUIET_EDIT_BOX)) {

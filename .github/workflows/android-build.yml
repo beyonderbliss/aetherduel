@@ -127,8 +127,52 @@ jobs:
               text, count = re.subn(pattern, "", text, count=1, flags=re.S)
               assert count == 1, "Could not remove " + action + " receiver"
           assert "WindBot." not in text, "WindBot runtime call remains in EpNativeActivity"
+          declaration = "\tpublic static native void putBackKeyEvent();\n"
+          anchor = "\tpublic static native void errorDialogReturn();\n"
+          assert text.count(anchor) == 1, "Could not locate native callback declarations"
+          assert "putBackKeyEvent" not in text, "Back callback already exists"
+          text = text.replace(anchor, anchor + declaration)
+
+          old_back = """\t@Override
+          \tpublic boolean onKeyDown(int keyCode, KeyEvent event) {
+          \t\tif (keyCode == KeyEvent.KEYCODE_BACK) {
+          \t\t\tif ((event.getSource() & InputDevice.SOURCE_MOUSE) != InputDevice.SOURCE_MOUSE)
+          \t\t\t\treturn true;
+          \t\t}
+          \t\treturn super.onKeyDown(keyCode, event);
+          \t}
+          """
+          new_back = """\t@Override
+          \tpublic boolean onKeyDown(int keyCode, KeyEvent event) {
+          \t\tif (keyCode == KeyEvent.KEYCODE_BACK &&
+          \t\t\t\t(event.getSource() & InputDevice.SOURCE_MOUSE) != InputDevice.SOURCE_MOUSE) {
+          \t\t\tputBackKeyEvent();
+          \t\t\treturn true;
+          \t\t}
+          \t\treturn super.onKeyDown(keyCode, event);
+          \t}
+
+          \t@Override
+          \tpublic void onBackPressed() {
+          \t\tputBackKeyEvent();
+          \t}
+          """
+          assert text.count(old_back) == 1, "Could not uniquely locate Android Back handler"
+          text = text.replace(old_back, new_back)
+
+          oncreate_anchor = "\t\tsuper.onCreate(savedInstanceState);\n"
+          assert text.count(oncreate_anchor) == 1, "Could not locate Activity onCreate"
+          oncreate_back = (
+              oncreate_anchor
+              + "\t\tif (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {\n"
+              + "\t\t\tgetOnBackInvokedDispatcher().registerOnBackInvokedCallback(\n"
+              + "\t\t\t\t\tandroid.window.OnBackInvokedDispatcher.PRIORITY_OVERLAY,\n"
+              + "\t\t\t\t\t() -> putBackKeyEvent());\n"
+              + "\t\t}\n"
+          )
+          text = text.replace(oncreate_anchor, oncreate_back)
           native.write_text(text)
-          print("WindBot-free Android wrapper prepared.")
+          print("WindBot-free Android wrapper prepared with native deck-name Back cancellation.")
           PY
           ! grep -R -nE 'libwindbot|WindBot\.(initAndroid|runAndroid|addDatabase)' build.gradle src/main/java
 

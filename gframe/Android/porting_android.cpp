@@ -133,6 +133,18 @@ extern "C" {
 		}
 	}
 
+	JNIEXPORT void JNICALL Java_io_github_edo9300_edopro_EpNativeActivity_putBackKeyEvent(
+		JNIEnv* env, jclass thiz) {
+		if(porting::app_global->userData) {
+			queued_messages_mutex->lock();
+			events->emplace_back([]() {
+				if(ygo::mainGame && ygo::mainGame->deckBuilder.deck_name_input_mode != 0)
+					ygo::mainGame->deckBuilder.CancelDeckNameInput();
+			});
+			queued_messages_mutex->unlock();
+		}
+	}
+
 	JNIEXPORT void JNICALL Java_io_github_edo9300_edopro_EpNativeActivity_errorDialogReturn(
 		JNIEnv* env, jclass thiz) {
 		error_dialog_returned = true;
@@ -379,7 +391,9 @@ bool transformEvent(const irr::SEvent& event, bool& stopPropagation) {
 						bool retval = hovered->OnEvent(event);
 						if(retval)
 							ygo::mainGame->env->setFocus(hovered);
-						if(ygo::gGameConfig->native_keyboard) {
+						const bool deckNameInput = hovered == ygo::mainGame->ebDeckname &&
+							ygo::mainGame->deckBuilder.deck_name_input_mode != 0;
+						if(ygo::gGameConfig->native_keyboard || deckNameInput) {
 							porting::displayKeyboard(true);
 						} else {
 							porting::showInputDialog(BufferIO::EncodeUTF8(((irr::gui::IGUIEditBox*)hovered)->getText()));
@@ -392,7 +406,8 @@ bool transformEvent(const irr::SEvent& event, bool& stopPropagation) {
 			break;
 		}
 		case irr::EET_KEY_INPUT_EVENT: {
-			if(ygo::gGameConfig->native_keyboard && event.KeyInput.Key == irr::KEY_RETURN) {
+			if(event.KeyInput.Key == irr::KEY_RETURN &&
+			   (ygo::gGameConfig->native_keyboard || ygo::mainGame->deckBuilder.deck_name_input_mode != 0)) {
 				porting::displayKeyboard(false);
 			}
 			break;

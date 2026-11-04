@@ -3254,58 +3254,72 @@ void Game::UpdateDeckMenuLayout() {
 	if(!wDeckEdit || !ebDeckname)
 		return;
 	const int panelLeft = GetDeckPanelLeft();
-	// The menu ends at logical X=605, leaving the fixed 5-unit gap to Filter Menu at X=610.
-	const int menuWidth = 605 - panelLeft;
+	int panelRight = 605;
+	if(wFilter) {
+		const int filterLeft = wFilter->getAbsolutePosition().UpperLeftCorner.X;
+		if(filterLeft > 0)
+			panelRight = Resize(filterLeft - Scale(kUiEdgeMargin), 0, true).X;
+	}
+	const int menuWidth = panelRight - panelLeft;
 	const int right = menuWidth - 5;
-	// Keep child coordinates in the same window-scaled coordinate space as the parent.
 	const auto localRect = [this](int left, int top, int rightEdge, int bottom) {
 		return Resize(left, top, rightEdge, bottom);
 	};
-	// Extra bottom room keeps the fourth row clear of the panel edge.
-	wDeckEdit->setRelativePosition(Resize(panelLeft, kUiEdgeMargin, 605, 135));
+	// Five units of vertical padding above and below the four-row menu.
+	wDeckEdit->setRelativePosition(Resize(panelLeft, kUiEdgeMargin, panelRight, 130));
 	const bool inputMode = deckBuilder.deck_name_input_mode != 0;
-	stBanlist->setVisible(!inputMode);
-	cbDBLFList->setVisible(!inputMode);
-	stDeck->setVisible(!inputMode);
+	stBanlist->setVisible(true);
+	cbDBLFList->setVisible(true);
+	stDeck->setVisible(true);
 	cbDBDecks->setVisible(!inputMode);
+	ebDeckname->setVisible(inputMode);
 	btnSaveDeck->setVisible(!inputMode);
 	btnShuffleDeck->setVisible(!inputMode);
 	btnSortDeck->setVisible(!inputMode);
 	btnClearDeck->setVisible(!inputMode);
 	btnDeleteDeck->setVisible(!inputMode);
-	ebDeckname->setVisible(inputMode);
 	btnSaveDeckAs->setVisible(true);
 	btnRenameDeck->setVisible(true);
 	if(inputMode) {
-		ebDeckname->setRelativePosition(localRect(5, 12, right, 48));
-		btnSaveDeckAs->setRelativePosition(localRect(5, 65, (menuWidth / 2) - 2, 90));
-		btnRenameDeck->setRelativePosition(localRect((menuWidth / 2) + 2, 65, right, 90));
+		ebDeckname->setRelativePosition(localRect(36, 35, right, 60));
+		const int contentLeft = 5;
+		const int contentRight = right;
+		const int gap = 2;
+		const int contentWidth = contentRight - contentLeft;
+		const int buttonWidth = std::max(1, (contentWidth - gap) / 2);
+		btnRenameDeck->setRelativePosition(localRect(contentLeft, 65, contentLeft + buttonWidth, 90));
+		btnSaveDeckAs->setRelativePosition(localRect(contentLeft + buttonWidth + gap, 65, contentRight, 90));
 		btnSaveDeckAs->setText(deckBuilder.deck_name_input_mode == 1 ? L"Create" : L"Rename");
 		btnRenameDeck->setText(L"Cancel");
 		return;
 	}
-	// Give the Ban List label enough width so its text is not clipped.
 	stBanlist->setRelativePosition(localRect(5, 8, 60, 28));
 	cbDBLFList->setRelativePosition(localRect(62, 5, right, 30));
 	stDeck->setRelativePosition(localRect(5, 38, 34, 58));
-	cbDBDecks->setRelativePosition(localRect(36, 35, right - 27, 60));
-	btnRenameDeck->setRelativePosition(localRect(right - 24, 35, right, 60));
-	btnSaveDeck->setRelativePosition(localRect(5, 65, (menuWidth / 2) - 2, 90));
-	btnSaveDeckAs->setRelativePosition(localRect((menuWidth / 2) + 2, 65, right, 90));
+	cbDBDecks->setRelativePosition(localRect(36, 35, right, 60));
 	const int contentLeft = 5;
 	const int contentRight = right;
 	const int gap = 2;
 	const int contentWidth = contentRight - contentLeft;
-	const int buttonWidth = std::max(1, (contentWidth - gap * 3) / 4);
+	const int operationWidth = std::max(1, (contentWidth - gap * 2) / 3);
+	const int op0 = contentLeft;
+	const int op1 = op0 + operationWidth + gap;
+	const int op2 = op1 + operationWidth + gap;
+	btnRenameDeck->setRelativePosition(localRect(op0, 65, op1 - gap, 90));
+	btnSaveDeck->setRelativePosition(localRect(op1, 65, op2 - gap, 90));
+	btnSaveDeckAs->setRelativePosition(localRect(op2, 65, contentRight, 90));
+	const int rowGap = 2;
+	const int rowButtonWidth = std::max(1, (contentWidth - rowGap * 3) / 4);
 	const int x0 = contentLeft;
-	const int x1 = x0 + buttonWidth + gap;
-	const int x2 = x1 + buttonWidth + gap;
-	const int x3 = x2 + buttonWidth + gap;
-	btnShuffleDeck->setRelativePosition(localRect(x0, 95, x1 - gap, 120));
-	btnSortDeck->setRelativePosition(localRect(x1, 95, x2 - gap, 120));
-	btnClearDeck->setRelativePosition(localRect(x2, 95, x3 - gap, 120));
+	const int x1 = x0 + rowButtonWidth + rowGap;
+	const int x2 = x1 + rowButtonWidth + rowGap;
+	const int x3 = x2 + rowButtonWidth + rowGap;
+	btnShuffleDeck->setRelativePosition(localRect(x0, 95, x1 - rowGap, 120));
+	btnSortDeck->setRelativePosition(localRect(x1, 95, x2 - rowGap, 120));
+	btnClearDeck->setRelativePosition(localRect(x2, 95, x3 - rowGap, 120));
 	btnDeleteDeck->setRelativePosition(localRect(x3, 95, contentRight, 120));
-	btnRenameDeck->setText(L"✎");
+	btnRenameDeck->setText(L"Rename");
+	btnSaveDeck->setText(gDataManager->GetSysString(1302).data());
 	btnSaveDeckAs->setText(gDataManager->GetSysString(1303).data());
 	btnShuffleDeck->setText(L"Shf");
 	btnSortDeck->setText(L"Sort");

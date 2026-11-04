@@ -75,6 +75,7 @@ public:
 		current_deck = std::move(new_deck);
 		RefreshLimitationStatus();
 	}
+	void CancelDeckNameInput();
 	void StartFilter(bool force_refresh = false);
 	void RefreshCurrentDeck();
 private:
@@ -88,6 +89,8 @@ private:
 	void SortList();
 
 	void ClearDeck();
+	void StartDeckNameInput(int mode);
+	void CommitDeckNameInput();
 	void RefreshLimitationStatus();
 	enum DeckType {
 		MAIN,
