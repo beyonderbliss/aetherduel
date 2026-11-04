@@ -628,6 +628,8 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		const bool forceInput = gGameConfig->ignoreDeckContents || event.MouseInput.Shift;
 		switch(event.MouseInput.Event) {
 		case irr::EMIE_LMOUSE_PRESSED_DOWN: {
+			if(!is_draging)
+				GetHoveredCard();
 			if(!is_draging && isroot && mainGame->deckEditorLayout.valid) {
 				const auto point = mainGame->Resize(mouse_pos.X, mouse_pos.Y, true);
 				const auto& tabs = mainGame->deckEditorLayout.deckTabs;
