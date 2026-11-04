@@ -10,8 +10,8 @@ namespace layout {
 
 static constexpr int kStandardArtworkWidth = 177;
 static constexpr int kStandardArtworkHeight = 254;
-static constexpr int kStandardPanelOriginX = 1;
-static constexpr int kStandardPanelOriginY = 1;
+static constexpr int kStandardPanelOriginX = 5;
+static constexpr int kStandardPanelOriginY = 5;
 static constexpr int kStandardWrapperPaddingX = 0;
 static constexpr int kStandardWrapperPaddingY = 0;
 static constexpr int kStandardArtworkOriginX = 0;
