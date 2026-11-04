@@ -3265,8 +3265,8 @@ DeckGridLayout Game::GetDeckGridLayout() const {
 	constexpr int gridBottom = 627;
 	const int panelLeft = GetDeckPanelLeft();
 	const int usableWidth = std::max(5, panelRight - panelLeft - horizontalInset * 2);
-	const int slotWidth = std::max(1, usableWidth / 5);
 	const int cardWidth = std::max(1, (usableWidth - horizontalGap * 4) / 5);
+	const int slotWidth = cardWidth + horizontalGap;
 	const int cardHeight = std::max(1, (cardWidth * 86 + 29) / 59);
 	const int gridHeight = cardHeight * 2 + verticalGap;
 	const int firstRowY = gridTop + std::max(0, (gridBottom - gridTop - gridHeight) / 2);
