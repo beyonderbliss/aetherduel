@@ -1361,7 +1361,6 @@ void Game::DrawDeckBd() {
 		   deckBuilder.deck_scroll_active && deckBuilder.deck_scroll_free) {
 			const int panelLeft = GetDeckPanelLeft();
 			const int panelRight = 800;
-			const int gridRight = grid.gridLeft + grid.slotWidth * 5;
 			const int leftTrackRight = grid.gridLeft + (grid.slotWidth - grid.cardWidth) / 2;
 			const int rightTrackLeft = grid.gridLeft + 4 * grid.slotWidth +
 				(grid.slotWidth - grid.cardWidth) / 2 + grid.cardWidth;
