@@ -144,6 +144,8 @@ public:
 	int is_lastcard;
 	int click_pos;
 	bool is_draging;
+	bool drag_pending = false;
+	int drag_start_seq = -1;
 	int scroll_pos;
 	int dragx;
 	int dragy;
