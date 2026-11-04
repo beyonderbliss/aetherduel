@@ -1388,7 +1388,7 @@ void Game::DrawDeckBd() {
 			const auto drawTrackIndicator = [&](int left, int width) {
 				if(width <= 0)
 					return;
-				const int indicatorWidth = std::min(deckBuilder.deck_scroll_active ? 7 : 5, std::max(2, width / 3));
+				const int indicatorWidth = std::min(width, deckBuilder.deck_scroll_active ? 7 : 4);
 				const int indicatorLeft = left + (width - indicatorWidth) / 2;
 				driver->draw2DRectangle(0x806f879f, Resize(indicatorLeft, trackTop, indicatorLeft + indicatorWidth, trackBottom));
 				driver->draw2DRectangle(0xffc7d7e8, Resize(indicatorLeft, thumbTop, indicatorLeft + indicatorWidth, thumbTop + thumbHeight));
