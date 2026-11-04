@@ -305,7 +305,7 @@ void Game::Initialize() {
 	PopulateAIBotWindow();
 
 	//img
-	wCardImg = env->addStaticText(L"", Scale(1, 1, 1 + CARD_IMG_WIDTH, 1 + CARD_IMG_HEIGHT), true, false, 0, -1, true);
+	wCardImg = env->addStaticText(L"", Scale(kUiEdgeMargin, kUiEdgeMargin, kUiEdgeMargin + CARD_IMG_WIDTH, kUiEdgeMargin + CARD_IMG_HEIGHT), true, false, 0, -1, true);
 	wCardImg->setBackgroundColor(skin::CARDINFO_IMAGE_BACKGROUND_VAL);
 	wCardImg->setVisible(false);
 	imgCard = AlignElementWithParent(env->addImage(Scale(0, 0, CARD_IMG_WIDTH, CARD_IMG_HEIGHT), wCardImg));
@@ -546,7 +546,7 @@ void Game::Initialize() {
 	btnReset = env->addButton(Scale(1, 190, 99, 210), wCmdMenu, BUTTON_CMD_RESET, gDataManager->GetSysString(1162).data());
 	defaultStrings.emplace_back(btnReset, 1162);
 	//deck edit
-	wDeckEdit = AlignElementWithParent(env->addStaticText(L"", Scale(309, 8, 605, 130), true, false, 0, -1, true));
+	wDeckEdit = AlignElementWithParent(env->addStaticText(L"", Scale(309, kUiEdgeMargin, 605, 130), true, false, 0, -1, true));
 	wDeckEdit->setVisible(false);
 	stBanlist = env->addStaticText(gDataManager->GetSysString(1300).data(), Scale(10, 9, 100, 29), false, false, wDeckEdit);
 	defaultStrings.emplace_back(stBanlist, 1300);
@@ -650,18 +650,18 @@ void Game::Initialize() {
 	tmpptr = env->addButton(nextYdkeManageRow(), wYdkeManage, BUTTON_CLOSE_YDKE_WINDOW, gDataManager->GetSysString(1210).data());
 	defaultStrings.emplace_back(tmpptr, 1210);
 	//
-	scrFilter = AlignElementWithParent(env->addScrollBar(false, Scale(999, 161, 1019, 629), 0, SCROLL_FILTER));
+	scrFilter = AlignElementWithParent(env->addScrollBar(false, Scale(999, 161, 1024 - kUiEdgeMargin, 640 - kUiEdgeMargin), 0, SCROLL_FILTER));
 	scrFilter->setLargeStep(DECK_SEARCH_SCROLL_STEP);
 	scrFilter->setSmallStep(DECK_SEARCH_SCROLL_STEP);
 	scrFilter->setVisible(false);
 	//sort type
-	wSort = AlignElementWithParent(env->addStaticText(L"", Scale(930, 132, 1020, 156), true, false, 0, -1, true));
+	wSort = AlignElementWithParent(env->addStaticText(L"", Scale(930, 132, 1024 - kUiEdgeMargin, 156), true, false, 0, -1, true));
 	cbSortType = AlignElementWithParent(AddComboBox(env, Scale(10, 2, 85, 22), wSort, COMBOBOX_SORTTYPE));
 	cbSortType->setMaxSelectionRows(10);
 	ReloadCBSortType();
 	wSort->setVisible(false);
 	//filters
-	wFilter = AlignElementWithParent(env->addStaticText(L"", Scale(610, 8, 1020, 130), true, false, 0, -1, true));
+	wFilter = AlignElementWithParent(env->addStaticText(L"", Scale(610, kUiEdgeMargin, 1024 - kUiEdgeMargin, 130), true, false, 0, -1, true));
 	wFilter->setVisible(false);
 	stCategory = env->addStaticText(gDataManager->GetSysString(1311).data(), Scale(10, 5, 70, 25), false, false, wFilter);
 	defaultStrings.emplace_back(stCategory, 1311);
@@ -1427,7 +1427,7 @@ void Game::PopulateAIBotWindow() {
 void Game::PopulateTabSettingsWindow() {
 	//tab
 	infosExpanded = 0;
-	wInfos = AlignElementWithParent(irr::gui::CGUICustomTabControl::addCustomTabControl(env, Scale(1, 275, 301, 639), 0, true));
+	wInfos = AlignElementWithParent(irr::gui::CGUICustomTabControl::addCustomTabControl(env, Scale(kUiEdgeMargin, 275, 301, 640 - kUiEdgeMargin), 0, true));
 	wInfos->setVisible(false);
 	//info
 	{
