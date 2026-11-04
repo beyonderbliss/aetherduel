@@ -200,6 +200,9 @@ void DeckBuilder::Initialize(bool refresh) {
 	deck_scroll_active = false;
 	deck_scroll_free = false;
 	main_deck_scroll_offset = 0.0f;
+	main_deck_scroll_velocity = 0.0f;
+	main_deck_scroll_inertia = false;
+	drag_source_in_deck = false;
 	prev_deck = mainGame->cbDBDecks->getSelected();
 	prev_operation = 0;
 	mainGame->SetMessageWindow();
@@ -785,11 +788,16 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				deck_scroll_start_x = logicalPress.X;
 				deck_scroll_start_y = logicalPress.Y;
 				deck_scroll_start_offset = main_deck_scroll_offset;
+				main_deck_scroll_velocity = 0.0f;
+				main_deck_scroll_inertia = false;
+				deck_scroll_last_y = logicalPress.Y;
+				deck_scroll_last_time = mainGame->device->getTimer()->getTime();
 			}
 			if(hovered_pos == 0 || hovered_seq == -1)
 				break;
 			click_pos = hovered_pos;
 			drag_start_seq = hovered_seq;
+			drag_source_in_deck = click_pos >= 1 && click_pos <= 3;
 			dragx = event.MouseInput.X;
 			dragy = event.MouseInput.Y;
 			if(!hovered_code || !(dragging_pointer = gDataManager->GetCardData(hovered_code)))
@@ -808,6 +816,10 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				deck_scroll_pending = false;
 				deck_scroll_active = false;
 				deck_scroll_free = false;
+				if(is_draging && drag_source_in_deck) {
+					is_draging = false;
+					drag_source_in_deck = false;
+				}
 				if(!is_draging) {
 					drag_pending = false;
 					drag_start_seq = -1;
@@ -830,6 +842,8 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				}
 			}
 			if(deck_scroll_active) {
+				if(deck_scroll_free && std::abs(main_deck_scroll_velocity) > 0.12f)
+					main_deck_scroll_inertia = true;
 				deck_scroll_pending = false;
 				deck_scroll_active = false;
 				deck_scroll_free = false;
@@ -859,12 +873,6 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				if(dx * dx + dy * dy >= threshold * threshold) {
 					drag_pending = false;
 					is_draging = true;
-					if(click_pos == 1)
-						pop_main(drag_start_seq);
-					else if(click_pos == 2)
-						pop_extra(drag_start_seq);
-					else if(click_pos == 3)
-						pop_side(drag_start_seq);
 				}
 			}
 			if(!is_draging) {
@@ -876,15 +884,36 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			}
 			GetHoveredCard();
 			bool pushed = false;
-			if(hovered_pos == 1)
-				pushed = push_main(dragging_pointer, hovered_seq + is_lastcard, forceInput);
-			else if(hovered_pos == 2)
-				pushed = push_extra(dragging_pointer, hovered_seq + is_lastcard, forceInput);
-			else if(hovered_pos == 3)
-				pushed = push_side(dragging_pointer, hovered_seq + is_lastcard, forceInput);
-			else if(hovered_pos == 4 && !mainGame->is_siding)
+			const int targetPos = hovered_pos;
+			int targetSeq = hovered_seq;
+			const int targetLast = is_lastcard;
+			if(drag_source_in_deck) {
+				if(click_pos == 1)
+					pop_main(drag_start_seq);
+				else if(click_pos == 2)
+					pop_extra(drag_start_seq);
+				else if(click_pos == 3)
+					pop_side(drag_start_seq);
+				if(targetPos == click_pos && targetSeq > drag_start_seq)
+					--targetSeq;
+			}
+			if(targetPos == 1)
+				pushed = push_main(dragging_pointer, targetSeq + targetLast, forceInput);
+			else if(targetPos == 2)
+				pushed = push_extra(dragging_pointer, targetSeq + targetLast, forceInput);
+			else if(targetPos == 3)
+				pushed = push_side(dragging_pointer, targetSeq + targetLast, forceInput);
+			else if(targetPos == 4 && !mainGame->is_siding)
 				pushed = true;
-			if(!pushed) {
+			if(!pushed && drag_source_in_deck) {
+				if(click_pos == 1)
+					push_main(dragging_pointer, drag_start_seq, true);
+				else if(click_pos == 2)
+					push_extra(dragging_pointer, drag_start_seq, true);
+				else if(click_pos == 3)
+					push_side(dragging_pointer, drag_start_seq, true);
+				pushed = true;
+			} else if(!pushed) {
 				if(click_pos == 1)
 					push_main(dragging_pointer);
 				else if(click_pos == 2)
@@ -894,6 +923,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			}
 			is_draging = false;
 			drag_pending = false;
+			drag_source_in_deck = false;
 			drag_start_seq = -1;
 			dragging_pointer = nullptr;
 			break;
@@ -945,17 +975,25 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					}
 				}
 			} else {
-				if(click_pos == 1) {
-					push_side(dragging_pointer);
-				} else if(click_pos == 2) {
-					push_side(dragging_pointer);
-				} else if(click_pos == 3) {
-					if(!push_extra(dragging_pointer))
-						push_main(dragging_pointer);
-				} else {
-					push_side(dragging_pointer);
+				if(drag_source_in_deck) {
+					if(click_pos == 1) pop_main(drag_start_seq);
+					else if(click_pos == 2) pop_extra(drag_start_seq);
+					else if(click_pos == 3) pop_side(drag_start_seq);
+				}
+				bool moved = false;
+				if(click_pos == 1 || click_pos == 2) moved = push_side(dragging_pointer);
+				else if(click_pos == 3) moved = push_extra(dragging_pointer) || push_main(dragging_pointer);
+				else moved = push_side(dragging_pointer);
+				if(!moved && drag_source_in_deck) {
+					if(click_pos == 1) push_main(dragging_pointer, drag_start_seq, true);
+					else if(click_pos == 2) push_extra(dragging_pointer, drag_start_seq, true);
+					else if(click_pos == 3) push_side(dragging_pointer, drag_start_seq, true);
 				}
 				is_draging = false;
+				drag_source_in_deck = false;
+				drag_pending = false;
+				drag_start_seq = -1;
+				dragging_pointer = nullptr;
 			}
 			break;
 		}
@@ -1009,10 +1047,20 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			}
 			if(deck_scroll_active) {
 				const auto logicalMove = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
-				if(deck_scroll_free)
+				if(deck_scroll_free) {
 					updateMainDeckFreeScroll(logicalMove.Y);
-				else
+					const uint32_t now = mainGame->device->getTimer()->getTime();
+					const uint32_t elapsed = now - deck_scroll_last_time;
+					if(elapsed > 0 && elapsed <= 120) {
+						const float deltaRows = static_cast<float>(logicalMove.Y - deck_scroll_last_y) /
+							static_cast<float>(std::max(1, mainGame->GetDeckGridLayout().rowStep));
+						main_deck_scroll_velocity = -deltaRows * 1000.0f / static_cast<float>(elapsed);
+					}
+					deck_scroll_last_y = logicalMove.Y;
+					deck_scroll_last_time = now;
+				} else {
 					updateMainDeckSnapScroll(logicalMove.Y);
+				}
 				GetHoveredCard();
 				break;
 			}
@@ -1023,12 +1071,6 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				if(dx * dx + dy * dy >= threshold * threshold) {
 					drag_pending = false;
 					is_draging = true;
-					if(click_pos == 1)
-						pop_main(drag_start_seq);
-					else if(click_pos == 2)
-						pop_extra(drag_start_seq);
-					else if(click_pos == 3)
-						pop_side(drag_start_seq);
 				}
 			}
 			GetHoveredCard();
@@ -1041,6 +1083,8 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			if(active_deck_tab == 0 && current_deck.main.size() > 15 &&
 			   logicalMouse.X >= grid.gridLeft && logicalMouse.X < grid.gridLeft + grid.slotWidth * 5 &&
 			   logicalMouse.Y >= grid.firstRowY && logicalMouse.Y < gridBottom) {
+				main_deck_scroll_inertia = false;
+				main_deck_scroll_velocity = 0.0f;
 				main_deck_scroll_offset = std::clamp(
 					std::round(main_deck_scroll_offset) + (event.MouseInput.Wheel < 0 ? 1.0f : -1.0f),
 					0.0f, getMainDeckMaxScroll());
@@ -1181,6 +1225,24 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 	}
 	return false;
 }
+void DeckBuilder::UpdateMainDeckScroll(uint32_t deltaTime) {
+	if(!main_deck_scroll_inertia || mainGame->is_siding || !mainGame->is_building)
+		return;
+	const float dt = std::min(0.05f, static_cast<float>(deltaTime) / 1000.0f);
+	if(dt <= 0.0f)
+		return;
+	const int totalRows = static_cast<int>((current_deck.main.size() + 4) / 5);
+	const float maxScroll = static_cast<float>(std::max(0, totalRows - 3));
+	main_deck_scroll_offset = std::clamp(main_deck_scroll_offset + main_deck_scroll_velocity * dt, 0.0f, maxScroll);
+	if(main_deck_scroll_offset <= 0.0f || main_deck_scroll_offset >= maxScroll)
+		main_deck_scroll_velocity = 0.0f;
+	main_deck_scroll_velocity *= std::exp(-5.5f * dt);
+	if(std::abs(main_deck_scroll_velocity) < 0.035f) {
+		main_deck_scroll_velocity = 0.0f;
+		main_deck_scroll_inertia = false;
+	}
+}
+
 void DeckBuilder::GetHoveredCard() {
 	irr::gui::IGUIElement* root = mainGame->env->getRootGUIElement();
 	if(root->getElementFromPoint(mouse_pos) != root)
