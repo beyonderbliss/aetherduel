@@ -54,6 +54,7 @@ static int parse_filter(const wchar_t* pstr, uint32_t& type) {
 void DeckBuilder::Initialize(bool refresh) {
 	mainGame->is_building = true;
 	mainGame->is_siding = false;
+	active_deck_tab = 0;
 	if(refresh)
 		mainGame->ClearCardInfo();
 	mainGame->mTopMenu->setVisible(false);
