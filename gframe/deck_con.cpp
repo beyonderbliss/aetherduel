@@ -178,6 +178,20 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			return true;
 		}
 	}
+	if(event.EventType == irr::EET_MOUSE_INPUT_EVENT &&
+	   event.MouseInput.Event == irr::EMIE_LMOUSE_LEFT_UP && !is_draging &&
+	   !mainGame->wCategories->isVisible() && !mainGame->wQuery->isVisible()) {
+		const auto pos = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
+		const int panelLeft = mainGame->Resize(mainGame->wCardImg->getRelativePosition().LowerRightCorner.X, 0, true).X + kUiEdgeMargin;
+		if(pos.X >= panelLeft && pos.X < 800 && pos.Y >= 140 && pos.Y <= 172) {
+			const int tabWidth = (800 - panelLeft) / 3;
+			active_deck_tab = std::min(2, (pos.X - panelLeft) / std::max(1, tabWidth));
+			hovered_code = 0;
+			hovered_pos = 0;
+			hovered_seq = -1;
+			return true;
+		}
+	}
 	bool stopPropagation = false;
 	if(mainGame->dField.OnCommonEvent(event, stopPropagation))
 		return stopPropagation;
@@ -960,70 +974,33 @@ void DeckBuilder::GetHoveredCard() {
 			return;
 		}
 
-		if(x < 314 || x > 794)
+		const int panelLeft = mainGame->Resize(mainGame->wCardImg->getRelativePosition().LowerRightCorner.X, 0, true).X + kUiEdgeMargin;
+		constexpr int panelRight = 800;
+		constexpr int firstRowY = 190;
+		constexpr int rowStep = 78;
+		constexpr int cardHeight = CARD_THUMB_HEIGHT;
+		if(x < panelLeft || x >= panelRight)
 			return;
 
-		if(y >= 164 && y <= 435) {
-			constexpr auto DECK_LIST_VERTICAL_SPACING = 4;
-			hovered_pos = 1;
-			int pile_size = static_cast<int>(current_deck.main.size());
-			if(pile_size == 0)
-				return;
-			int cards_per_row = 10;
-			bool last_row_not_full = false;
-			if(current_deck.main.size() > 40) {
-				auto res = div(pile_size + 3, 4);
-				cards_per_row = res.quot;
-				last_row_not_full = res.rem != 3;
-			}
-			int y_index = (y - 164) / (CARD_THUMB_HEIGHT + DECK_LIST_VERTICAL_SPACING);
-			int x_index = cards_per_row - 1;
-			if(x < 750)
-				x_index = ((x - 314) * x_index) / 436;
-			auto seq = y_index * cards_per_row + x_index;
-			if(seq >= pile_size) {
-				if(!last_row_not_full)
-					return;
-				const float dx = 436.0f / (cards_per_row - 1);
-				auto a = ((pile_size % cards_per_row) - 1) * dx + CARD_THUMB_WIDTH;
-				if((x - 314) >= a)
-					return;
-				seq = y_index * cards_per_row + ((pile_size % cards_per_row) - 1);
-			}
-			hovered_seq = seq;
-			hovered_code = current_deck.main[hovered_seq]->code;
+		const int row = (y >= firstRowY && y < firstRowY + cardHeight) ? 0 :
+			((y >= firstRowY + rowStep && y < firstRowY + rowStep + cardHeight) ? 1 : -1);
+		if(row < 0)
 			return;
-		}
-		if(y >= 466 && y <= 530) {
-			hovered_pos = 2;
-			int pile_size = static_cast<int>(current_deck.extra.size());
-			if(pile_size == 0)
-				return;
-			int cards_per_row = std::max(10, pile_size);
-			auto seq = cards_per_row - 1;
-			if(x < 750)
-				seq = ((x - 314) * seq) / 436;
-			if(seq >= pile_size)
-				return;
+
+		hovered_pos = active_deck_tab + 1;
+		const Deck::Vector* activeDeck = active_deck_tab == 0 ? &current_deck.main :
+			(active_deck_tab == 1 ? &current_deck.extra : &current_deck.side);
+		const int slotWidth = std::max(1, (panelRight - panelLeft) / 5);
+		const int col = std::min(4, (x - panelLeft) / slotWidth);
+		const int seq = row * 5 + col;
+		if(seq < static_cast<int>(activeDeck->size())) {
 			hovered_seq = seq;
-			hovered_code = current_deck.extra[hovered_seq]->code;
-			is_lastcard = x >= 772;
-			return;
-		}
-		if(y >= 564 && y <= 628) {
-			hovered_pos = 3;
-			int pile_size = static_cast<int>(current_deck.side.size());
-			if(pile_size == 0)
-				return;
-			int cards_per_row = std::max(10, pile_size);
-			auto seq = cards_per_row - 1;
-			if(x < 750)
-				seq = ((x - 314) * seq) / 436;
-			if(seq >= pile_size)
-				return;
-			hovered_seq = seq;
-			hovered_code = current_deck.side[hovered_seq]->code;
-			is_lastcard = x >= 772;
+			hovered_code = (*activeDeck)[seq]->code;
+			const int cardLeft = panelLeft + col * slotWidth + (slotWidth - CARD_THUMB_WIDTH) / 2;
+			is_lastcard = x >= cardLeft + CARD_THUMB_WIDTH / 2;
+		} else {
+			hovered_seq = activeDeck->empty() ? -1 : static_cast<int>(activeDeck->size()) - 1;
+			is_lastcard = 1;
 		}
 	};
 	UpdateHoverCode();
