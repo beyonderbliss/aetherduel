@@ -197,6 +197,15 @@ jobs:
           	}
           """
 
+          old_back = """\t@Override
+          \tpublic boolean onKeyDown(int keyCode, KeyEvent event) {
+          \t\tif (keyCode == KeyEvent.KEYCODE_BACK) {
+          \t\t\tif ((event.getSource() & InputDevice.SOURCE_MOUSE) != InputDevice.SOURCE_MOUSE)
+          \t\t\t\treturn true;
+          \t\t}
+          \t\treturn super.onKeyDown(keyCode, event);
+          \t}
+          """
           new_back = """\t@Override
           \tpublic boolean onKeyDown(int keyCode, KeyEvent event) {
           \t\tif (keyCode == KeyEvent.KEYCODE_BACK &&
@@ -213,7 +222,7 @@ jobs:
           \t}
           """
           assert text.count(old_back) == 1, "Could not uniquely locate Android Back handler"
-          text = text.replace(old_back, new_back)
+          text = text.replace(old_back, input_mode_java + "\\n" + new_back)
 
           oncreate_anchor = "\t\tsuper.onCreate(savedInstanceState);\n"
           assert text.count(oncreate_anchor) == 1, "Could not locate Activity onCreate"
