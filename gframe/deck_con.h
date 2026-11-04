@@ -147,6 +147,12 @@ public:
 	bool drag_pending = false;
 	int drag_start_seq = -1;
 	int scroll_pos;
+	int main_deck_scroll_row = 0;
+	bool deck_scroll_pending = false;
+	bool deck_scroll_active = false;
+	int deck_scroll_start_x = 0;
+	int deck_scroll_start_y = 0;
+	int deck_scroll_start_row = 0;
 	int dragx;
 	int dragy;
 	const CardDataC* dragging_pointer;
