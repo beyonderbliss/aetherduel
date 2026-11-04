@@ -267,6 +267,14 @@ void DeckBuilder::ExportDeckToClipboard(bool plain_text) {
 	mainGame->PopupElement(mainGame->wACMessage, 20);
 }
 bool DeckBuilder::OnEvent(const irr::SEvent& event) {
+	const auto updateMainDeckScroll = [this](int logicalY) {
+		const auto grid = mainGame->GetDeckGridLayout();
+		const int deltaY = logicalY - deck_scroll_start_y;
+		const int rowsMoved = deltaY / std::max(1, grid.rowStep);
+		const int totalRows = static_cast<int>((current_deck.main.size() + 4) / 5);
+		const int maxScrollRow = std::max(0, totalRows - 3);
+		main_deck_scroll_row = std::clamp(deck_scroll_start_row - rowsMoved, 0, maxScrollRow);
+	};
 	// The DeckBuilder replaces ClientField as the active event receiver.
 	// Keep the shared card viewer interactive in both editor and duel modes.
 	if(event.EventType == irr::EET_MOUSE_INPUT_EVENT &&
@@ -739,6 +747,18 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			if(mainGame->wCategories->isVisible() || mainGame->wQuery->isVisible())
 				break;
 			GetHoveredCard();
+			const auto logicalPress = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
+			const auto grid = mainGame->GetDeckGridLayout();
+			const int gridBottom = grid.firstRowY + 2 * grid.rowStep + grid.cardHeight;
+			if(active_deck_tab == 0 && current_deck.main.size() > 15 &&
+			   logicalPress.X >= grid.gridLeft && logicalPress.X < grid.gridLeft + grid.slotWidth * 5 &&
+			   logicalPress.Y >= grid.firstRowY && logicalPress.Y < gridBottom) {
+				deck_scroll_pending = true;
+				deck_scroll_active = false;
+				deck_scroll_start_x = logicalPress.X;
+				deck_scroll_start_y = logicalPress.Y;
+				deck_scroll_start_row = main_deck_scroll_row;
+			}
 			if(hovered_pos == 0 || hovered_seq == -1)
 				break;
 			click_pos = hovered_pos;
@@ -758,6 +778,8 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
 			const bool releaseIsRoot = mainGame->env->getRootGUIElement()->getElementFromPoint(mouse_pos) == mainGame->env->getRootGUIElement();
 			if(!releaseIsRoot) {
+				deck_scroll_pending = false;
+				deck_scroll_active = false;
 				if(!is_draging) {
 					drag_pending = false;
 					drag_start_seq = -1;
@@ -765,6 +787,27 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				}
 				break;
 			}
+			if(deck_scroll_pending) {
+				const auto logicalRelease = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
+				const int dx = logicalRelease.X - deck_scroll_start_x;
+				const int dy = logicalRelease.Y - deck_scroll_start_y;
+				if(std::abs(dy) >= 10 && std::abs(dy) > std::abs(dx)) {
+					deck_scroll_active = true;
+					drag_pending = false;
+					dragging_pointer = nullptr;
+					updateMainDeckScroll(logicalRelease.Y);
+				}
+			}
+			if(deck_scroll_active) {
+				deck_scroll_pending = false;
+				deck_scroll_active = false;
+				drag_pending = false;
+				drag_start_seq = -1;
+				dragging_pointer = nullptr;
+				GetHoveredCard();
+				break;
+			}
+			deck_scroll_pending = false;
 			// Some touch drivers report the final position only on release.
 			if(drag_pending) {
 				const int threshold = std::max(8, mainGame->Scale(10));
@@ -904,6 +947,25 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		}
 		case irr::EMIE_MOUSE_MOVED: {
 			mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
+			if(deck_scroll_pending) {
+				const auto logicalMove = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
+				const int dx = logicalMove.X - deck_scroll_start_x;
+				const int dy = logicalMove.Y - deck_scroll_start_y;
+				if(std::abs(dy) >= 10 && std::abs(dy) > std::abs(dx)) {
+					deck_scroll_active = true;
+					drag_pending = false;
+					dragging_pointer = nullptr;
+					updateMainDeckScroll(logicalMove.Y);
+				} else if(std::abs(dx) >= 10 && std::abs(dx) > std::abs(dy)) {
+					deck_scroll_pending = false;
+				}
+			}
+			if(deck_scroll_active) {
+				const auto logicalMove = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
+				updateMainDeckScroll(logicalMove.Y);
+				GetHoveredCard();
+				break;
+			}
 			if(drag_pending) {
 				const int threshold = std::max(8, mainGame->Scale(10));
 				const int dx = event.MouseInput.X - dragx;
@@ -923,6 +985,18 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			break;
 		}
 		case irr::EMIE_MOUSE_WHEEL: {
+			const auto logicalMouse = mainGame->Resize(mouse_pos.X, mouse_pos.Y, true);
+			const auto grid = mainGame->GetDeckGridLayout();
+			const int gridBottom = grid.firstRowY + 2 * grid.rowStep + grid.cardHeight;
+			if(active_deck_tab == 0 && current_deck.main.size() > 15 &&
+			   logicalMouse.X >= grid.gridLeft && logicalMouse.X < grid.gridLeft + grid.slotWidth * 5 &&
+			   logicalMouse.Y >= grid.firstRowY && logicalMouse.Y < gridBottom) {
+				const int totalRows = static_cast<int>((current_deck.main.size() + 4) / 5);
+				const int maxScrollRow = std::max(0, totalRows - 3);
+				main_deck_scroll_row = std::clamp(main_deck_scroll_row + (event.MouseInput.Wheel < 0 ? 1 : -1), 0, maxScrollRow);
+				GetHoveredCard();
+				return true;
+			}
 			if(!mainGame->scrFilter->isVisible())
 				break;
 			if(!mainGame->Resize(805, 160, 1024 - kUiEdgeMargin, 640 - kUiEdgeMargin).isPointInside(mouse_pos))
@@ -1089,6 +1163,12 @@ void DeckBuilder::GetHoveredCard() {
 		}
 
 		const auto grid = mainGame->GetDeckGridLayout();
+		int scrollRows = 0;
+		if(active_deck_tab == 0) {
+			const int totalRows = static_cast<int>((current_deck.main.size() + 4) / 5);
+			main_deck_scroll_row = std::clamp(main_deck_scroll_row, 0, std::max(0, totalRows - 3));
+			scrollRows = main_deck_scroll_row;
+		}
 		const int panelLeft = grid.gridLeft;
 		const int panelRight = panelLeft + grid.slotWidth * 5;
 		if(x < panelLeft || x >= panelRight)
@@ -1104,7 +1184,7 @@ void DeckBuilder::GetHoveredCard() {
 		const Deck::Vector* activeDeck = active_deck_tab == 0 ? &current_deck.main :
 			(active_deck_tab == 1 ? &current_deck.extra : &current_deck.side);
 		const int col = (x - panelLeft) / grid.slotWidth;
-		const int seq = row * 5 + col;
+		const int seq = (row + scrollRows) * 5 + col;
 		if(seq < static_cast<int>(activeDeck->size())) {
 			hovered_seq = seq;
 			hovered_code = (*activeDeck)[seq]->code;
