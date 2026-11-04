@@ -132,6 +132,7 @@ private:
 	uint16_t main_skill_count;
 	Deck current_deck;
 public:
+	int active_deck_tab = 0;
 	uint32_t hovered_code;
 	int hovered_pos;
 	int hovered_seq;
