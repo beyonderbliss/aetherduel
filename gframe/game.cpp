@@ -3710,12 +3710,12 @@ void Game::ApplyDeckEditorLayout() {
 
 	// Search filters keep their original controls and event IDs; only their
 	// horizontal coordinates are compressed to the new search-panel width.
-	setScreenRect(wFilter, layout.searchFilters);
 	if(deckEditorFilterBaseRects.empty() && wFilter) {
 		deckEditorFilterBaseWidth = std::max<irr::s32>(1, wFilter->getRelativePosition().getWidth());
 		for(auto it = wFilter->getChildren().begin(); it != wFilter->getChildren().end(); ++it)
 			deckEditorFilterBaseRects.emplace(*it, (*it)->getRelativePosition());
 	}
+	setScreenRect(wFilter, layout.searchFilters);
 	const irr::s32 filterWidth = std::max<irr::s32>(1, Scale(layout.searchFilters.getWidth()));
 	const float filterScaleX = static_cast<float>(filterWidth) / std::max<irr::s32>(1, deckEditorFilterBaseWidth);
 	for(const auto& [element, baseRect] : deckEditorFilterBaseRects) {
