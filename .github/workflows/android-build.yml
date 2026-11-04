@@ -158,9 +158,7 @@ jobs:
           assert "putBackKeyEvent" not in text, "Back callback already exists"
           text = text.replace(anchor, anchor + declaration)
           input_mode_java = """	private int deckNamePreviousSystemUiVisibility = -1;
-          private boolean deckNamePreviousNavigationBarsVisible = false;
           private boolean deckNameInputModeActive = false;
-          private boolean deckNameNavigationStateCaptured = false;
 
           	public void setDeckNameInputMode(boolean active) {
           		runOnUiThread(() -> {
@@ -168,20 +166,14 @@ jobs:
           			deckNameInputModeActive = active;
           			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
           				android.view.WindowInsetsController controller = getWindow().getInsetsController();
+          				if (controller != null) {
+          					controller.setSystemBarsBehavior(
+          							android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+          					controller.hide(android.view.WindowInsets.Type.navigationBars());
+          				}
+          				// Reapply after the IME request so its inset transition cannot leave
+          				// the navigation bar visible beside the split keyboard.
           				if (active) {
-          					if (!deckNameNavigationStateCaptured) {
-          						android.view.WindowInsets insets = decor.getRootWindowInsets();
-          						deckNamePreviousNavigationBarsVisible = insets != null
-          								&& insets.isVisible(android.view.WindowInsets.Type.navigationBars());
-          						deckNameNavigationStateCaptured = true;
-          					}
-          					if (controller != null) {
-          						controller.setSystemBarsBehavior(
-          								android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-          						controller.hide(android.view.WindowInsets.Type.navigationBars());
-          					}
-          					// Reapply after the IME request so its inset transition cannot leave
-          					// the navigation bar visible beside the split keyboard.
           					decor.post(() -> {
           						if (deckNameInputModeActive) {
           							android.view.WindowInsetsController current = getWindow().getInsetsController();
@@ -189,14 +181,6 @@ jobs:
           								current.hide(android.view.WindowInsets.Type.navigationBars());
           						}
           					});
-          				} else if (deckNameNavigationStateCaptured) {
-          					if (controller != null) {
-          						if (deckNamePreviousNavigationBarsVisible)
-          							controller.show(android.view.WindowInsets.Type.navigationBars());
-          						else
-          							controller.hide(android.view.WindowInsets.Type.navigationBars());
-          					}
-          					deckNameNavigationStateCaptured = false;
           				}
           			} else if (active) {
           				if (deckNamePreviousSystemUiVisibility < 0)
@@ -212,18 +196,6 @@ jobs:
           		});
           	}
 
-          assert "setDeckNameInputMode(boolean active)" not in text, "Deck-name immersive method already exists"
-          text = text.replace(declaration, declaration + input_mode_java)
-
-          old_back = """\t@Override
-          \tpublic boolean onKeyDown(int keyCode, KeyEvent event) {
-          \t\tif (keyCode == KeyEvent.KEYCODE_BACK) {
-          \t\t\tif ((event.getSource() & InputDevice.SOURCE_MOUSE) != InputDevice.SOURCE_MOUSE)
-          \t\t\t\treturn true;
-          \t\t}
-          \t\treturn super.onKeyDown(keyCode, event);
-          \t}
-          """
           new_back = """\t@Override
           \tpublic boolean onKeyDown(int keyCode, KeyEvent event) {
           \t\tif (keyCode == KeyEvent.KEYCODE_BACK &&
