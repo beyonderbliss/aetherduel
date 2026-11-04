@@ -1,5 +1,6 @@
 #include "game_config.h"
 #include <algorithm>
+#include <cstdlib>
 #include <functional>
 #include <sstream>
 #include <unordered_map>
