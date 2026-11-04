@@ -1,5 +1,6 @@
 #include "game_config.h"
 #include <algorithm>
+#include <cmath>
 #include <irrlicht.h>
 #include "game.h"
 #include "materials.h"
@@ -1323,25 +1324,66 @@ void Game::DrawDeckBd() {
 		driver->draw2DRectangle(0xff65717f, Resize(panelLeft + 8, 198, panelRight - 8, 199));
 
 		const auto grid = GetDeckGridLayout();
-		int firstCardIndex = 0;
+		float scrollRows = 0.0f;
 		if(deckBuilder.active_deck_tab == 0) {
 			const int totalRows = static_cast<int>((activeDeck->size() + 4) / 5);
-			deckBuilder.main_deck_scroll_row = std::clamp(deckBuilder.main_deck_scroll_row, 0, std::max(0, totalRows - 3));
-			firstCardIndex = deckBuilder.main_deck_scroll_row * 5;
+			const float maxScroll = static_cast<float>(std::max(0, totalRows - 3));
+			deckBuilder.main_deck_scroll_offset = std::clamp(deckBuilder.main_deck_scroll_offset, 0.0f, maxScroll);
+			scrollRows = deckBuilder.main_deck_scroll_offset;
 		}
-		for(int i = 0; i < 15 && firstCardIndex + i < static_cast<int>(activeDeck->size()); ++i) {
-			const int cardIndex = firstCardIndex + i;
-			const int row = i / 5;
-			const int col = i % 5;
-			const int cardX = grid.gridLeft + col * grid.slotWidth + (grid.slotWidth - grid.cardWidth) / 2;
-			const int cardY = grid.firstRowY + row * grid.rowStep;
-			DrawThumb((*activeDeck)[cardIndex], irr::core::vector2di(cardX, cardY), deckBuilder.filterList,
-				false, nullptr, true, grid.cardWidth, grid.cardHeight);
-			if(deckBuilder.hovered_pos == deckBuilder.active_deck_tab + 1 && deckBuilder.hovered_seq == cardIndex) {
-				driver->draw2DRectangleOutline(
-					Resize(cardX - 1, cardY - 1, cardX + grid.cardWidth + 1, cardY + grid.cardHeight + 1),
-					skin::DECK_WINDOW_HOVERED_CARD_OUTLINE_VAL);
+		const int viewportBottom = grid.firstRowY + 2 * grid.rowStep + grid.cardHeight;
+		const auto gridClip = Resize(grid.gridLeft, grid.firstRowY,
+			grid.gridLeft + grid.slotWidth * 5, viewportBottom);
+		const int firstVisibleRow = static_cast<int>(std::floor(scrollRows));
+		const int visibleRowCount = static_cast<int>(std::ceil(
+			static_cast<float>(viewportBottom - grid.firstRowY) / std::max(1, grid.rowStep) +
+			(scrollRows - firstVisibleRow)));
+		for(int row = firstVisibleRow; row < firstVisibleRow + visibleRowCount; ++row) {
+			for(int col = 0; col < 5; ++col) {
+				const int cardIndex = row * 5 + col;
+				if(cardIndex < 0 || cardIndex >= static_cast<int>(activeDeck->size()))
+					continue;
+				const int cardX = grid.gridLeft + col * grid.slotWidth + (grid.slotWidth - grid.cardWidth) / 2;
+				const int cardY = grid.firstRowY + static_cast<int>(std::round((row - scrollRows) * grid.rowStep));
+				DrawThumb((*activeDeck)[cardIndex], irr::core::vector2di(cardX, cardY), deckBuilder.filterList,
+					false, &gridClip, true, grid.cardWidth, grid.cardHeight);
+				if(deckBuilder.hovered_pos == deckBuilder.active_deck_tab + 1 && deckBuilder.hovered_seq == cardIndex &&
+				   cardY >= grid.firstRowY && cardY + grid.cardHeight <= viewportBottom) {
+					driver->draw2DRectangleOutline(
+						Resize(cardX - 1, cardY - 1, cardX + grid.cardWidth + 1, cardY + grid.cardHeight + 1),
+						skin::DECK_WINDOW_HOVERED_CARD_OUTLINE_VAL);
+				}
 			}
+		}
+		// Keep the touch tracks invisible at rest; show their position indicator
+		// only while the user is actively dragging either side track.
+		if(deckBuilder.active_deck_tab == 0 && activeDeck->size() > 15 &&
+		   deckBuilder.deck_scroll_active && deckBuilder.deck_scroll_free) {
+			const int panelLeft = GetDeckPanelLeft();
+			const int panelRight = 800;
+			const int gridRight = grid.gridLeft + grid.slotWidth * 5;
+			const int trackTop = grid.firstRowY;
+			const int trackBottom = viewportBottom;
+			const int trackHeight = trackBottom - trackTop;
+			const int leftTrackWidth = grid.gridLeft - panelLeft;
+			const int rightTrackWidth = panelRight - gridRight;
+			const int totalRows = static_cast<int>((activeDeck->size() + 4) / 5);
+			const float maxScroll = static_cast<float>(std::max(0, totalRows - 3));
+			const int thumbHeight = std::max(12, static_cast<int>(std::round(
+				trackHeight * 3.0f / std::max(3, totalRows))));
+			const int thumbTravel = std::max(0, trackHeight - thumbHeight);
+			const int thumbTop = trackTop + static_cast<int>(std::round(
+				maxScroll > 0.0f ? deckBuilder.main_deck_scroll_offset / maxScroll * thumbTravel : 0.0f));
+			const auto drawTrackIndicator = [&](int left, int width) {
+				if(width <= 0)
+					return;
+				const int indicatorWidth = std::min(5, std::max(2, width / 3));
+				const int indicatorLeft = left + (width - indicatorWidth) / 2;
+				driver->draw2DRectangle(0x806f879f, Resize(indicatorLeft, trackTop, indicatorLeft + indicatorWidth, trackBottom));
+				driver->draw2DRectangle(0xffc7d7e8, Resize(indicatorLeft, thumbTop, indicatorLeft + indicatorWidth, thumbTop + thumbHeight));
+			};
+			drawTrackIndicator(panelLeft, leftTrackWidth);
+			drawTrackIndicator(gridRight, rightTrackWidth);
 		}
 	}
 	//search result
