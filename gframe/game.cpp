@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <sstream>
 #include <nlohmann/json.hpp>
 #include <irrlicht.h>
