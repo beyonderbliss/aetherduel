@@ -56,8 +56,8 @@ for code, name in rows:
             print(f"Skipping card {code} ({name}): {error}", file=sys.stderr)
             destination.unlink(missing_ok=True)
 
-    if len(selected) == 40:
-        break
+    # Keep going through every matching card: the full CDB remains searchable,
+    # so every Dark-name result should have its corresponding local artwork.
 
 if len(selected) < 40:
     raise SystemExit(
