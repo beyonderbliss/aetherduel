@@ -23,6 +23,8 @@ struct Layout {
 	irr::core::recti header;
 	irr::core::recti workspace;
 	irr::core::recti deckPanel;
+	irr::core::recti deckTabs;
+	irr::core::recti deckCards;
 	irr::core::recti searchPanel;
 	irr::core::recti searchFilters;
 	irr::core::recti searchSort;
@@ -79,6 +81,10 @@ inline Layout Calculate(const irr::core::recti& viewport) {
 	layout.header = { workspaceLeft, top, right, headerBottom };
 	layout.workspace = { workspaceLeft, workspaceTop, right, bottom };
 	layout.deckPanel = { workspaceLeft, workspaceTop, searchLeft, bottom };
+	const irr::s32 deckTabHeight = std::min<irr::s32>(36, std::max<irr::s32>(0, bottom - workspaceTop));
+	const irr::s32 deckCardsTop = std::min(bottom, workspaceTop + deckTabHeight + gap);
+	layout.deckTabs = { workspaceLeft, workspaceTop, searchLeft, workspaceTop + deckTabHeight };
+	layout.deckCards = { workspaceLeft, deckCardsTop, searchLeft, bottom };
 	layout.searchPanel = { searchLeft, workspaceTop, right, bottom };
 
 	const irr::s32 filterHeight = std::min<irr::s32>(122, std::max<irr::s32>(0, bottom - workspaceTop));

@@ -6,6 +6,7 @@
 #include <IEventReceiver.h>
 #include <map>
 #include <vector>
+#include <array>
 #include "deck.h"
 
 namespace ygo {
@@ -139,6 +140,8 @@ public:
 	int click_pos;
 	bool is_draging;
 	int scroll_pos;
+	int active_deck_tab{ 0 };
+	std::array<int, 3> deck_scroll_rows{};
 	int dragx;
 	int dragy;
 	const CardDataC* dragging_pointer;

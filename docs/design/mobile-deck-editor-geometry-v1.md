@@ -347,3 +347,10 @@ Adjust the tunable values only when measurements show a usability or fit problem
 Treat this document as the frozen v1 contract. Before changing native code, map each requirement to the smallest relevant implementation location and keep the work limited to the Deck Editor.
 
 Any deliberate deviation must be documented as a spec revision with its reason and affected acceptance criteria. Do not silently reinterpret the prototype or weaken the split drag/scroll hitbox requirement.
+
+
+## Deck panel tab behavior (Step 3 implementation)
+
+The native deck panel displays one category at a time through three tabs: Main, Extra, and Side. The card viewport uses a five-column grid and shows at most two rows (10 cards) at once. Additional rows are traversed vertically. Each tab retains its own vertical row offset so changing tabs does not reset another deck's position.
+
+Step 3 adds viewport rendering, tab selection, per-tab scroll state, card hit-testing for the visible rows, and mouse-wheel scrolling. Mobile touch-drag scrolling and gesture arbitration with card dragging remain Step 4 work and must be completed before treating touch scrolling as validated.

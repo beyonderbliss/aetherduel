@@ -623,10 +623,21 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		break;
 	}
 	case irr::EET_MOUSE_INPUT_EVENT: {
+		mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
 		bool isroot = mainGame->env->getRootGUIElement()->getElementFromPoint(mouse_pos) == mainGame->env->getRootGUIElement();
 		const bool forceInput = gGameConfig->ignoreDeckContents || event.MouseInput.Shift;
 		switch(event.MouseInput.Event) {
 		case irr::EMIE_LMOUSE_PRESSED_DOWN: {
+			if(!is_draging && isroot && mainGame->deckEditorLayout.valid) {
+				const auto point = mainGame->Resize(mouse_pos.X, mouse_pos.Y, true);
+				const auto& tabs = mainGame->deckEditorLayout.deckTabs;
+				if(tabs.isPointInside(point)) {
+					const int tabWidth = std::max(1, tabs.getWidth() / 3);
+					active_deck_tab = std::clamp((point.X - tabs.UpperLeftCorner.X) / tabWidth, 0, 2);
+					GetHoveredCard();
+					return true;
+				}
+			}
 			if(is_draging)
 				break;
 			if(!isroot)
@@ -779,6 +790,21 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			break;
 		}
 		case irr::EMIE_MOUSE_WHEEL: {
+			if(mainGame->deckEditorLayout.valid) {
+				const auto point = mainGame->Resize(mouse_pos.X, mouse_pos.Y, true);
+				const auto& cards = mainGame->deckEditorLayout.deckCards;
+				if(cards.isPointInside(point)) {
+					const int tab = std::clamp(active_deck_tab, 0, 2);
+					const Deck::Vector* deck = tab == 0 ? &current_deck.main : (tab == 1 ? &current_deck.extra : &current_deck.side);
+					const int maxRows = std::max(0, (static_cast<int>(deck->size()) + 4) / 5 - 2);
+					if(event.MouseInput.Wheel < 0)
+						deck_scroll_rows[tab] = std::min(maxRows, deck_scroll_rows[tab] + 1);
+					else
+						deck_scroll_rows[tab] = std::max(0, deck_scroll_rows[tab] - 1);
+					GetHoveredCard();
+					return true;
+				}
+			}
 			if(!mainGame->scrFilter->isVisible())
 				break;
 			if(!mainGame->Resize(805, 160, 1020, 630).isPointInside(mouse_pos))
@@ -924,6 +950,32 @@ void DeckBuilder::GetHoveredCard() {
 	is_lastcard = 0;
 
 	auto UpdateHoverCode = [&]() {
+		if(mainGame->deckEditorLayout.valid) {
+			const auto& tabs = mainGame->deckEditorLayout.deckTabs;
+			const auto& cards = mainGame->deckEditorLayout.deckCards;
+			if(cards.isPointInside(relative_mouse_pos)) {
+				const int tab = std::clamp(active_deck_tab, 0, 2);
+				const Deck::Vector* deck = tab == 0 ? &current_deck.main : (tab == 1 ? &current_deck.extra : &current_deck.side);
+				const int row = (y - cards.UpperLeftCorner.Y) / 68;
+				const int col = std::clamp((x - cards.UpperLeftCorner.X) * 5 / std::max(1, cards.getWidth()), 0, 4);
+				if(row >= 0 && row < 2) {
+					const int first = std::max(0, deck_scroll_rows[tab]) * 5;
+					const int seq = first + row * 5 + col;
+					hovered_pos = tab + 1;
+					if(seq < static_cast<int>(deck->size())) {
+						hovered_seq = seq;
+						hovered_code = (*deck)[seq]->code;
+						if(tab != 0) {
+							const int slotWidth = std::max(1, cards.getWidth() / 5);
+							is_lastcard = (x - cards.UpperLeftCorner.X) % slotWidth >= slotWidth / 2;
+						}
+					}
+				}
+				return;
+			}
+			if(tabs.isPointInside(relative_mouse_pos))
+				return;
+		}
 		if(searchResultRect.isPointInside(relative_mouse_pos)) {
 			hovered_pos = 4;
 			if(results.empty())
@@ -931,79 +983,11 @@ void DeckBuilder::GetHoveredCard() {
 			const int offset = (mainGame->scrFilter->getPos() % DECK_SEARCH_SCROLL_STEP) * -1.f * 0.65f;
 			auto seq = (y - 165 - offset) / 66;
 			int pos = (mainGame->scrFilter->getPos() / DECK_SEARCH_SCROLL_STEP) + seq;
-
 			if(pos >= static_cast<int>(results.size()))
 				return;
-
 			hovered_seq = seq;
 			hovered_code = results[pos]->code;
 			return;
-		}
-
-		if(x < 314 || x > 794)
-			return;
-
-		if(y >= 164 && y <= 435) {
-			constexpr auto DECK_LIST_VERTICAL_SPACING = 4;
-			hovered_pos = 1;
-			int pile_size = static_cast<int>(current_deck.main.size());
-			if(pile_size == 0)
-				return;
-			int cards_per_row = 10;
-			bool last_row_not_full = false;
-			if(current_deck.main.size() > 40) {
-				auto res = div(pile_size + 3, 4);
-				cards_per_row = res.quot;
-				last_row_not_full = res.rem != 3;
-			}
-			int y_index = (y - 164) / (CARD_THUMB_HEIGHT + DECK_LIST_VERTICAL_SPACING);
-			int x_index = cards_per_row - 1;
-			if(x < 750)
-				x_index = ((x - 314) * x_index) / 436;
-			auto seq = y_index * cards_per_row + x_index;
-			if(seq >= pile_size) {
-				if(!last_row_not_full)
-					return;
-				const float dx = 436.0f / (cards_per_row - 1);
-				auto a = ((pile_size % cards_per_row) - 1) * dx + CARD_THUMB_WIDTH;
-				if((x - 314) >= a)
-					return;
-				seq = y_index * cards_per_row + ((pile_size % cards_per_row) - 1);
-			}
-			hovered_seq = seq;
-			hovered_code = current_deck.main[hovered_seq]->code;
-			return;
-		}
-		if(y >= 466 && y <= 530) {
-			hovered_pos = 2;
-			int pile_size = static_cast<int>(current_deck.extra.size());
-			if(pile_size == 0)
-				return;
-			int cards_per_row = std::max(10, pile_size);
-			auto seq = cards_per_row - 1;
-			if(x < 750)
-				seq = ((x - 314) * seq) / 436;
-			if(seq >= pile_size)
-				return;
-			hovered_seq = seq;
-			hovered_code = current_deck.extra[hovered_seq]->code;
-			is_lastcard = x >= 772;
-			return;
-		}
-		if(y >= 564 && y <= 628) {
-			hovered_pos = 3;
-			int pile_size = static_cast<int>(current_deck.side.size());
-			if(pile_size == 0)
-				return;
-			int cards_per_row = std::max(10, pile_size);
-			auto seq = cards_per_row - 1;
-			if(x < 750)
-				seq = ((x - 314) * seq) / 436;
-			if(seq >= pile_size)
-				return;
-			hovered_seq = seq;
-			hovered_code = current_deck.side[hovered_seq]->code;
-			is_lastcard = x >= 772;
 		}
 	};
 	UpdateHoverCode();
