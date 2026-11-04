@@ -756,10 +756,28 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		}
 		case irr::EMIE_LMOUSE_LEFT_UP: {
 			if(!isroot) {
-				drag_pending = false;
-				drag_start_seq = -1;
-				dragging_pointer = nullptr;
+				if(!is_draging) {
+					drag_pending = false;
+					drag_start_seq = -1;
+					dragging_pointer = nullptr;
+				}
 				break;
+			}
+			// Some touch drivers report the final position only on release.
+			if(drag_pending) {
+				const int threshold = std::max(8, mainGame->Scale(10));
+				const int dx = event.MouseInput.X - dragx;
+				const int dy = event.MouseInput.Y - dragy;
+				if(dx * dx + dy * dy >= threshold * threshold) {
+					drag_pending = false;
+					is_draging = true;
+					if(click_pos == 1)
+						pop_main(drag_start_seq);
+					else if(click_pos == 2)
+						pop_extra(drag_start_seq);
+					else if(click_pos == 3)
+						pop_side(drag_start_seq);
+				}
 			}
 			if(!is_draging) {
 				drag_pending = false;
@@ -769,6 +787,8 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				GetHoveredCard();
 				break;
 			}
+			mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
+			GetHoveredCard();
 			bool pushed = false;
 			if(hovered_pos == 1)
 				pushed = push_main(dragging_pointer, hovered_seq, forceInput);
