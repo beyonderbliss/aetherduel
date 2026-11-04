@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <functional>
 #include <sstream>
-#include <cwchar>
 #include <unordered_map>
 #include <irrlicht.h>
 #include "config.h"
@@ -59,7 +58,6 @@ void DeckBuilder::StartDeckNameInput(int mode) {
 		if(selected < 0)
 			return;
 		mainGame->ebDeckname->setText(mainGame->cbDBDecks->getItem(selected));
-		mainGame->ebDeckname->setCursorPos(static_cast<irr::s32>(std::wcslen(mainGame->ebDeckname->getText())));
 	} else {
 		mainGame->ebDeckname->setText(L"");
 	}
