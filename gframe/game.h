@@ -66,6 +66,15 @@ namespace ygo {
 // Shared logical inset for screen-edge-aligned Duel and Deck Editor UI.
 constexpr int kUiEdgeMargin = 5;
 
+struct DeckGridLayout {
+	int panelLeft;
+	int slotWidth;
+	int firstRowY;
+	int rowStep;
+	int cardWidth;
+	int cardHeight;
+};
+
 class GitRepo;
 
 struct DuelInfo {
@@ -543,7 +552,7 @@ public:
 	void HideElement(irr::gui::IGUIElement* element, bool set_action = false);
 	void PopupElement(irr::gui::IGUIElement* element, int hideframe = 0);
 	void WaitFrameSignal(int frame, std::unique_lock<epro::mutex>& _lck);
-	void DrawThumb(const CardDataC* cp, irr::core::vector2di pos, LFList* lflist, bool drag = false, const irr::core::recti* cliprect = nullptr, bool loadimage = true);
+	void DrawThumb(const CardDataC* cp, irr::core::vector2di pos, LFList* lflist, bool drag = false, const irr::core::recti* cliprect = nullptr, bool loadimage = true, int thumbWidth = CARD_THUMB_WIDTH, int thumbHeight = CARD_THUMB_HEIGHT);
 	void DrawDeckBd();
 	void SaveConfig();
 	void Suspend();
@@ -584,6 +593,7 @@ public:
 	void SetMessageWindow();
 	void ResizeCardinfoWindow(bool keep_ratio);
 	int GetDeckPanelLeft() const;
+	DeckGridLayout GetDeckGridLayout() const;
 	void UpdateDeckMenuLayout();
 
 	bool HasFocus(irr::gui::EGUI_ELEMENT_TYPE type) const;
