@@ -132,25 +132,61 @@ jobs:
           assert text.count(anchor) == 1, "Could not locate native callback declarations"
           assert "putBackKeyEvent" not in text, "Back callback already exists"
           text = text.replace(anchor, anchor + declaration)
-          input_mode_java = """\tprivate int deckNamePreviousSystemUiVisibility = -1;
+          input_mode_java = """	private int deckNamePreviousSystemUiVisibility = -1;
+          private boolean deckNamePreviousNavigationBarsVisible = false;
+          private boolean deckNameInputModeActive = false;
+          private boolean deckNameNavigationStateCaptured = false;
 
-          \tpublic void setDeckNameInputMode(boolean active) {
-          \t\trunOnUiThread(() -> {
-          \t\t\tandroid.view.View decor = getWindow().getDecorView();
-          \t\t\tif (active) {
-          \t\t\t\tif (deckNamePreviousSystemUiVisibility < 0)
-          \t\t\t\t\tdeckNamePreviousSystemUiVisibility = decor.getSystemUiVisibility();
-          \t\t\t\tdecor.setSystemUiVisibility(
-          \t\t\t\t\t\tdeckNamePreviousSystemUiVisibility
-          \t\t\t\t\t\t| android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-          \t\t\t\t\t\t| android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-          \t\t\t} else if (deckNamePreviousSystemUiVisibility >= 0) {
-          \t\t\t\tdecor.setSystemUiVisibility(deckNamePreviousSystemUiVisibility);
-          \t\t\t\tdeckNamePreviousSystemUiVisibility = -1;
-          \t\t\t}
-          \t\t});
-          \t}
-          """
+          	public void setDeckNameInputMode(boolean active) {
+          		runOnUiThread(() -> {
+          			android.view.View decor = getWindow().getDecorView();
+          			deckNameInputModeActive = active;
+          			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+          				android.view.WindowInsetsController controller = getWindow().getInsetsController();
+          				if (active) {
+          					if (!deckNameNavigationStateCaptured) {
+          						android.view.WindowInsets insets = decor.getRootWindowInsets();
+          						deckNamePreviousNavigationBarsVisible = insets != null
+          								&& insets.isVisible(android.view.WindowInsets.Type.navigationBars());
+          						deckNameNavigationStateCaptured = true;
+          					}
+          					if (controller != null) {
+          						controller.setSystemBarsBehavior(
+          								android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+          						controller.hide(android.view.WindowInsets.Type.navigationBars());
+          					}
+          					// Reapply after the IME request so its inset transition cannot leave
+          					// the navigation bar visible beside the split keyboard.
+          					decor.post(() -> {
+          						if (deckNameInputModeActive) {
+          							android.view.WindowInsetsController current = getWindow().getInsetsController();
+          							if (current != null)
+          								current.hide(android.view.WindowInsets.Type.navigationBars());
+          						}
+          					});
+          				} else if (deckNameNavigationStateCaptured) {
+          					if (controller != null) {
+          						if (deckNamePreviousNavigationBarsVisible)
+          							controller.show(android.view.WindowInsets.Type.navigationBars());
+          						else
+          							controller.hide(android.view.WindowInsets.Type.navigationBars());
+          					}
+          					deckNameNavigationStateCaptured = false;
+          				}
+          			} else if (active) {
+          				if (deckNamePreviousSystemUiVisibility < 0)
+          					deckNamePreviousSystemUiVisibility = decor.getSystemUiVisibility();
+          				decor.setSystemUiVisibility(
+          						deckNamePreviousSystemUiVisibility
+          								| android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+          								| android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+          			} else if (deckNamePreviousSystemUiVisibility >= 0) {
+          				decor.setSystemUiVisibility(deckNamePreviousSystemUiVisibility);
+          				deckNamePreviousSystemUiVisibility = -1;
+          			}
+          		});
+          	}
+
           assert "setDeckNameInputMode(boolean active)" not in text, "Deck-name immersive method already exists"
           text = text.replace(declaration, declaration + input_mode_java)
 
