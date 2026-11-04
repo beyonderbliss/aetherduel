@@ -3707,6 +3707,10 @@ void Game::ApplyDeckEditorLayout() {
 	place(btnHandTestSettings, true);
 	place(btnYdkeManage, true);
 	place(btnSettingsMenu, true);
+	if(stHandTestSettings && btnHandTestSettings) {
+		const buttonRect = btnHandTestSettings->getRelativePosition();
+		stHandTestSettings->setRelativePosition(irr::core::recti(0, 0, buttonRect.getWidth(), buttonRect.getHeight()));
+	}
 
 	// Search filters keep their original controls and event IDs; only their
 	// horizontal coordinates are compressed to the new search-panel width.
