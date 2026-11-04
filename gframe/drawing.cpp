@@ -1270,11 +1270,7 @@ void Game::DrawDeckBd() {
 
 		const Deck::Vector* activeDeck = deckBuilder.active_deck_tab == 0 ? &current_deck.main :
 			(deckBuilder.active_deck_tab == 1 ? &current_deck.extra : &current_deck.side);
-		const epro::wstringview tabNames[] = {
-			gDataManager->GetSysString(1330),
-			gDataManager->GetSysString(1331),
-			gDataManager->GetSysString(1332)
-		};
+		const wchar_t* tabNames[] = { L"Main Deck", L"Extra Deck", L"Side Deck" };
 		const Deck::Vector* tabDecks[] = { &current_deck.main, &current_deck.extra, &current_deck.side };
 		const int tabWidth = (panelRight - panelLeft) / 3;
 		for(int tab = 0; tab < 3; ++tab) {
@@ -1286,10 +1282,36 @@ void Game::DrawDeckBd() {
 			driver->draw2DRectangleOutline(tabRect, 0xff9099a5);
 			const auto label = epro::format(L"{} ({})", tabNames[tab], tabDecks[tab]->size());
 			DrawShadowText(textFont, label, tabRect, Resize(1, 1, 1, 1),
-				0xffffffff, 0xff000000, false, true);
+				0xffffffff, 0xff000000, true, true);
 		}
 
-		constexpr int firstRowY = 190;
+		const auto CountType = [](const Deck::Vector& deck, uint32_t type) {
+			int count = 0;
+			for(const auto* card : deck) {
+				if(card && (card->type & type))
+					++count;
+			}
+			return count;
+		};
+		std::wstring categoryStats;
+		if(deckBuilder.active_deck_tab == 1) {
+			categoryStats = epro::format(L"Fusion {}  |  XYZ {}  |  Synchro {}  |  Link {}  |  Ritual {}",
+				CountType(*activeDeck, TYPE_FUSION), CountType(*activeDeck, TYPE_XYZ),
+				CountType(*activeDeck, TYPE_SYNCHRO), CountType(*activeDeck, TYPE_LINK),
+				CountType(*activeDeck, TYPE_RITUAL));
+		} else {
+			categoryStats = epro::format(L"Monster {}  |  Spell {}  |  Trap {}",
+				CountType(*activeDeck, TYPE_MONSTER), CountType(*activeDeck, TYPE_SPELL),
+				CountType(*activeDeck, TYPE_TRAP));
+		}
+		const auto statsWidth = textFont->getDimensionustring(categoryStats).Width;
+		const auto statsRight = ResizeX(panelRight - 8);
+		const auto statsRect = irr::core::recti(statsRight - statsWidth, ResizeY(174),
+			statsRight, ResizeY(194));
+		DrawShadowText(textFont, categoryStats, statsRect, Resize(1, 1, 1, 1),
+			0xffffffff, 0xff000000, false, true);
+
+		constexpr int firstRowY = 210;
 		constexpr int rowStep = 78;
 		const float slotWidth = static_cast<float>(panelRight - panelLeft) / 5.0f;
 		for(int i = 0; i < std::min<int>(10, activeDeck->size()); ++i) {
