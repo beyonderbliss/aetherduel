@@ -1322,10 +1322,10 @@ void Game::DrawDeckBd() {
 		driver->draw2DRectangle(0xff65717f, Resize(panelLeft + 8, 198, panelRight - 8, 199));
 
 		const auto grid = GetDeckGridLayout();
-		for(int i = 0; i < std::min<int>(10, activeDeck->size()); ++i) {
+		for(int i = 0; i < std::min<int>(15, activeDeck->size()); ++i) {
 			const int row = i / 5;
 			const int col = i % 5;
-			const int cardX = grid.panelLeft + 8 + col * grid.slotWidth + (grid.slotWidth - grid.cardWidth) / 2;
+			const int cardX = grid.gridLeft + col * grid.slotWidth + (grid.slotWidth - grid.cardWidth) / 2;
 			const int cardY = grid.firstRowY + row * grid.rowStep;
 			DrawThumb((*activeDeck)[i], irr::core::vector2di(cardX, cardY), deckBuilder.filterList,
 				false, nullptr, true, grid.cardWidth, grid.cardHeight);
