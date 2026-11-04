@@ -631,10 +631,22 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			if(!is_draging && isroot && mainGame->deckEditorLayout.valid) {
 				const auto point = mainGame->Resize(mouse_pos.X, mouse_pos.Y, true);
 				const auto& tabs = mainGame->deckEditorLayout.deckTabs;
+				const auto& cards = mainGame->deckEditorLayout.deckCards;
 				if(tabs.isPointInside(point)) {
 					const int tabWidth = std::max(1, tabs.getWidth() / 3);
 					active_deck_tab = std::clamp((point.X - tabs.UpperLeftCorner.X) / tabWidth, 0, 2);
 					GetHoveredCard();
+					return true;
+				}
+				if(cards.isPointInside(point)) {
+					deck_scroll_pending = true;
+					deck_scroll_active = false;
+					deck_gesture_start = point;
+					deck_gesture_tab = std::clamp(active_deck_tab, 0, 2);
+					deck_gesture_start_row = deck_scroll_rows[deck_gesture_tab];
+					deck_gesture_pos = hovered_pos;
+					deck_gesture_seq = hovered_seq;
+					deck_gesture_card = hovered_seq >= 0 ? gDataManager->GetCardData(hovered_code) : nullptr;
 					return true;
 				}
 			}
@@ -667,6 +679,12 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			break;
 		}
 		case irr::EMIE_LMOUSE_LEFT_UP: {
+			if(deck_scroll_pending) {
+				deck_scroll_pending = false;
+				deck_scroll_active = false;
+				deck_gesture_card = nullptr;
+				return true;
+			}
 			if(!isroot)
 				break;
 			if(!is_draging) {
@@ -786,6 +804,38 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		}
 		case irr::EMIE_MOUSE_MOVED: {
 			mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
+			if(deck_scroll_pending) {
+				const auto point = mainGame->Resize(mouse_pos.X, mouse_pos.Y, true);
+				const int dx = point.X - deck_gesture_start.X;
+				const int dy = point.Y - deck_gesture_start.Y;
+				if(!deck_scroll_active && std::abs(dy) >= 8 && std::abs(dy) > std::abs(dx))
+					deck_scroll_active = true;
+				if(deck_scroll_active) {
+					const int tab = deck_gesture_tab;
+					const Deck::Vector* deck = tab == 0 ? &current_deck.main : (tab == 1 ? &current_deck.extra : &current_deck.side);
+					const int maxRows = std::max(0, (static_cast<int>(deck->size()) + 4) / 5 - 2);
+					const int rowDelta = (deck_gesture_start.Y - point.Y) / 68;
+					deck_scroll_rows[tab] = std::clamp(deck_gesture_start_row + rowDelta, 0, maxRows);
+					GetHoveredCard();
+					return true;
+				}
+				if(deck_gesture_card && std::abs(dx) >= 8) {
+					is_draging = true;
+					click_pos = deck_gesture_pos;
+					dragging_pointer = deck_gesture_card;
+					if(click_pos == 1)
+						pop_main(deck_gesture_seq);
+					else if(click_pos == 2)
+						pop_extra(deck_gesture_seq);
+					else if(click_pos == 3)
+						pop_side(deck_gesture_seq);
+					deck_scroll_pending = false;
+					deck_gesture_card = nullptr;
+					GetHoveredCard();
+					return true;
+				}
+				return true;
+			}
 			GetHoveredCard();
 			break;
 		}

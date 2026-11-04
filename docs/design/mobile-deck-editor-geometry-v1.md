@@ -353,4 +353,4 @@ Any deliberate deviation must be documented as a spec revision with its reason a
 
 The native deck panel displays one category at a time through three tabs: Main, Extra, and Side. The card viewport uses a five-column grid and shows at most two rows (10 cards) at once. Additional rows are traversed vertically. Each tab retains its own vertical row offset so changing tabs does not reset another deck's position.
 
-Step 3 adds viewport rendering, tab selection, per-tab scroll state, card hit-testing for the visible rows, and mouse-wheel scrolling. Mobile touch-drag scrolling and gesture arbitration with card dragging remain Step 4 work and must be completed before treating touch scrolling as validated.
+Step 3 adds viewport rendering, tab selection, per-tab scroll state, card hit-testing for the visible rows, mouse-wheel scrolling, and vertical touch-drag scrolling within the active deck viewport. Vertical gestures scroll by rows; horizontal movement on a card preserves card dragging. Search-result touch scrolling and its gesture arbitration remain Step 4 work.

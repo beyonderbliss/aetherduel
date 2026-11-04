@@ -142,6 +142,14 @@ public:
 	int scroll_pos;
 	int active_deck_tab{ 0 };
 	std::array<int, 3> deck_scroll_rows{};
+	bool deck_scroll_pending{ false };
+	bool deck_scroll_active{ false };
+	irr::core::vector2di deck_gesture_start;
+	int deck_gesture_start_row{ 0 };
+	int deck_gesture_pos{ 0 };
+	int deck_gesture_seq{ -1 };
+	int deck_gesture_tab{ 0 };
+	const CardDataC* deck_gesture_card{ nullptr };
 	int dragx;
 	int dragy;
 	const CardDataC* dragging_pointer;
