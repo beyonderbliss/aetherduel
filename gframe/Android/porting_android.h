@@ -21,6 +21,7 @@ extern std::string internal_storage;
 
 bool transformEvent(const irr::SEvent& event, bool& stopPropagation);
 void displayKeyboard(bool show);
+void setDeckNameInputMode(bool active);
 
 void showComboBox(const std::vector<std::string>& parameters, int selected);
 
