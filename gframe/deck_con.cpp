@@ -192,6 +192,8 @@ void DeckBuilder::Initialize(bool refresh) {
 	hovered_seq = -1;
 	is_lastcard = 0;
 	is_draging = false;
+	drag_pending = false;
+	drag_start_seq = -1;
 	prev_deck = mainGame->cbDBDecks->getSelected();
 	prev_operation = 0;
 	mainGame->SetMessageWindow();
@@ -729,38 +731,40 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		const bool forceInput = gGameConfig->ignoreDeckContents || event.MouseInput.Shift;
 		switch(event.MouseInput.Event) {
 		case irr::EMIE_LMOUSE_PRESSED_DOWN: {
-			if(is_draging)
+			if(is_draging || drag_pending)
 				break;
 			if(!isroot)
 				break;
 			if(mainGame->wCategories->isVisible() || mainGame->wQuery->isVisible())
 				break;
+			mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
+			GetHoveredCard();
 			if(hovered_pos == 0 || hovered_seq == -1)
 				break;
 			click_pos = hovered_pos;
+			drag_start_seq = hovered_seq;
 			dragx = event.MouseInput.X;
 			dragy = event.MouseInput.Y;
 			if(!hovered_code || !(dragging_pointer = gDataManager->GetCardData(hovered_code)))
 				break;
-			if(hovered_pos == 4) {
-				if(!forceInput && !check_limit(dragging_pointer))
-					break;
-			}
-			is_draging = true;
-			if(hovered_pos == 1)
-				pop_main(hovered_seq);
-			else if(hovered_pos == 2)
-				pop_extra(hovered_seq);
-			else if(hovered_pos == 3)
-				pop_side(hovered_seq);
-			mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
-			GetHoveredCard();
+			if(hovered_pos == 4 && !forceInput && !check_limit(dragging_pointer))
+				break;
+			// A touch-down is only a candidate drag. Keep the card in its deck
+			// until the pointer actually moves beyond the drag threshold.
+			drag_pending = true;
 			break;
 		}
 		case irr::EMIE_LMOUSE_LEFT_UP: {
-			if(!isroot)
+			if(!isroot) {
+				drag_pending = false;
+				drag_start_seq = -1;
+				dragging_pointer = nullptr;
 				break;
+			}
 			if(!is_draging) {
+				drag_pending = false;
+				drag_start_seq = -1;
+				dragging_pointer = nullptr;
 				mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
 				GetHoveredCard();
 				break;
@@ -783,6 +787,9 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					push_side(dragging_pointer);
 			}
 			is_draging = false;
+			drag_pending = false;
+			drag_start_seq = -1;
+			dragging_pointer = nullptr;
 			break;
 		}
 		case irr::EMIE_RMOUSE_LEFT_UP: {
@@ -877,6 +884,21 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		}
 		case irr::EMIE_MOUSE_MOVED: {
 			mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
+			if(drag_pending) {
+				const int threshold = std::max(8, mainGame->Scale(10));
+				const int dx = event.MouseInput.X - dragx;
+				const int dy = event.MouseInput.Y - dragy;
+				if(dx * dx + dy * dy >= threshold * threshold) {
+					drag_pending = false;
+					is_draging = true;
+					if(click_pos == 1)
+						pop_main(drag_start_seq);
+					else if(click_pos == 2)
+						pop_extra(drag_start_seq);
+					else if(click_pos == 3)
+						pop_side(drag_start_seq);
+				}
+			}
 			GetHoveredCard();
 			break;
 		}
