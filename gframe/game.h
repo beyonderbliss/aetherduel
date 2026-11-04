@@ -63,6 +63,9 @@ namespace irr {
 }
 namespace ygo {
 
+// Shared logical inset for screen-edge-aligned Duel and Deck Editor UI.
+constexpr int kUiEdgeMargin = 5;
+
 class GitRepo;
 
 struct DuelInfo {
