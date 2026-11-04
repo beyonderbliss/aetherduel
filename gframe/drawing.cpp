@@ -1265,7 +1265,7 @@ void Game::DrawDeckBd() {
 		const auto& cards = layout.deckCards;
 		const int activeTab = std::clamp(deckBuilder.active_deck_tab, 0, 2);
 		const std::array<const Deck::Vector*, 3> decks = { &current_deck.main, &current_deck.extra, &current_deck.side };
-		const std::array<std::wstring, 3> labels = {
+		const std::array<epro::wstringview, 3> labels = {
 			gDataManager->GetSysString(1330), gDataManager->GetSysString(1331), gDataManager->GetSysString(1332)
 		};
 		const int tabWidth = std::max(1, tabs.getWidth() / 3);
