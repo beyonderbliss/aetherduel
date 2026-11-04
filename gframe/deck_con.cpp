@@ -771,9 +771,12 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			const int gridRight = grid.gridLeft + grid.slotWidth * 5;
 			const int gridBottom = grid.firstRowY + 2 * grid.rowStep + grid.cardHeight;
 			const int panelLeft = mainGame->GetDeckPanelLeft();
+			const int leftTrackRight = grid.gridLeft + (grid.slotWidth - grid.cardWidth) / 2;
+			const int rightTrackLeft = grid.gridLeft + 4 * grid.slotWidth +
+				(grid.slotWidth - grid.cardWidth) / 2 + grid.cardWidth;
 			const bool inGrid = logicalPress.X >= grid.gridLeft && logicalPress.X < gridRight;
-			const bool inSideTrack = (logicalPress.X >= panelLeft && logicalPress.X < grid.gridLeft) ||
-				(logicalPress.X >= gridRight && logicalPress.X < 800);
+			const bool inSideTrack = (logicalPress.X >= panelLeft && logicalPress.X < leftTrackRight) ||
+				(logicalPress.X >= rightTrackLeft && logicalPress.X < 800);
 			if(active_deck_tab == 0 && current_deck.main.size() > 15 &&
 			   logicalPress.Y >= grid.firstRowY && logicalPress.Y < gridBottom && (inGrid || inSideTrack)) {
 				deck_scroll_pending = true;
