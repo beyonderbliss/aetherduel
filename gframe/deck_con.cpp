@@ -886,7 +886,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			bool pushed = false;
 			const int targetPos = hovered_pos;
 			int targetSeq = hovered_seq;
-			const int targetLast = is_lastcard;
+			int targetLast = is_lastcard;
 			if(drag_source_in_deck) {
 				if(click_pos == 1)
 					pop_main(drag_start_seq);
@@ -894,8 +894,12 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					pop_extra(drag_start_seq);
 				else if(click_pos == 3)
 					pop_side(drag_start_seq);
-				if(targetPos == click_pos && targetSeq > drag_start_seq)
-					--targetSeq;
+				if(targetPos == click_pos) {
+					if(targetSeq > drag_start_seq)
+						--targetSeq;
+					else if(targetSeq == drag_start_seq)
+						targetLast = 0;
+				}
 			}
 			if(targetPos == 1)
 				pushed = push_main(dragging_pointer, targetSeq + targetLast, forceInput);
@@ -1241,6 +1245,7 @@ void DeckBuilder::UpdateMainDeckScroll(uint32_t deltaTime) {
 		main_deck_scroll_velocity = 0.0f;
 		main_deck_scroll_inertia = false;
 	}
+	GetHoveredCard();
 }
 
 void DeckBuilder::GetHoveredCard() {
