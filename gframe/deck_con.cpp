@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <functional>
 #include <sstream>
+#include <cwchar>
 #include <unordered_map>
 #include <irrlicht.h>
 #include "config.h"
@@ -58,6 +59,7 @@ void DeckBuilder::StartDeckNameInput(int mode) {
 		if(selected < 0)
 			return;
 		mainGame->ebDeckname->setText(mainGame->cbDBDecks->getItem(selected));
+		mainGame->ebDeckname->setCursorPos(static_cast<irr::s32>(std::wcslen(mainGame->ebDeckname->getText())));
 	} else {
 		mainGame->ebDeckname->setText(L"");
 	}
@@ -65,6 +67,7 @@ void DeckBuilder::StartDeckNameInput(int mode) {
 	mainGame->UpdateDeckMenuLayout();
 	mainGame->env->setFocus(mainGame->ebDeckname);
 #if EDOPRO_ANDROID
+	porting::setDeckNameInputMode(true);
 	porting::displayKeyboard(true);
 #endif
 }
@@ -74,6 +77,7 @@ void DeckBuilder::CancelDeckNameInput() {
 		return;
 #if EDOPRO_ANDROID
 	porting::displayKeyboard(false);
+	porting::setDeckNameInputMode(false);
 #endif
 	deck_name_input_mode = 0;
 	mainGame->ebDeckname->setText(L"");
