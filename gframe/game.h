@@ -602,6 +602,7 @@ public:
 	void ReloadElementsStrings();
 
 	void OnResize();
+	void ApplyDeckEditorLayout();
 	template<typename T>
 	T Scale(T val) const;
 	template<typename T, typename T2, typename T3, typename T4>
@@ -699,6 +700,8 @@ public:
 	irr::core::dimension2d<irr::u32> window_size;
 	irr::core::vector2d<irr::f32> window_scale;
 	deck_editor::Layout deckEditorLayout;
+	std::unordered_map<irr::gui::IGUIElement*, irr::core::recti> deckEditorFilterBaseRects;
+	irr::s32 deckEditorFilterBaseWidth{ 0 };
 
 	CGUISkinSystem* skinSystem;
 

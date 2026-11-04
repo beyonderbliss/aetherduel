@@ -24,6 +24,10 @@ struct Layout {
 	irr::core::recti workspace;
 	irr::core::recti deckPanel;
 	irr::core::recti searchPanel;
+	irr::core::recti searchFilters;
+	irr::core::recti searchSort;
+	irr::core::recti searchResults;
+	irr::core::recti searchScrollbar;
 	LayoutMode mode{ LayoutMode::Standard };
 	bool valid{ false };
 };
@@ -76,6 +80,16 @@ inline Layout Calculate(const irr::core::recti& viewport) {
 	layout.workspace = { workspaceLeft, workspaceTop, right, bottom };
 	layout.deckPanel = { workspaceLeft, workspaceTop, searchLeft, bottom };
 	layout.searchPanel = { searchLeft, workspaceTop, right, bottom };
+
+	const irr::s32 filterHeight = std::min<irr::s32>(122, std::max<irr::s32>(0, bottom - workspaceTop));
+	const irr::s32 filterBottom = std::min(bottom, workspaceTop + filterHeight);
+	const irr::s32 sortTop = std::min(bottom, filterBottom + gap);
+	const irr::s32 sortBottom = std::min(bottom, sortTop + 24);
+	const irr::s32 resultsTop = std::min(bottom, sortBottom + gap);
+	layout.searchFilters = { searchLeft, workspaceTop, right, filterBottom };
+	layout.searchSort = { searchLeft, sortTop, right, sortBottom };
+	layout.searchResults = { searchLeft, resultsTop, right, bottom };
+	layout.searchScrollbar = { std::max(searchLeft, right - 20), resultsTop, right, bottom };
 	layout.valid = true;
 	return layout;
 }

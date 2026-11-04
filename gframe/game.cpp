@@ -3597,6 +3597,142 @@ void Game::ReloadElementsStrings() {
 
 	ReloadCBCurrentSkin();
 }
+
+void Game::ApplyDeckEditorLayout() {
+	if(!is_building || !deckEditorLayout.valid)
+		return;
+
+	const auto& layout = deckEditorLayout;
+	auto setScreenRect = [this](irr::gui::IGUIElement* element, const irr::core::recti& rect) {
+		if(element)
+			element->setRelativePosition(Scale(rect));
+	};
+	auto setLocalRect = [this](irr::gui::IGUIElement* element, irr::s32 x, irr::s32 y, irr::s32 width, irr::s32 height) {
+		if(element)
+			element->setRelativePosition(Scale(x, y, x + width, y + height));
+	};
+
+	// Left preview: artwork above the existing Info/Log/Chat/Repositories tabs.
+	const auto& preview = layout.previewPanel;
+	const irr::s32 previewWidth = preview.getWidth();
+	const irr::s32 previewHeight = preview.getHeight();
+	const irr::s32 artworkWidthLimit = std::max<irr::s32>(1, previewWidth - 16);
+	const irr::s32 artworkHeightLimit = std::max<irr::s32>(1,
+		std::min(previewHeight - 170, static_cast<irr::s32>(previewHeight * 0.60f)));
+	const float artworkAspect = static_cast<float>(CARD_IMG_WIDTH) / CARD_IMG_HEIGHT;
+	const irr::s32 artworkWidth = std::min(artworkWidthLimit,
+		static_cast<irr::s32>(std::round(artworkHeightLimit * artworkAspect)));
+	const irr::s32 artworkHeight = static_cast<irr::s32>(std::round(artworkWidth / artworkAspect));
+	const irr::s32 artworkLeft = preview.UpperLeftCorner.X + (previewWidth - artworkWidth) / 2;
+	const irr::s32 artworkTop = preview.UpperLeftCorner.Y + 4;
+	const irr::s32 artworkBottom = artworkTop + artworkHeight;
+	setScreenRect(wCardImg, { artworkLeft, artworkTop, artworkLeft + artworkWidth, artworkBottom });
+	if(imgCard)
+		imgCard->setRelativePosition(Scale(0, 0, artworkWidth, artworkHeight));
+
+	const irr::s32 infoLeft = preview.UpperLeftCorner.X + 4;
+	const irr::s32 infoTop = std::min(preview.LowerRightCorner.Y - 4, artworkBottom + 6);
+	const irr::s32 infoRight = preview.LowerRightCorner.X - 4;
+	const irr::s32 infoBottom = preview.LowerRightCorner.Y - 4;
+	setScreenRect(wInfos, { infoLeft, infoTop, infoRight, infoBottom });
+
+	const irr::s32 infoWidth = std::max<irr::s32>(1, infoRight - infoLeft);
+	const irr::s32 infoHeight = std::max<irr::s32>(1, infoBottom - infoTop);
+	const irr::s32 contentRight = std::max<irr::s32>(20, infoWidth - 10);
+	if(stName) stName->setRelativePosition(Scale(8, 8, contentRight, 30));
+	if(stInfo) stInfo->setRelativePosition(Scale(10, 35, contentRight, 58));
+	if(stDataInfo) stDataInfo->setRelativePosition(Scale(10, 58, contentRight, 81));
+	if(stSetName) stSetName->setRelativePosition(Scale(10, 81, contentRight, 104));
+	if(stPasscodeScope) stPasscodeScope->setRelativePosition(Scale(10, 104, contentRight, 127));
+	if(stText) stText->setRelativePosition(Scale(10, 129, contentRight, std::max<irr::s32>(130, infoHeight - 8)));
+
+	const irr::s32 listBottom = std::max<irr::s32>(35, infoHeight - 38);
+	const irr::s32 buttonTop = std::max<irr::s32>(10, infoHeight - 32);
+	if(lstLog) lstLog->setRelativePosition(Scale(8, 8, contentRight, listBottom));
+	if(lstChat) lstChat->setRelativePosition(Scale(8, 8, contentRight, listBottom));
+	setLocalRect(btnClearLog, std::max<irr::s32>(8, infoWidth - 108), buttonTop, 96, 24);
+	setLocalRect(btnExpandLog, 8, buttonTop, 96, 24);
+	setLocalRect(btnClearChat, std::max<irr::s32>(8, infoWidth - 108), buttonTop, 96, 24);
+	setLocalRect(btnExpandChat, 8, buttonTop, 96, 24);
+	if(mTabRepositories)
+		mTabRepositories->setRelativePosition(Scale(1, 1, std::max<irr::s32>(2, infoWidth - 1), std::max<irr::s32>(2, infoHeight - 1)));
+	if(wCardImg && wCardImg->getParent())
+		wCardImg->getParent()->sendToBack(wCardImg);
+
+	// One-row header. Existing widget IDs and event bindings are preserved.
+	setScreenRect(wDeckEdit, layout.header);
+	const irr::s32 headerWidth = layout.header.getWidth();
+	const irr::s32 headerHeight = layout.header.getHeight();
+	const irr::s32 headerGap = 2;
+	const irr::s32 headerControlHeight = std::max<irr::s32>(20, headerHeight - 8);
+	const irr::s32 headerY = (headerHeight - headerControlHeight) / 2;
+	const std::array<irr::s32, 17> headerWidths = {
+		48, 82, 32, 90, 42, 44, 80, 42, 42, 36, 36, 42, 44, 48, 32, 44, 32
+	};
+	irr::s32 naturalWidth = 0;
+	for(const auto width : headerWidths)
+		naturalWidth += width;
+	naturalWidth += headerGap * static_cast<irr::s32>(headerWidths.size() - 1);
+	const float headerScale = std::min(1.0f,
+		static_cast<float>(std::max<irr::s32>(1, headerWidth - 12)) / std::max<irr::s32>(1, naturalWidth));
+	irr::s32 x = 6;
+	auto placeHeaderChild = [&](irr::gui::IGUIElement* element, irr::s32 requestedWidth, bool rootElement = false) {
+		const irr::s32 width = std::max<irr::s32>(18, static_cast<irr::s32>(std::round(requestedWidth * headerScale)));
+		const irr::s32 left = rootElement ? layout.header.UpperLeftCorner.X + x : x;
+		const irr::s32 top = rootElement ? layout.header.UpperLeftCorner.Y + headerY : headerY;
+		if(element) {
+			const auto rect = Scale(left, top, left + width, top + headerControlHeight);
+			element->setRelativePosition(rect);
+		}
+		x += width + headerGap;
+	};
+	size_t headerIndex = 0;
+	auto place = [&](irr::gui::IGUIElement* element, bool rootElement = false) {
+		placeHeaderChild(element, headerWidths[headerIndex++], rootElement);
+	};
+	place(stBanlist);
+	place(cbDBLFList);
+	place(stDeck);
+	place(cbDBDecks);
+	place(btnSaveDeck);
+	place(btnRenameDeck);
+	place(ebDeckname);
+	place(btnSaveDeckAs);
+	place(btnShuffleDeck);
+	place(btnSortDeck);
+	place(btnClearDeck);
+	place(btnDeleteDeck);
+	place(btnLeaveGame, true);
+	place(btnHandTest, true);
+	place(btnHandTestSettings, true);
+	place(btnYdkeManage, true);
+	place(btnSettingsMenu, true);
+
+	// Search filters keep their original controls and event IDs; only their
+	// horizontal coordinates are compressed to the new search-panel width.
+	setScreenRect(wFilter, layout.searchFilters);
+	if(deckEditorFilterBaseRects.empty() && wFilter) {
+		deckEditorFilterBaseWidth = std::max<irr::s32>(1, wFilter->getRelativePosition().getWidth());
+		for(auto it = wFilter->getChildren().begin(); it != wFilter->getChildren().end(); ++it)
+			deckEditorFilterBaseRects.emplace(*it, (*it)->getRelativePosition());
+	}
+	const irr::s32 filterWidth = std::max<irr::s32>(1, Scale(layout.searchFilters.getWidth()));
+	const float filterScaleX = static_cast<float>(filterWidth) / std::max<irr::s32>(1, deckEditorFilterBaseWidth);
+	for(const auto& [element, baseRect] : deckEditorFilterBaseRects) {
+		auto rect = baseRect;
+		rect.UpperLeftCorner.X = static_cast<irr::s32>(std::round(rect.UpperLeftCorner.X * filterScaleX));
+		rect.LowerRightCorner.X = static_cast<irr::s32>(std::round(rect.LowerRightCorner.X * filterScaleX));
+		element->setRelativePosition(rect);
+	}
+
+	setScreenRect(wSort, layout.searchSort);
+	if(cbSortType) {
+		const irr::s32 sortWidth = std::max<irr::s32>(1, layout.searchSort.getWidth());
+		cbSortType->setRelativePosition(Scale(std::max<irr::s32>(2, sortWidth - 92), 1, sortWidth - 3, 23));
+	}
+	setScreenRect(scrFilter, layout.searchScrollbar);
+}
+
 void Game::OnResize() {
 	env->getRootGUIElement()->setRelativePosition(irr::core::recti(0, 0, window_size.Width, window_size.Height));
 
@@ -3718,6 +3854,8 @@ void Game::OnResize() {
 	roomListTable->addRow(roomListTable->getRowCount());
 	roomListTable->removeRow(roomListTable->getRowCount() - 1);
 	roomListTable->setSelected(prev);
+	if(is_building)
+		ApplyDeckEditorLayout();
 }
 irr::core::recti Game::Resize(irr::s32 x, irr::s32 y, irr::s32 x2, irr::s32 y2) const {
 	x = x * window_scale.X;
