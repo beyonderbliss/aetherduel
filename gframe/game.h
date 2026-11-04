@@ -67,7 +67,7 @@ namespace ygo {
 constexpr int kUiEdgeMargin = 5;
 
 struct DeckGridLayout {
-	int panelLeft;
+	int gridLeft;
 	int slotWidth;
 	int firstRowY;
 	int rowStep;
