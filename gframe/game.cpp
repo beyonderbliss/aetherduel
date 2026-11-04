@@ -3709,7 +3709,7 @@ void Game::ApplyDeckEditorLayout() {
 	place(btnYdkeManage, true);
 	place(btnSettingsMenu, true);
 	if(stHandTestSettings && btnHandTestSettings) {
-		const buttonRect = btnHandTestSettings->getRelativePosition();
+		const auto buttonRect = btnHandTestSettings->getRelativePosition();
 		stHandTestSettings->setRelativePosition(irr::core::recti(0, 0, buttonRect.getWidth(), buttonRect.getHeight()));
 	}
 
