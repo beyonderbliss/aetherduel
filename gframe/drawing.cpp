@@ -1258,6 +1258,7 @@ void Game::DrawThumb(const CardDataC* cp, irr::core::vector2di pos, LFList* lfli
 #define DRAWRECT(what,...) do { driver->draw2DRectangle(Resize(__VA_ARGS__), DECKCOLOR(what)); } while(0)
 #define DRAWOUTLINE(what,...) do { driver->draw2DRectangleOutline(Resize(__VA_ARGS__), SKCOLOR(what##_OUTLINE)); } while(0)
 void Game::DrawDeckBd() {
+	deckBuilder.UpdateMainDeckScroll(delta_time);
 	const auto GetDeckSizeStr = [&](const Deck::Vector& deck, const Deck::Vector& pre_deck)->std::wstring {
 		if(is_siding)
 			return epro::format(L"{} ({})", deck.size(), pre_deck.size());
@@ -1345,8 +1346,16 @@ void Game::DrawDeckBd() {
 					continue;
 				const int cardX = grid.gridLeft + col * grid.slotWidth + (grid.slotWidth - grid.cardWidth) / 2;
 				const int cardY = grid.firstRowY + static_cast<int>(std::round((row - scrollRows) * grid.rowStep));
-				DrawThumb((*activeDeck)[cardIndex], irr::core::vector2di(cardX, cardY), deckBuilder.filterList,
-					false, &gridClip, true, grid.cardWidth, grid.cardHeight);
+				const bool placeholder = deckBuilder.is_draging && deckBuilder.drag_source_in_deck &&
+					deckBuilder.active_deck_tab == deckBuilder.click_pos - 1 && cardIndex == deckBuilder.drag_start_seq;
+				if(placeholder) {
+					const auto placeholderRect = Resize(cardX, cardY, cardX + grid.cardWidth, cardY + grid.cardHeight);
+					driver->draw2DRectangle(0x403b4654, placeholderRect);
+					driver->draw2DRectangleOutline(placeholderRect, 0xff9aa8b8);
+				} else {
+					DrawThumb((*activeDeck)[cardIndex], irr::core::vector2di(cardX, cardY), deckBuilder.filterList,
+						false, &gridClip, true, grid.cardWidth, grid.cardHeight);
+				}
 				if(deckBuilder.hovered_pos == deckBuilder.active_deck_tab + 1 && deckBuilder.hovered_seq == cardIndex &&
 				   cardY >= grid.firstRowY && cardY + grid.cardHeight <= viewportBottom) {
 					driver->draw2DRectangleOutline(
@@ -1358,7 +1367,7 @@ void Game::DrawDeckBd() {
 		// Keep the touch tracks invisible at rest; show their position indicator
 		// only while the user is actively dragging either side track.
 		if(deckBuilder.active_deck_tab == 0 && activeDeck->size() > 15 &&
-		   deckBuilder.deck_scroll_active && deckBuilder.deck_scroll_free) {
+		   ((deckBuilder.deck_scroll_active && deckBuilder.deck_scroll_free) || deckBuilder.main_deck_scroll_inertia)) {
 			const int panelLeft = GetDeckPanelLeft();
 			const int panelRight = 800;
 			const int leftTrackRight = grid.gridLeft + (grid.slotWidth - grid.cardWidth) / 2;
@@ -1379,7 +1388,7 @@ void Game::DrawDeckBd() {
 			const auto drawTrackIndicator = [&](int left, int width) {
 				if(width <= 0)
 					return;
-				const int indicatorWidth = std::min(5, std::max(2, width / 3));
+				const int indicatorWidth = std::min(deckBuilder.deck_scroll_active ? 7 : 5, std::max(2, width / 3));
 				const int indicatorLeft = left + (width - indicatorWidth) / 2;
 				driver->draw2DRectangle(0x806f879f, Resize(indicatorLeft, trackTop, indicatorLeft + indicatorWidth, trackBottom));
 				driver->draw2DRectangle(0xffc7d7e8, Resize(indicatorLeft, thumbTop, indicatorLeft + indicatorWidth, thumbTop + thumbHeight));
