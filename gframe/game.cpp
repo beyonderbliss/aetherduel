@@ -3267,7 +3267,11 @@ DeckGridLayout Game::GetDeckGridLayout() const {
 	const int usableWidth = std::max(5, panelRight - panelLeft - horizontalInset * 2);
 	const int cardWidth = std::max(1, (usableWidth - horizontalGap * 4) / 5);
 	const int slotWidth = cardWidth + horizontalGap;
-	const int cardHeight = std::max(1, (cardWidth * 86 + 29) / 59);
+	// Resize() scales X and Y independently. Compensate in logical height so
+	// the rendered thumbnail keeps the physical 59:86 card-art aspect ratio.
+	const float scaleY = std::max(0.001f, window_scale.Y);
+	const int cardHeight = std::max(1, static_cast<int>(std::round(
+		cardWidth * 86.0f / 59.0f * window_scale.X / scaleY)));
 	const int gridHeight = cardHeight * 2 + verticalGap;
 	const int firstRowY = gridTop + std::max(0, (gridBottom - gridTop - gridHeight) / 2);
 	return { panelLeft, slotWidth, firstRowY, cardHeight + verticalGap, cardWidth, cardHeight };
