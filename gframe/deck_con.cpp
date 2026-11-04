@@ -1058,7 +1058,8 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					if(elapsed > 0 && elapsed <= 120) {
 						const float deltaRows = static_cast<float>(logicalMove.Y - deck_scroll_last_y) /
 							static_cast<float>(std::max(1, mainGame->GetDeckGridLayout().rowStep));
-						main_deck_scroll_velocity = -deltaRows * 1000.0f / static_cast<float>(elapsed);
+						main_deck_scroll_velocity = std::clamp(
+							-deltaRows * 1000.0f / static_cast<float>(elapsed), -8.0f, 8.0f);
 					}
 					deck_scroll_last_y = logicalMove.Y;
 					deck_scroll_last_time = now;
