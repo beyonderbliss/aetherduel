@@ -100,6 +100,10 @@ void DeckBuilder::Initialize(bool refresh) {
 }
 void DeckBuilder::Terminate(bool showmenu) {
 	mainGame->is_building = false;
+	if(mainGame->cardViewFullscreen) {
+		mainGame->cardViewFullscreen = false;
+		mainGame->ResizeCardinfoWindow(gGameConfig->keep_cardinfo_aspect_ratio);
+	}
 	mainGame->is_siding = false;
 	if(showmenu) {
 		mainGame->ClearCardInfo();
@@ -162,6 +166,18 @@ void DeckBuilder::ExportDeckToClipboard(bool plain_text) {
 	mainGame->PopupElement(mainGame->wACMessage, 20);
 }
 bool DeckBuilder::OnEvent(const irr::SEvent& event) {
+	// The DeckBuilder replaces ClientField as the active event receiver.
+	// Keep the shared card viewer interactive in both editor and duel modes.
+	if(event.EventType == irr::EET_MOUSE_INPUT_EVENT &&
+	   event.MouseInput.Event == irr::EMIE_LMOUSE_LEFT_UP &&
+	   mainGame->wCardImg->isVisible() && mainGame->imgCard->isVisible()) {
+		const irr::core::vector2di tap(event.MouseInput.X, event.MouseInput.Y);
+		if(mainGame->imgCard->getAbsolutePosition().isPointInside(tap)) {
+			mainGame->cardViewFullscreen = !mainGame->cardViewFullscreen;
+			mainGame->ResizeCardinfoWindow(gGameConfig->keep_cardinfo_aspect_ratio);
+			return true;
+		}
+	}
 	bool stopPropagation = false;
 	if(mainGame->dField.OnCommonEvent(event, stopPropagation))
 		return stopPropagation;
