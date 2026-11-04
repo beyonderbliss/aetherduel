@@ -3239,7 +3239,7 @@ void Game::SetMessageWindow() {
 	}
 }
 void Game::ResizeCardinfoWindow(bool keep_ratio) {
-	if(!dInfo.isInDuel)
+	if(!dInfo.isInDuel && !is_building)
 		cardViewFullscreen = false;
 
 	if(cardViewFullscreen) {
