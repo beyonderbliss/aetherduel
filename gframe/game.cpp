@@ -559,10 +559,11 @@ void Game::Initialize() {
 
 	btnSaveDeck = AlignElementWithParent(env->addButton(Scale(225, 35, 290, 60), wDeckEdit, BUTTON_SAVE_DECK, gDataManager->GetSysString(1302).data()));
 	defaultStrings.emplace_back(btnSaveDeck, 1302);
-	btnRenameDeck = AlignElementWithParent(env->addButton(Scale(5, 65, 75, 90), wDeckEdit, BUTTON_RENAME_DECK, gDataManager->GetSysString(1362).data()));
+	btnRenameDeck = AlignElementWithParent(env->addButton(Scale(5, 65, 75, 90), wDeckEdit, BUTTON_RENAME_DECK, L"✎"));
 	defaultStrings.emplace_back(btnRenameDeck, 1362);
 	ebDeckname = AlignElementWithParent(env->addEditBox(L"", Scale(80, 65, 220, 90), true, wDeckEdit, EDITBOX_DECK_NAME));
 	ebDeckname->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
+	ebDeckname->setVisible(false);
 	btnSaveDeckAs = AlignElementWithParent(env->addButton(Scale(225, 65, 290, 90), wDeckEdit, BUTTON_SAVE_DECK_AS, gDataManager->GetSysString(1303).data()));
 	defaultStrings.emplace_back(btnSaveDeckAs, 1303);
 	btnShuffleDeck = AlignElementWithParent(env->addButton(Scale(5, 95, 75, 120), wDeckEdit, BUTTON_SHUFFLE_DECK, gDataManager->GetSysString(1307).data()));
@@ -3238,6 +3239,71 @@ void Game::SetMessageWindow() {
 		SetCentered(wACMessage);
 	}
 }
+int Game::GetDeckPanelLeft() const {
+	// Use fullscreen-card geometry as the permanent deck-panel anchor.
+	const float aspect = static_cast<float>(layout::kFullscreenAspectWidth) / layout::kFullscreenAspectHeight;
+	const auto viewport = driver->getScreenSize();
+	const irr::s32 inset = std::max<irr::s32>(4,
+		static_cast<irr::s32>(std::min(viewport.Width, viewport.Height) * 0.0075f));
+	const irr::s32 availableWidth = static_cast<irr::s32>(viewport.Width) - inset * 2;
+	const irr::s32 availableHeight = static_cast<irr::s32>(viewport.Height) - inset * 2;
+	const irr::s32 cardWidth = std::min<irr::s32>(availableWidth,
+		static_cast<irr::s32>(availableHeight * aspect));
+	return Resize(inset + cardWidth, 0, true).X + kUiEdgeMargin;
+}
+void Game::UpdateDeckMenuLayout() {
+	if(!wDeckEdit || !ebDeckname)
+		return;
+	const int panelLeft = GetDeckPanelLeft();
+	const int menuWidth = std::max(130, 605 - panelLeft);
+	const int right = menuWidth - 5;
+	wDeckEdit->setRelativePosition(Resize(panelLeft, kUiEdgeMargin, 605, 130));
+	const bool inputMode = deckBuilder.deck_name_input_mode != 0;
+	stBanlist->setVisible(!inputMode);
+	cbDBLFList->setVisible(!inputMode);
+	stDeck->setVisible(!inputMode);
+	cbDBDecks->setVisible(!inputMode);
+	btnSaveDeck->setVisible(!inputMode);
+	btnShuffleDeck->setVisible(!inputMode);
+	btnSortDeck->setVisible(!inputMode);
+	btnClearDeck->setVisible(!inputMode);
+	btnDeleteDeck->setVisible(!inputMode);
+	ebDeckname->setVisible(inputMode);
+	btnSaveDeckAs->setVisible(true);
+	btnRenameDeck->setVisible(true);
+	if(inputMode) {
+		ebDeckname->setRelativePosition(Scale(5, 12, right, 48));
+		btnSaveDeckAs->setRelativePosition(Scale(5, 65, (menuWidth / 2) - 2, 90));
+		btnRenameDeck->setRelativePosition(Scale((menuWidth / 2) + 2, 65, right, 90));
+		btnSaveDeckAs->setText(deckBuilder.deck_name_input_mode == 1 ? L"Create" : L"Rename");
+		btnRenameDeck->setText(L"Cancel");
+		return;
+	}
+	stBanlist->setRelativePosition(Scale(5, 8, 42, 28));
+	cbDBLFList->setRelativePosition(Scale(44, 5, right, 30));
+	stDeck->setRelativePosition(Scale(5, 38, 34, 58));
+	cbDBDecks->setRelativePosition(Scale(36, 35, right - 27, 60));
+	btnRenameDeck->setRelativePosition(Scale(right - 24, 35, right, 60));
+	btnSaveDeck->setRelativePosition(Scale(5, 65, (menuWidth / 2) - 2, 90));
+	btnSaveDeckAs->setRelativePosition(Scale((menuWidth / 2) + 2, 65, right, 90));
+	const int gap = 2;
+	const int buttonWidth = std::max(1, (menuWidth - 10 - gap * 3) / 4);
+	const int x0 = 5;
+	btnShuffleDeck->setRelativePosition(Scale(x0, 95, x0 + buttonWidth, 120));
+	btnSortDeck->setRelativePosition(Scale(x0 + buttonWidth + gap, 95, x0 + (buttonWidth + gap) * 2 - gap, 120));
+	btnClearDeck->setRelativePosition(Scale(x0 + (buttonWidth + gap) * 2, 95, x0 + (buttonWidth + gap) * 3 - gap, 120));
+	btnDeleteDeck->setRelativePosition(Scale(x0 + (buttonWidth + gap) * 3, 95, right, 120));
+	btnRenameDeck->setText(L"✎");
+	btnSaveDeckAs->setText(gDataManager->GetSysString(1303).data());
+	btnShuffleDeck->setText(L"Shf");
+	btnSortDeck->setText(L"Sort");
+	btnClearDeck->setText(L"Clr");
+	btnDeleteDeck->setText(L"Del");
+	btnShuffleDeck->setToolTipText(L"Shuffle");
+	btnSortDeck->setToolTipText(L"Sort");
+	btnClearDeck->setToolTipText(L"Clear");
+	btnDeleteDeck->setToolTipText(L"Delete");
+}
 void Game::ResizeCardinfoWindow(bool keep_ratio) {
 	if(!dInfo.isInDuel && !is_building)
 		cardViewFullscreen = false;
@@ -3663,6 +3729,7 @@ void Game::OnResize() {
 	stHintMsg->setRelativePosition(ResizeWin(500, 60, 820, 90));
 
 	ResizeCardinfoWindow(gGameConfig->keep_cardinfo_aspect_ratio);
+	UpdateDeckMenuLayout();
 	for(auto& window : repoInfoGui) {
 		window.second.progress2->setRelativePosition(Scale(5, 20 + 15, (300 - 8) * window_scale.X, 20 + 30));
 		window.second.history_button2->setRelativePosition(irr::core::recti(ResizeX(200), 5, ResizeX(300 - 5), Scale(20 + 10)));
