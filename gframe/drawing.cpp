@@ -1327,8 +1327,8 @@ void Game::DrawDeckBd() {
 		const auto grid = GetDeckGridLayout();
 		float scrollRows = 0.0f;
 		if(deckBuilder.active_deck_tab == 0) {
-			const int totalRows = static_cast<int>((activeDeck->size() + 4) / 5);
-			const float maxScroll = static_cast<float>(std::max(0, totalRows - 3));
+			const int unlockedRows = std::max(3, static_cast<int>(activeDeck->size() / 5) + 1);
+			const float maxScroll = static_cast<float>(unlockedRows - 3);
 			deckBuilder.main_deck_scroll_offset = std::clamp(deckBuilder.main_deck_scroll_offset, 0.0f, maxScroll);
 			scrollRows = deckBuilder.main_deck_scroll_offset;
 		}
@@ -1364,38 +1364,8 @@ void Game::DrawDeckBd() {
 				}
 			}
 		}
-		// Keep the touch tracks invisible at rest; show their position indicator
-		// only while the user is actively dragging either side track.
-		if(deckBuilder.active_deck_tab == 0 && activeDeck->size() > 15 &&
-		   ((deckBuilder.deck_scroll_active && deckBuilder.deck_scroll_free) || deckBuilder.main_deck_scroll_inertia)) {
-			const int panelLeft = GetDeckPanelLeft();
-			const int panelRight = 800;
-			const int leftTrackRight = grid.gridLeft + (grid.slotWidth - grid.cardWidth) / 2;
-			const int rightTrackLeft = grid.gridLeft + 4 * grid.slotWidth +
-				(grid.slotWidth - grid.cardWidth) / 2 + grid.cardWidth;
-			const int trackTop = grid.firstRowY;
-			const int trackBottom = viewportBottom;
-			const int trackHeight = trackBottom - trackTop;
-			const int leftTrackWidth = leftTrackRight - panelLeft;
-			const int rightTrackWidth = panelRight - rightTrackLeft;
-			const int totalRows = static_cast<int>((activeDeck->size() + 4) / 5);
-			const float maxScroll = static_cast<float>(std::max(0, totalRows - 3));
-			const int thumbHeight = std::max(12, static_cast<int>(std::round(
-				trackHeight * 3.0f / std::max(3, totalRows))));
-			const int thumbTravel = std::max(0, trackHeight - thumbHeight);
-			const int thumbTop = trackTop + static_cast<int>(std::round(
-				maxScroll > 0.0f ? deckBuilder.main_deck_scroll_offset / maxScroll * thumbTravel : 0.0f));
-			const auto drawTrackIndicator = [&](int left, int width) {
-				if(width <= 0)
-					return;
-				const int indicatorWidth = std::min(width, deckBuilder.deck_scroll_active ? 7 : 4);
-				const int indicatorLeft = left + (width - indicatorWidth) / 2;
-				driver->draw2DRectangle(0x806f879f, Resize(indicatorLeft, trackTop, indicatorLeft + indicatorWidth, trackBottom));
-				driver->draw2DRectangle(0xffc7d7e8, Resize(indicatorLeft, thumbTop, indicatorLeft + indicatorWidth, thumbTop + thumbHeight));
-			};
-			drawTrackIndicator(panelLeft, leftTrackWidth);
-			drawTrackIndicator(rightTrackLeft, rightTrackWidth);
-		}
+		// Free-scroll tracks and indicators are intentionally not rendered.
+
 	}
 	//search result
 	{
