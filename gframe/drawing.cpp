@@ -1270,7 +1270,7 @@ void Game::DrawDeckBd() {
 
 		const Deck::Vector* activeDeck = deckBuilder.active_deck_tab == 0 ? &current_deck.main :
 			(deckBuilder.active_deck_tab == 1 ? &current_deck.extra : &current_deck.side);
-		const auto tabNames[] = {
+		const epro::wstringview tabNames[] = {
 			gDataManager->GetSysString(1330),
 			gDataManager->GetSysString(1331),
 			gDataManager->GetSysString(1332)
@@ -1282,7 +1282,7 @@ void Game::DrawDeckBd() {
 			const int right = tab == 2 ? panelRight : left + tabWidth;
 			const auto tabRect = Resize(left, 140, right, 172);
 			const auto tabColor = tab == deckBuilder.active_deck_tab ? 0xff46566a : 0xff252f3b;
-			driver->draw2DRectangle(tabRect, tabColor);
+			driver->draw2DRectangle(tabColor, tabRect);
 			driver->draw2DRectangleOutline(tabRect, 0xff9099a5);
 			const auto label = epro::format(L"{} ({})", tabNames[tab], tabDecks[tab]->size());
 			DrawShadowText(textFont, label, tabRect, Resize(1, 1, 1, 1),
