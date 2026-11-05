@@ -170,6 +170,7 @@ struct info_panel_elements {
 	irr::gui::IGUITab* tabRepositories;
 	irr::gui::IGUIContextMenu* mTabRepositories;
 	irr::gui::IGUIButton* btnSettingsMenu;
+	irr::gui::IGUIButton* btnPanelCycle;
 };
 
 struct main_menu_panel_elements {
