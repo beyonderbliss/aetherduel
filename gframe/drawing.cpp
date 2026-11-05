@@ -1334,7 +1334,7 @@ void Game::DrawDeckBd() {
 		const auto grid = GetDeckGridLayout();
 		float scrollRows = 0.0f;
 		if(deckBuilder.active_deck_tab == 0) {
-			const int unlockedRows = std::max(3, static_cast<int>(activeDeck->size() / 5) + 1);
+			const int unlockedRows = std::max(3, static_cast<int>((activeDeck->size() + 4) / 5));
 			const float maxScroll = static_cast<float>(unlockedRows - 3);
 			deckBuilder.main_deck_scroll_offset = std::clamp(deckBuilder.main_deck_scroll_offset, 0.0f, maxScroll);
 			scrollRows = deckBuilder.main_deck_scroll_offset;
