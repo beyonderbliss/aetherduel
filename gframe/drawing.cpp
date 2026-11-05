@@ -1182,6 +1182,8 @@ void Game::WaitFrameSignal(int frame, std::unique_lock<epro::mutex>& _lck) {
 	frameSignal.Wait(_lck);
 }
 void Game::DrawThumb(const CardDataC* cp, irr::core::vector2di pos, LFList* lflist, bool drag, const irr::core::recti* cliprect, bool load_image, int thumbWidth, int thumbHeight) {
+	if(!cp)
+		return;
 	auto code = cp->code;
 	auto flit = lflist->GetLimitationIterator(cp);
 	int count = 3;
@@ -1200,11 +1202,15 @@ void Game::DrawThumb(const CardDataC* cp, irr::core::vector2di pos, LFList* lfli
 	const int otTop = static_cast<int>(std::round(50 * thumbScale));
 	const int otRight = static_cast<int>(std::round(37 * thumbScale));
 	const int otBottom = static_cast<int>(std::round(65 * thumbScale));
-	irr::core::recti dragloc = Resize(pos.X, pos.Y, pos.X + thumbWidth, pos.Y + thumbHeight);
+	constexpr float cardAspectRatio = 59.0f / 86.0f;
+	irr::core::recti dragloc = ResizeWithCappedWidth(
+		pos.X, pos.Y, pos.X + thumbWidth, pos.Y + thumbHeight, cardAspectRatio);
 	irr::core::recti limitloc = Resize(pos.X, pos.Y, pos.X + limitSize, pos.Y + limitSize);
 	irr::core::recti otloc = Resize(pos.X + otLeft, pos.Y + otTop, pos.X + otRight, pos.Y + otBottom);
 	if(drag) {
-		dragloc = irr::core::recti(pos.X, pos.Y, pos.X + Scale(thumbWidth * window_scale.X), pos.Y + Scale(thumbHeight * window_scale.Y));
+		const int dragWidth = static_cast<int>(std::round(Scale(thumbWidth * window_scale.X)));
+		const int dragHeight = static_cast<int>(std::round(static_cast<float>(dragWidth) / cardAspectRatio));
+		dragloc = irr::core::recti(pos.X, pos.Y, pos.X + dragWidth, pos.Y + dragHeight);
 		limitloc = irr::core::recti(pos.X, pos.Y, pos.X + Scale(limitSize * window_scale.X), pos.Y + Scale(limitSize * window_scale.Y));
 		otloc = irr::core::recti(pos.X + Scale(otLeft * window_scale.X), pos.Y + Scale(otTop * window_scale.Y),
 			pos.X + Scale(otRight * window_scale.X), pos.Y + Scale(otBottom * window_scale.Y));
@@ -1455,7 +1461,7 @@ void Game::DrawDeckBd() {
 							  Resize(860, height_offset + 209 + i * kDeckSearchResultRowHeight, 955, height_offset + 229 + i * kDeckSearchResultRowHeight), 0xffffffff, 0xff000000, false, false, &rect);
 		}
 	}
-	if(deckBuilder.is_draging)
+	if(deckBuilder.is_draging && deckBuilder.dragging_pointer)
 		DrawThumb(deckBuilder.dragging_pointer, irr::core::vector2di(deckBuilder.dragx - Scale(kDeckSearchResultThumbWidth / 2), deckBuilder.dragy - Scale(kDeckSearchResultThumbHeight / 2)), deckBuilder.filterList, true, nullptr, true,
 			kDeckSearchResultThumbWidth, kDeckSearchResultThumbHeight);
 }
