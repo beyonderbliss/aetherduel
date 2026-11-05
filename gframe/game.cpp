@@ -1528,7 +1528,14 @@ void Game::PopulateSettingsWindow() {
 
 	gSettings.window = gSettings.tabcontrolwindow->getWindow();
 	defaultStrings.emplace_back(gSettings.window, 1273);
-	gSettings.window->getCloseButton()->setRelativePosition(Scale(610, 390, 660, 430));
+	gSettings.window->getCloseButton()->setVisible(false);
+	const auto settingsClientRect = gSettings.window->getClientRect();
+	const auto settingsCloseRect = irr::core::recti(
+		settingsClientRect.LowerRightCorner.X - Scale(52),
+		settingsClientRect.LowerRightCorner.Y - Scale(40),
+		settingsClientRect.LowerRightCorner.X - Scale(8),
+		settingsClientRect.LowerRightCorner.Y - Scale(8));
+	env->addButton(settingsCloseRect, gSettings.window, BUTTON_SHOW_SETTINGS, L"×");
 	gSettings.window->setVisible(false);
 
 	irr::s32 cur_y = 5;
