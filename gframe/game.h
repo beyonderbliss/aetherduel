@@ -68,7 +68,7 @@ constexpr int kUiEdgeMargin = 5;
 constexpr int kDeckSearchResultRowHeight = 79;
 constexpr int kDeckSearchResultViewportHeight = 474;
 constexpr int kDeckSearchResultThumbWidth = 50;
-constexpr int kDeckSearchResultThumbHeight = (CARD_THUMB_WIDTH * 86 + 29) / 59;
+constexpr int kDeckSearchResultThumbHeight = (kDeckSearchResultThumbWidth * 86 + 29) / 59;
 
 struct DeckGridLayout {
 	int gridLeft;
