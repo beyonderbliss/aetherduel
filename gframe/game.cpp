@@ -661,8 +661,8 @@ void Game::Initialize() {
 	scrFilter->setSmallStep(DECK_SEARCH_SCROLL_STEP);
 	scrFilter->setVisible(false);
 	//sort type
-	wSort = AlignElementWithParent(env->addStaticText(L"", Scale(930, 132, 1024 - kUiEdgeMargin, 156), true, false, 0, -1, true));
-	cbSortType = AlignElementWithParent(AddComboBox(env, Scale(10, 2, 85, 22), wSort, COMBOBOX_SORTTYPE));
+	wSort = AlignElementWithParent(env->addStaticText(L"", Scale(930, 132, 1024 - kUiEdgeMargin, 157), true, false, 0, -1, true));
+	cbSortType = AlignElementWithParent(AddComboBox(env, Scale(14, 3, 89, 25), wSort, COMBOBOX_SORTTYPE));
 	cbSortType->setMaxSelectionRows(10);
 	ReloadCBSortType();
 	wSort->setVisible(false);
