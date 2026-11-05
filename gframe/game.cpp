@@ -552,6 +552,7 @@ void Game::Initialize() {
 	defaultStrings.emplace_back(stBanlist, 1300);
 	cbDBLFList = AlignElementWithParent(AddComboBox(env, Scale(80, 5, 220, 30), wDeckEdit, COMBOBOX_DBLFLIST));
 	cbDBLFList->setMaxSelectionRows(10);
+cbDBLFList->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 #if EDOPRO_ANDROID || EDOPRO_IOS
 	static_cast<irr::gui::CGUICustomComboBox*>(cbDBLFList)->setTouchWholeArea(true);
 #endif
@@ -559,6 +560,7 @@ void Game::Initialize() {
 	defaultStrings.emplace_back(stDeck, 1301);
 	cbDBDecks = AlignElementWithParent(AddComboBox(env, Scale(80, 35, 220, 60), wDeckEdit, COMBOBOX_DBDECKS));
 	cbDBDecks->setMaxSelectionRows(15);
+cbDBDecks->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 #if EDOPRO_ANDROID || EDOPRO_IOS
 	static_cast<irr::gui::CGUICustomComboBox*>(cbDBDecks)->setTouchWholeArea(true);
 #endif
@@ -3380,10 +3382,7 @@ void Game::UpdateDeckMenuLayout() {
 	btnSortDeck->setText(L"Sort");
 	btnClearDeck->setText(L"Clear");
 	btnDeleteDeck->setText(L"Delete");
-	btnShuffleDeck->setToolTipText(L"Shuffle");
-	btnSortDeck->setToolTipText(L"Sort");
-	btnClearDeck->setToolTipText(L"Clear");
-	btnDeleteDeck->setToolTipText(L"Delete");
+
 }
 void Game::ResizeCardinfoWindow(bool keep_ratio) {
 	if(!dInfo.isInDuel && !is_building)
