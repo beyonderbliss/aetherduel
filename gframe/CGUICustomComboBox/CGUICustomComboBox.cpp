@@ -77,6 +77,10 @@ void CGUICustomComboBox::setTouchWholeArea(bool enabled) {
 	updateListButtonWidth(Environment->getSkin() ? Environment->getSkin()->getSize(EGDS_SCROLLBAR_SIZE) : 15);
 }
 
+void CGUICustomComboBox::setArrowOnlyClick(bool enabled) {
+	ArrowOnlyClick = enabled;
+}
+
 void CGUICustomComboBox::setTextAlignment(EGUI_ALIGNMENT horizontal, EGUI_ALIGNMENT vertical) {
 	HAlign = horizontal;
 	VAlign = vertical;
@@ -298,6 +302,8 @@ bool CGUICustomComboBox::OnEvent(const SEvent& event) {
 			}
 			case EMIE_LMOUSE_LEFT_UP:
 			{
+				if(ArrowOnlyClick && !ListBox)
+					return true;
 				if(TouchWholeArea && !ListBox) {
 					Environment->setFocus(this);
 					openCloseMenu();
