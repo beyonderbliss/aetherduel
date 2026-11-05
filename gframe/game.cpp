@@ -1463,7 +1463,7 @@ void Game::PopulateTabSettingsWindow() {
 	static_cast<irr::gui::CGUICustomTabControl*>(wInfos)->setTabHeaderVisible(false);
 	wInfos->setVisible(false);
 	// Standalone panel switch button: right-aligned above the content panel with a 5-unit gap.
-	btnPanelCycle = env->addButton(Scale(201, 245, 301, 270), nullptr, -1, gDataManager->GetSysString(1270).data());
+	btnPanelCycle = env->addButton(Resize(211, 255, 301, 290), nullptr, -1, gDataManager->GetSysString(1270).data());
 	defaultStrings.emplace_back(btnPanelCycle, 1270);
 	//info
 	{
@@ -3431,14 +3431,19 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 	const irr::s32 wrapperWidth = layout::kStandardArtworkWidth + layout::kStandardWrapperPaddingX * 2;
 	const irr::s32 wrapperHeight = layout::kStandardArtworkHeight + layout::kStandardWrapperPaddingY * 2;
 	const float wrapperAspect = static_cast<float>(wrapperWidth) / wrapperHeight;
+	const auto panelRect = wInfos->getAbsolutePosition();
+	const auto* infoTabs = static_cast<const irr::gui::CGUICustomTabControl*>(wInfos);
+	// calcTabPos() starts the page below the retained tab-height offset, even while its header is hidden.
+	const irr::s32 contentTop = panelRect.UpperLeftCorner.Y + infoTabs->getTabHeight() + 2;
+	const irr::s32 contentBottom = Resize(0, contentTop, true).Y - 5;
 	auto rect = (keep_ratio && layout::kStandardKeepAspectRatio) ?
-		// Use the full vertical space above the content panel while retaining the card ratio.
-		// The thumbnail starts at Y=5 and stops at Y=270, leaving the required 5-unit gap.
+		// Fill the available height up to 5 logical units before the actual page content.
+		// Cap the width to leave 5 units between the thumbnail and the 90-unit switch button.
 		ResizeWithCappedWidth(
 			layout::kStandardPanelOriginX,
 			layout::kStandardPanelOriginY,
-			layout::kStandardPanelOriginX + 1000,
-			275 - 5,
+			301 - 90 - 5,
+			contentBottom,
 			wrapperAspect) :
 		Resize(
 			layout::kStandardPanelOriginX,
@@ -3775,12 +3780,10 @@ void Game::OnResize() {
 	wMainMenu->setRelativePosition(ResizeWin(mainMenuLeftX, 200, mainMenuRightX, 450));
 	wBtnSettings->setRelativePosition(ResizeWin(0, 610, 30, 640));
 	{
-		auto buttonRect = btnPanelCycle->getRelativePosition();
+		auto buttonRect = Resize(211, 255, 301, 290);
 		const auto panelRect = wInfos->getRelativePosition();
 		buttonRect.UpperLeftCorner.X = panelRect.LowerRightCorner.X - buttonRect.getWidth();
 		buttonRect.LowerRightCorner.X = panelRect.LowerRightCorner.X;
-		buttonRect.UpperLeftCorner.Y = ResizeY(245);
-		buttonRect.LowerRightCorner.Y = ResizeY(270);
 		btnPanelCycle->setRelativePosition(buttonRect);
 	}
 	SetCentered(wCommitsLog);
