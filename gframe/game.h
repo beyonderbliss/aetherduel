@@ -167,6 +167,7 @@ struct info_panel_elements {
 	irr::gui::IGUIButton* btnExpandLog;
 	irr::gui::IGUIButton* btnClearChat;
 	irr::gui::IGUIButton* btnExpandChat;
+	irr::gui::IGUIButton* btnPanelCycle;
 	irr::gui::IGUITab* tabRepositories;
 	irr::gui::IGUIContextMenu* mTabRepositories;
 	irr::gui::IGUIButton* btnSettingsMenu;
