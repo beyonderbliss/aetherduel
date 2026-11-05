@@ -2090,7 +2090,8 @@ bool Game::MainLoop() {
 		int fpsCounterWidth = fpsCounter->getTextWidth() / (dpi_scale * window_scale.X) + 20; // corner may be curved
 #endif
 		if (is_building || is_siding) {
-			fpsCounter->setRelativePosition(Resize(205, CARD_IMG_HEIGHT + 1, 300, CARD_IMG_HEIGHT + 21));
+			// Keep the FPS counter in the strip between the deck-editor actions and panel switch.
+			fpsCounter->setRelativePosition(Resize(std::max(205, 301 - fpsCounterWidth), 222, 301, 242));
 		} else if (wChat->isVisible()) { // Move it above the chat box
 			fpsCounter->setRelativePosition(Resize(1020 - fpsCounterWidth, 595, 1020, 615));
 		} else { // bottom right of window with a little padding
@@ -3431,25 +3432,19 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 	const irr::s32 wrapperHeight = layout::kStandardArtworkHeight + layout::kStandardWrapperPaddingY * 2;
 	const float wrapperAspect = static_cast<float>(wrapperWidth) / wrapperHeight;
 	auto rect = (keep_ratio && layout::kStandardKeepAspectRatio) ?
+		// Use the full vertical space above the content panel while retaining the card ratio.
+		// The thumbnail starts at Y=5 and stops at Y=270, leaving the required 5-unit gap.
 		ResizeWithCappedWidth(
 			layout::kStandardPanelOriginX,
 			layout::kStandardPanelOriginY,
-			layout::kStandardPanelOriginX + wrapperWidth,
-			layout::kStandardPanelOriginY + wrapperHeight,
+			layout::kStandardPanelOriginX + 1000,
+			275 - 5,
 			wrapperAspect) :
 		Resize(
 			layout::kStandardPanelOriginX,
 			layout::kStandardPanelOriginY,
 			layout::kStandardPanelOriginX + wrapperWidth,
 			layout::kStandardPanelOriginY + wrapperHeight);
-	if(keep_ratio && layout::kStandardKeepAspectRatio) {
-		// Enlarge the standard artwork uniformly; leave KCPAR-off and fullscreen unchanged.
-		constexpr float standardArtworkScale = 1.05f;
-		const irr::s32 enlargedWidth = static_cast<irr::s32>(std::round(rect.getWidth() * standardArtworkScale));
-		const irr::s32 enlargedHeight = static_cast<irr::s32>(std::round(rect.getHeight() * standardArtworkScale));
-		rect.LowerRightCorner.X = rect.UpperLeftCorner.X + enlargedWidth;
-		rect.LowerRightCorner.Y = rect.UpperLeftCorner.Y + enlargedHeight;
-	}
 	wCardImg->setRelativePosition(rect);
 	// Match the artwork child bounds to the resized wrapper. This keeps both
 	// edges synchronized when window_scale.X and window_scale.Y differ.
@@ -3779,7 +3774,15 @@ void Game::OnResize() {
 	wRoomListPlaceholder->setRelativePosition(irr::core::recti(0, 0, window_size.Width, window_size.Height));
 	wMainMenu->setRelativePosition(ResizeWin(mainMenuLeftX, 200, mainMenuRightX, 450));
 	wBtnSettings->setRelativePosition(ResizeWin(0, 610, 30, 640));
-	btnPanelCycle->setRelativePosition(ResizeWin(201, 245, 301, 270));
+	{
+		auto buttonRect = btnPanelCycle->getRelativePosition();
+		const auto panelRect = wInfos->getRelativePosition();
+		buttonRect.UpperLeftCorner.X = panelRect.LowerRightCorner.X - buttonRect.getWidth();
+		buttonRect.LowerRightCorner.X = panelRect.LowerRightCorner.X;
+		buttonRect.UpperLeftCorner.Y = ResizeY(245);
+		buttonRect.LowerRightCorner.Y = ResizeY(270);
+		btnPanelCycle->setRelativePosition(buttonRect);
+	}
 	SetCentered(wCommitsLog);
 	SetCentered(updateWindow, false);
 
