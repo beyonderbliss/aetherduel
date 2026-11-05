@@ -1887,8 +1887,8 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 						mainGame->HideElement(settingsWindow);
 					else
 						mainGame->PopupElement(settingsWindow);
-				} else if(!settingsWindow->isVisible()) {
-					mainGame->PopupElement(settingsWindow);
+				} else {
+					mainGame->HideElement(settingsWindow);
 				}
 				if(settingsWindow->isVisible())
 					mainGame->env->setFocus(settingsWindow);
