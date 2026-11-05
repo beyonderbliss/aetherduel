@@ -549,6 +549,7 @@ void Game::Initialize() {
 	wDeckEdit = AlignElementWithParent(env->addStaticText(L"", Scale(309, kUiEdgeMargin, 605, 130), true, false, 0, -1, true));
 	wDeckEdit->setVisible(false);
 	stBanlist = env->addStaticText(gDataManager->GetSysString(1300).data(), Scale(10, 9, 100, 29), false, false, wDeckEdit);
+	stBanlist->setTextAlignment(irr::gui::EGUIA_RIGHT, irr::gui::EGUIA_CENTER);
 	defaultStrings.emplace_back(stBanlist, 1300);
 	cbDBLFList = AlignElementWithParent(AddComboBox(env, Scale(80, 5, 220, 30), wDeckEdit, COMBOBOX_DBLFLIST));
 	cbDBLFList->setMaxSelectionRows(10);
@@ -557,6 +558,7 @@ void Game::Initialize() {
 	static_cast<irr::gui::CGUICustomComboBox*>(cbDBLFList)->setTouchWholeArea(true);
 #endif
 	stDeck = env->addStaticText(gDataManager->GetSysString(1301).data(), Scale(10, 39, 100, 59), false, false, wDeckEdit);
+	stDeck->setTextAlignment(irr::gui::EGUIA_RIGHT, irr::gui::EGUIA_CENTER);
 	defaultStrings.emplace_back(stDeck, 1301);
 	cbDBDecks = AlignElementWithParent(AddComboBox(env, Scale(80, 35, 220, 60), wDeckEdit, COMBOBOX_DBDECKS));
 	cbDBDecks->setMaxSelectionRows(15);
@@ -683,7 +685,8 @@ void Game::Initialize() {
 	cbCardType2->addItem(gDataManager->GetSysString(1310).data(), 0);
 	chkAnime = AlignElementWithParent(env->addCheckBox(gGameConfig->chkAnime, Scale(5, 98, 150, 120), wFilter, CHECKBOX_SHOW_ANIME, gDataManager->GetSysString(1999).data()));
 	defaultStrings.emplace_back(chkAnime, 1999);
-	stLimit = env->addStaticText(gDataManager->GetSysString(1315).data(), Scale(205, 7, 280, 27), false, false, wFilter);
+	stLimit = env->addStaticText(gDataManager->GetSysString(1315).data(), Scale(205, 7, 255, 27), false, false, wFilter);
+	stLimit->setTextAlignment(irr::gui::EGUIA_RIGHT, irr::gui::EGUIA_CENTER);
 	defaultStrings.emplace_back(stLimit, 1315);
 	cbLimit = AlignElementWithParent(AddComboBox(env, Scale(260, 5, 390, 25), wFilter, COMBOBOX_OTHER_FILT));
 #if EDOPRO_ANDROID || EDOPRO_IOS
@@ -710,11 +713,13 @@ void Game::Initialize() {
 	cbRace->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	cbRace->setMaxSelectionRows(10);
 	ReloadCBRace();
-	stAttack = env->addStaticText(gDataManager->GetSysString(1322).data(), Scale(205, 30, 280, 50), false, false, wFilter);
+	stAttack = env->addStaticText(gDataManager->GetSysString(1322).data(), Scale(205, 30, 255, 50), false, false, wFilter);
+	stAttack->setTextAlignment(irr::gui::EGUIA_RIGHT, irr::gui::EGUIA_CENTER);
 	defaultStrings.emplace_back(stAttack, 1322);
 	ebAttack = AlignElementWithParent(env->addEditBox(L"", Scale(260, 28, 340, 48), true, wFilter, EDITBOX_ATTACK));
 	ebAttack->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
-	stDefense = env->addStaticText(gDataManager->GetSysString(1323).data(), Scale(205, 53, 280, 73), false, false, wFilter);
+	stDefense = env->addStaticText(gDataManager->GetSysString(1323).data(), Scale(205, 53, 255, 73), false, false, wFilter);
+	stDefense->setTextAlignment(irr::gui::EGUIA_RIGHT, irr::gui::EGUIA_CENTER);
 	defaultStrings.emplace_back(stDefense, 1323);
 	ebDefense = AlignElementWithParent(env->addEditBox(L"", Scale(260, 51, 340, 71), true, wFilter, EDITBOX_DEFENSE));
 	ebDefense->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
@@ -726,7 +731,8 @@ void Game::Initialize() {
 	defaultStrings.emplace_back(stScale, 1336);
 	ebScale = AlignElementWithParent(env->addEditBox(L"", Scale(150, 74, 190, 94), true, wFilter, EDITBOX_SCALE));
 	ebScale->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
-	stSearch = env->addStaticText(gDataManager->GetSysString(1325).data(), Scale(205, 76, 280, 96), false, false, wFilter);
+	stSearch = env->addStaticText(gDataManager->GetSysString(1325).data(), Scale(205, 76, 255, 96), false, false, wFilter);
+	stSearch->setTextAlignment(irr::gui::EGUIA_RIGHT, irr::gui::EGUIA_CENTER);
 	defaultStrings.emplace_back(stSearch, 1325);
 	ebCardName = AlignElementWithParent(env->addEditBox(L"", Scale(260, 74, 390, 94), true, wFilter, EDITBOX_KEYWORD));
 	ebCardName->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
@@ -3767,13 +3773,13 @@ void Game::OnResize() {
 	stBanlist->setRelativePosition(ResizeWin(10, 9, 100, 29));
 	stDeck->setRelativePosition(ResizeWin(10, 39, 100, 59));
 	stCategory->setRelativePosition(ResizeWin(10, 5, 70, 25));
-	stLimit->setRelativePosition(ResizeWin(205, 5, 280, 25));
+	stLimit->setRelativePosition(ResizeWin(205, 5, 255, 25));
 	stAttribute->setRelativePosition(ResizeWin(10, 28, 70, 48));
 	stRace->setRelativePosition(ResizeWin(10, 51, 70, 71));
-	stAttack->setRelativePosition(ResizeWin(205, 28, 280, 48));
-	stDefense->setRelativePosition(ResizeWin(205, 51, 280, 71));
+	stAttack->setRelativePosition(ResizeWin(205, 28, 255, 48));
+	stDefense->setRelativePosition(ResizeWin(205, 51, 255, 71));
 	stStar->setRelativePosition(ResizeWin(10, 74, 80, 94));
-	stSearch->setRelativePosition(ResizeWin(205, 74, 280, 94));
+	stSearch->setRelativePosition(ResizeWin(205, 74, 255, 94));
 	stScale->setRelativePosition(ResizeWin(110, 74, 150, 94));
 
 	wLanWindow->setRelativePosition(ResizeWin(220, 100, 800, 520));
