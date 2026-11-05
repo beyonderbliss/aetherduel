@@ -1462,6 +1462,9 @@ void Game::PopulateTabSettingsWindow() {
 	wInfos = AlignElementWithParent(irr::gui::CGUICustomTabControl::addCustomTabControl(env, Scale(kUiEdgeMargin, 275, 301, 640 - kUiEdgeMargin), 0, true));
 	static_cast<irr::gui::CGUICustomTabControl*>(wInfos)->setTabHeaderVisible(false);
 	wInfos->setVisible(false);
+	// Standalone panel switch button: right-aligned above the content panel with a 5-unit gap.
+	btnPanelCycle = env->addButton(Scale(201, 245, 301, 270), nullptr, -1, gDataManager->GetSysString(1270).data());
+	defaultStrings.emplace_back(btnPanelCycle, 1270);
 	//info
 	{
 		irr::gui::IGUITab* tabInfo = wInfos->addTab(gDataManager->GetSysString(1270).data());
@@ -3774,6 +3777,7 @@ void Game::OnResize() {
 	wRoomListPlaceholder->setRelativePosition(irr::core::recti(0, 0, window_size.Width, window_size.Height));
 	wMainMenu->setRelativePosition(ResizeWin(mainMenuLeftX, 200, mainMenuRightX, 450));
 	wBtnSettings->setRelativePosition(ResizeWin(0, 610, 30, 640));
+	btnPanelCycle->setRelativePosition(ResizeWin(201, 245, 301, 270));
 	SetCentered(wCommitsLog);
 	SetCentered(updateWindow, false);
 
