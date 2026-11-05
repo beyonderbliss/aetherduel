@@ -1459,9 +1459,7 @@ void Game::PopulateAIBotWindow() {
 void Game::PopulateTabSettingsWindow() {
 	//tab
 	infosExpanded = 0;
-	wInfos = AlignElementWithParent(irr::gui::CGUICustomTabControl::addCustomTabControl(env, Scale(kUiEdgeMargin, 300, 301, 640 - kUiEdgeMargin), 0, true));
-	wInfos->setTabHeight(0);
-	wInfos->setTabVerticalAlignment(irr::gui::EGUIA_UPPERLEFT);
+	wInfos = AlignElementWithParent(irr::gui::CGUICustomTabControl::addCustomTabControl(env, Scale(kUiEdgeMargin, 275, 301, 640 - kUiEdgeMargin), 0, true));
 	wInfos->setVisible(false);
 	//info
 	{
@@ -1523,8 +1521,6 @@ void Game::PopulateTabSettingsWindow() {
 		mTabRepositories = irr::gui::CGUICustomContextMenu::addCustomContextMenu(env, tabRepositories, -1, Scale(1, 275, 301, 639));
 		mTabRepositories->setCloseHandling(irr::gui::ECONTEXT_MENU_CLOSE::ECMC_HIDE);
 	}
-	// Cycle the shared left-side panel without changing the Settings controls.
-	btnPanelCycle = env->addButton(Scale(301 - 10 - 90, 10, 301 - 10, 45), wInfos, -1, gDataManager->GetSysString(1270).data());
 }
 
 void Game::PopulateSettingsWindow() {
@@ -3441,14 +3437,12 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 			layout::kStandardPanelOriginX + wrapperWidth,
 			layout::kStandardPanelOriginY + wrapperHeight);
 	if(keep_ratio && layout::kStandardKeepAspectRatio) {
-		// Use the space freed by removing the tab-caption strip. Keep a 5-unit
-		// gap above the unchanged tab content area and scale both axes uniformly.
-		const irr::s32 targetBottom = ResizeY(300 + 2 - 5);
-		const irr::s32 availableHeight = std::max<irr::s32>(1, targetBottom - rect.UpperLeftCorner.Y);
-		const float artworkScale = static_cast<float>(availableHeight) / std::max<irr::s32>(1, rect.getHeight());
-		const irr::s32 enlargedWidth = static_cast<irr::s32>(std::round(rect.getWidth() * artworkScale));
+		// Enlarge the standard artwork uniformly; leave KCPAR-off and fullscreen unchanged.
+		constexpr float standardArtworkScale = 1.05f;
+		const irr::s32 enlargedWidth = static_cast<irr::s32>(std::round(rect.getWidth() * standardArtworkScale));
+		const irr::s32 enlargedHeight = static_cast<irr::s32>(std::round(rect.getHeight() * standardArtworkScale));
 		rect.LowerRightCorner.X = rect.UpperLeftCorner.X + enlargedWidth;
-		rect.LowerRightCorner.Y = rect.UpperLeftCorner.Y + availableHeight;
+		rect.LowerRightCorner.Y = rect.UpperLeftCorner.Y + enlargedHeight;
 	}
 	wCardImg->setRelativePosition(rect);
 	// Match the artwork child bounds to the resized wrapper. This keeps both
