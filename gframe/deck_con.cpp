@@ -182,11 +182,10 @@ void DeckBuilder::Initialize(bool refresh) {
 	if(refresh) {
 		ClearSearch();
 	} else if(results.size()) {
-		auto oldscrpos = scroll_pos;
-		auto oldscrbpos = mainGame->scrFilter->getPos();
+		const float oldScroll = search_result_scroll_offset;
 		StartFilter();
-		scroll_pos = oldscrpos;
-		mainGame->scrFilter->setPos(oldscrbpos);
+		const float maxScroll = std::max(0.0f, static_cast<float>(results.size()) * kDeckSearchResultRowHeight - kDeckSearchResultViewportHeight);
+		search_result_scroll_offset = std::clamp(oldScroll, 0.0f, maxScroll);
 	}
 	mouse_pos.set(0, 0);
 	hovered_code = 0;
@@ -240,7 +239,6 @@ void DeckBuilder::Terminate(bool showmenu) {
 	mainGame->wHandTest->setVisible(false);
 	mainGame->device->setEventReceiver(&mainGame->menuHandler);
 	mainGame->wACMessage->setVisible(false);
-	mainGame->scrFilter->setVisible(false);
 	mainGame->SetMessageWindow();
 	int sel = mainGame->cbDBDecks->getSelected();
 	if(sel >= 0)
@@ -276,6 +274,13 @@ void DeckBuilder::ExportDeckToClipboard(bool plain_text) {
 	mainGame->PopupElement(mainGame->wACMessage, 20);
 }
 bool DeckBuilder::OnEvent(const irr::SEvent& event) {
+	const auto getSearchResultMaxScroll = [this]() {
+		return std::max(0.0f, static_cast<float>(results.size()) * kDeckSearchResultRowHeight - kDeckSearchResultViewportHeight);
+	};
+	const auto updateSearchResultFreeScroll = [this, &getSearchResultMaxScroll](int logicalY) {
+		const float deltaY = static_cast<float>(logicalY - search_result_scroll_start_y);
+		search_result_scroll_offset = std::clamp(search_result_scroll_start_offset - deltaY, 0.0f, getSearchResultMaxScroll());
+	};
 	const auto getMainDeckMaxScroll = [this]() {
 		const int unlockedRows = std::max(3, static_cast<int>(current_deck.main.size() / 5) + 1);
 		return static_cast<float>(unlockedRows - 3);
@@ -730,15 +735,6 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			}
 			break;
 		}
-		case irr::gui::EGET_SCROLL_BAR_CHANGED: {
-			switch(id) {
-				case SCROLL_FILTER: {
-					GetHoveredCard();
-					break;
-				}
-			}
-			break;
-		}
 		case irr::gui::EGET_CHECKBOX_CHANGED: {
 			switch (id) {
 				case CHECKBOX_SHOW_ANIME: {
@@ -770,6 +766,18 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				break;
 			GetHoveredCard();
 			const auto logicalPress = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
+			if(results.size() > 7 && logicalPress.X >= 859 && logicalPress.X < 955 && logicalPress.Y >= 165 && logicalPress.Y < 631) {
+				search_result_scroll_pending = true;
+				search_result_scroll_active = false;
+				search_result_scroll_start_x = logicalPress.X;
+				search_result_scroll_start_y = logicalPress.Y;
+				search_result_scroll_start_offset = search_result_scroll_offset;
+				search_result_scroll_velocity = 0.0f;
+				search_result_scroll_inertia = false;
+				search_result_scroll_last_y = logicalPress.Y;
+				search_result_scroll_last_time = mainGame->device->getTimer()->getTime();
+				break;
+			}
 			const auto grid = mainGame->GetDeckGridLayout();
 			const int gridRight = grid.gridLeft + grid.slotWidth * 5;
 			const int gridBottom = grid.firstRowY + 2 * grid.rowStep + grid.cardHeight;
@@ -795,6 +803,15 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			}
 			if(hovered_pos == 0 || hovered_seq == -1)
 				break;
+			if(hovered_pos == 4) {
+				const float rowOffset = std::fmod(search_result_scroll_offset, static_cast<float>(kDeckSearchResultRowHeight));
+				const int row = static_cast<int>(std::floor((logicalPress.Y - 165 + rowOffset) / kDeckSearchResultRowHeight));
+				const float imageTop = 165.0f + row * kDeckSearchResultRowHeight - search_result_scroll_offset;
+				const bool onCardImage = logicalPress.X >= 810 && logicalPress.X < 810 + kDeckSearchResultThumbWidth &&
+					logicalPress.Y >= imageTop && logicalPress.Y < imageTop + kDeckSearchResultThumbHeight;
+				if(!onCardImage)
+					break;
+			}
 			click_pos = hovered_pos;
 			drag_start_seq = hovered_seq;
 			drag_source_in_deck = click_pos >= 1 && click_pos <= 3;
@@ -813,6 +830,8 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
 			const bool releaseIsRoot = mainGame->env->getRootGUIElement()->getElementFromPoint(mouse_pos) == mainGame->env->getRootGUIElement();
 			if(!releaseIsRoot) {
+				search_result_scroll_pending = false;
+				search_result_scroll_active = false;
 				deck_scroll_pending = false;
 				deck_scroll_active = false;
 				deck_scroll_free = false;
@@ -825,6 +844,25 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					drag_start_seq = -1;
 					dragging_pointer = nullptr;
 				}
+				break;
+			}
+			if(search_result_scroll_pending) {
+				const auto logicalRelease = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
+				const int dx = logicalRelease.X - search_result_scroll_start_x;
+				const int dy = logicalRelease.Y - search_result_scroll_start_y;
+				if(!search_result_scroll_active && std::abs(dy) >= 10 && std::abs(dy) > std::abs(dx))
+					search_result_scroll_active = true;
+				if(search_result_scroll_active) {
+					updateSearchResultFreeScroll(logicalRelease.Y);
+					if(std::abs(search_result_scroll_velocity) > 45.0f)
+						search_result_scroll_inertia = true;
+				}
+				search_result_scroll_pending = false;
+				search_result_scroll_active = false;
+				drag_pending = false;
+				drag_start_seq = -1;
+				dragging_pointer = nullptr;
+				GetHoveredCard();
 				break;
 			}
 			if(deck_scroll_pending) {
@@ -1032,6 +1070,30 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		}
 		case irr::EMIE_MOUSE_MOVED: {
 			mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
+			if(search_result_scroll_pending) {
+				const auto logicalMove = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
+				const int dx = logicalMove.X - search_result_scroll_start_x;
+				const int dy = logicalMove.Y - search_result_scroll_start_y;
+				if(!search_result_scroll_active && std::abs(dy) >= 10 && std::abs(dy) > std::abs(dx)) {
+					search_result_scroll_active = true;
+					drag_pending = false;
+					drag_start_seq = -1;
+					dragging_pointer = nullptr;
+				}
+				if(search_result_scroll_active) {
+					updateSearchResultFreeScroll(logicalMove.Y);
+					const uint32_t now = mainGame->device->getTimer()->getTime();
+					const uint32_t elapsed = now - search_result_scroll_last_time;
+					if(elapsed > 0 && elapsed <= 120) {
+						const float delta = static_cast<float>(logicalMove.Y - search_result_scroll_last_y);
+						search_result_scroll_velocity = std::clamp(-delta * 1000.0f / static_cast<float>(elapsed), -1800.0f, 1800.0f);
+					}
+					search_result_scroll_last_y = logicalMove.Y;
+					search_result_scroll_last_time = now;
+					GetHoveredCard();
+				}
+				break;
+			}
 			if(deck_scroll_pending) {
 				const auto logicalMove = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
 				const int dx = logicalMove.X - deck_scroll_start_x;
@@ -1096,17 +1158,12 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				GetHoveredCard();
 				return true;
 			}
-			if(!mainGame->scrFilter->isVisible())
-				break;
 			if(!mainGame->Resize(805, 160, 1024 - kUiEdgeMargin, 640 - kUiEdgeMargin).isPointInside(mouse_pos))
 				break;
-			if(event.MouseInput.Wheel < 0) {
-				if(mainGame->scrFilter->getPos() < mainGame->scrFilter->getMax())
-					mainGame->scrFilter->setPos(mainGame->scrFilter->getPos() + DECK_SEARCH_SCROLL_STEP);
-			} else {
-				if(mainGame->scrFilter->getPos() > 0)
-					mainGame->scrFilter->setPos(mainGame->scrFilter->getPos() - DECK_SEARCH_SCROLL_STEP);
-			}
+			search_result_scroll_inertia = false;
+			search_result_scroll_velocity = 0.0f;
+			search_result_scroll_offset = std::clamp(search_result_scroll_offset + (event.MouseInput.Wheel < 0 ?
+				static_cast<float>(kDeckSearchResultRowHeight) : -static_cast<float>(kDeckSearchResultRowHeight)), 0.0f, getSearchResultMaxScroll());
 			GetHoveredCard();
 			return true;
 		}
@@ -1249,6 +1306,24 @@ void DeckBuilder::UpdateMainDeckScroll(uint32_t deltaTime) {
 	GetHoveredCard();
 }
 
+void DeckBuilder::UpdateSearchResultScroll(uint32_t deltaTime) {
+	if(!search_result_scroll_inertia || mainGame->is_siding || !mainGame->is_building)
+		return;
+	const float dt = std::min(0.05f, static_cast<float>(deltaTime) / 1000.0f);
+	if(dt <= 0.0f)
+		return;
+	const float maxScroll = std::max(0.0f, static_cast<float>(results.size()) * kDeckSearchResultRowHeight - kDeckSearchResultViewportHeight);
+	search_result_scroll_offset = std::clamp(search_result_scroll_offset + search_result_scroll_velocity * dt, 0.0f, maxScroll);
+	if(search_result_scroll_offset <= 0.0f || search_result_scroll_offset >= maxScroll)
+		search_result_scroll_velocity = 0.0f;
+	search_result_scroll_velocity *= std::exp(-5.5f * dt);
+	if(std::abs(search_result_scroll_velocity) < 8.0f) {
+		search_result_scroll_velocity = 0.0f;
+		search_result_scroll_inertia = false;
+	}
+	GetHoveredCard();
+}
+
 void DeckBuilder::GetHoveredCard() {
 	irr::gui::IGUIElement* root = mainGame->env->getRootGUIElement();
 	if(root->getElementFromPoint(mouse_pos) != root)
@@ -1268,11 +1343,12 @@ void DeckBuilder::GetHoveredCard() {
 			hovered_pos = 4;
 			if(results.empty())
 				return;
-			const int offset = (mainGame->scrFilter->getPos() % DECK_SEARCH_SCROLL_STEP) * -1.f * 0.65f;
-			auto seq = (y - 165 - offset) / 66;
-			int pos = (mainGame->scrFilter->getPos() / DECK_SEARCH_SCROLL_STEP) + seq;
+			const int firstRow = static_cast<int>(std::floor(search_result_scroll_offset / kDeckSearchResultRowHeight));
+			const float rowOffset = search_result_scroll_offset - firstRow * kDeckSearchResultRowHeight;
+			const int seq = static_cast<int>(std::floor((y - 165 + rowOffset) / kDeckSearchResultRowHeight));
+			const int pos = firstRow + seq;
 
-			if(pos >= static_cast<int>(results.size()))
+			if(pos < 0 || pos >= static_cast<int>(results.size()))
 				return;
 
 			hovered_seq = seq;
@@ -1496,13 +1572,11 @@ void DeckBuilder::FilterCards(bool force_refresh) {
 	results.resize(std::distance(results.begin(), ip));
 	result_string = epro::to_wstring(results.size());
 	scroll_pos = 0;
-	if(results.size() > 7) {
-		mainGame->scrFilter->setVisible(true);
-		mainGame->scrFilter->setMax(static_cast<irr::s32>(results.size() - 7) * DECK_SEARCH_SCROLL_STEP);
-	} else {
-		mainGame->scrFilter->setVisible(false);
-	}
-	mainGame->scrFilter->setPos(0);
+	search_result_scroll_offset = 0.0f;
+	search_result_scroll_velocity = 0.0f;
+	search_result_scroll_inertia = false;
+	search_result_scroll_pending = false;
+	search_result_scroll_active = false;
 }
 bool DeckBuilder::CheckCardProperties(const CardDataM& data) {
 	if(data._data.type & TYPE_TOKEN || data._data.ot & SCOPE_HIDDEN || ((data._data.ot & SCOPE_OFFICIAL) != data._data.ot && (!mainGame->chkAnime->isChecked() && !filterList->whitelist)))
@@ -1687,12 +1761,16 @@ void DeckBuilder::ClearSearch() {
 	mainGame->ebStar->setEnabled(false);
 	mainGame->ebScale->setEnabled(false);
 	mainGame->ebCardName->setText(L"");
-	mainGame->scrFilter->setVisible(false);
 	searched_terms.clear();
 	ClearFilter();
 	results.clear();
 	result_string = L"0";
 	scroll_pos = 0;
+	search_result_scroll_offset = 0.0f;
+	search_result_scroll_velocity = 0.0f;
+	search_result_scroll_inertia = false;
+	search_result_scroll_pending = false;
+	search_result_scroll_active = false;
 	mainGame->env->setFocus(mainGame->ebCardName);
 }
 void DeckBuilder::ClearFilter() {
