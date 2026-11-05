@@ -1525,6 +1525,7 @@ void Game::PopulateSettingsWindow() {
 
 	gSettings.window = gSettings.tabcontrolwindow->getWindow();
 	defaultStrings.emplace_back(gSettings.window, 1273);
+	gSettings.window->getCloseButton()->setRelativePosition(Scale(610, 390, 660, 430));
 	gSettings.window->setVisible(false);
 
 	irr::s32 cur_y = 5;
