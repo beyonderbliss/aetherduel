@@ -20,7 +20,7 @@ CGUICustomTabControl::CGUICustomTabControl(IGUIEnvironment* environment,
 										   IGUIElement* parent, const core::rect<s32>& rectangle,
 										   bool fillbackground, bool border, s32 id)
 	: IGUITabControl(environment, parent, id, rectangle), ActiveTab(-1),
-	Border(border), FillBackground(fillbackground), ScrollControl(false), TabHeight(0), VerticalAlignment(EGUIA_UPPERLEFT),
+	Border(border), FillBackground(fillbackground), TabHeaderVisible(true), ScrollControl(false), TabHeight(0), VerticalAlignment(EGUIA_UPPERLEFT),
 	UpButton(0), DownButton(0), TabMaxWidth(0), CurrentScrollTabIndex(0), TabExtraWidth(20) {
 #ifdef _DEBUG
 	setDebugName("CGUICustomTabControl");
@@ -241,6 +241,8 @@ bool CGUICustomTabControl::OnEvent(const SEvent& event) {
 			case EET_GUI_EVENT:
 				switch(event.GUIEvent.EventType) {
 					case EGET_BUTTON_CLICKED:
+						if(!TabHeaderVisible)
+							break;
 						if(event.GUIEvent.Caller == UpButton) {
 							scrollLeft();
 							return true;
@@ -258,6 +260,8 @@ bool CGUICustomTabControl::OnEvent(const SEvent& event) {
 				switch(event.MouseInput.Event) {
 					case EMIE_LMOUSE_PRESSED_DOWN:
 					{
+						if(!TabHeaderVisible)
+							break;
 						s32 idx = getTabAt(event.MouseInput.X, event.MouseInput.Y);
 						if(idx >= 0)
 							return true;
@@ -266,6 +270,8 @@ bool CGUICustomTabControl::OnEvent(const SEvent& event) {
 					}
 					case EMIE_LMOUSE_LEFT_UP:
 					{
+						if(!TabHeaderVisible)
+							break;
 						s32 idx = getTabAt(event.MouseInput.X, event.MouseInput.Y);
 						if(idx >= 0) {
 							setActiveTab(idx);
@@ -410,6 +416,7 @@ void CGUICustomTabControl::draw() {
 	IGUIFont* font = skin->getFont();
 	video::IVideoDriver* driver = Environment->getVideoDriver();
 
+	if(TabHeaderVisible) {
 	core::rect<s32> frameRect(AbsoluteRect);
 
 	if(Tabs.empty())
@@ -544,15 +551,18 @@ void CGUICustomTabControl::draw() {
 			driver->draw2DRectangle(skin->getColor(EGDC_3D_DARK_SHADOW), tr, &AbsoluteClippingRect);
 		}
 	}
+	}
 
 	skin->draw3DTabBody(this, Border, FillBackground, AbsoluteRect, &AbsoluteClippingRect, TabHeight, VerticalAlignment);
 
-	// enable scrollcontrols on need
-	if(UpButton)
-		UpButton->setEnabled(needLeftScroll);
-	if(DownButton)
-		DownButton->setEnabled(needRightScroll);
-	refreshSprites();
+	// enable scrollcontrols on need only while the header is visible.
+	if(TabHeaderVisible) {
+		if(UpButton)
+			UpButton->setEnabled(needLeftScroll);
+		if(DownButton)
+			DownButton->setEnabled(needRightScroll);
+		refreshSprites();
+	}
 
 	IGUIElement::draw();
 }
@@ -569,6 +579,14 @@ void CGUICustomTabControl::setTabHeight(s32 height) {
 	recalculateScrollBar();
 }
 
+
+void CGUICustomTabControl::setTabHeaderVisible(bool visible) {
+	if(TabHeaderVisible == visible)
+		return;
+
+	TabHeaderVisible = visible;
+	recalculateScrollBar();
+}
 
 //! Get the height of the tabs
 s32 CGUICustomTabControl::getTabHeight() const {
@@ -606,6 +624,14 @@ s32 CGUICustomTabControl::getTabExtraWidth() const {
 void CGUICustomTabControl::recalculateScrollBar() {
 	if(!UpButton || !DownButton)
 		return;
+
+	if(!TabHeaderVisible) {
+		ScrollControl = false;
+		CurrentScrollTabIndex = 0;
+		UpButton->setVisible(false);
+		DownButton->setVisible(false);
+		return;
+	}
 
 	ScrollControl = needScrollControl();
 
@@ -672,6 +698,9 @@ EGUI_ALIGNMENT CGUICustomTabControl::getTabVerticalAlignment() const {
 
 
 s32 CGUICustomTabControl::getTabAt(s32 xpos, s32 ypos) const {
+	if(!TabHeaderVisible)
+		return -1;
+
 	core::vector2di p(xpos, ypos);
 	IGUISkin* skin = Environment->getSkin();
 	IGUIFont* font = skin->getFont();
@@ -733,7 +762,7 @@ bool CGUICustomTabControl::setActiveTab(s32 idx) {
 			Tabs[i]->setVisible(i == ActiveTab);
 
 	if(changed) {
-		if(needScrollControl()) {
+		if(TabHeaderVisible && needScrollControl()) {
 			core::rect<s32> frameRect(AbsoluteRect);
 			s32 pos = frameRect.UpperLeftCorner.X + 2;
 			IGUIFont* font = Environment->getSkin()->getFont();
