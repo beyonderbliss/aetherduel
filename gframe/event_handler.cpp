@@ -1787,6 +1787,13 @@ static void UpdatePanelCycleButtonLabel(Game* game) {
 	if(activeTab >= 0 && activeTab < 4)
 		game->btnPanelCycle->setText(gDataManager->GetSysString(panelStringIds[activeTab]).data());
 }
+static void UpdatePanelCycleButtonPosition(Game* game) {
+	auto buttonRect = game->btnPanelCycle->getRelativePosition();
+	const auto panelRect = game->wInfos->getRelativePosition();
+	buttonRect.UpperLeftCorner.X = panelRect.LowerRightCorner.X - buttonRect.getWidth();
+	buttonRect.LowerRightCorner.X = panelRect.LowerRightCorner.X;
+	game->btnPanelCycle->setRelativePosition(buttonRect);
+}
 static bool IsTrulyVisible(const irr::gui::IGUIElement* elem) {
 	while(elem->isVisible()) {
 		elem = elem->getParent();
@@ -2154,6 +2161,8 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 					}
 					mainGame->infosExpanded = 1;
 				}
+				UpdatePanelCycleButtonLabel(mainGame);
+				UpdatePanelCycleButtonPosition(mainGame);
 				return true;
 			}
 			break;
