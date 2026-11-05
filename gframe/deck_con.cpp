@@ -832,15 +832,11 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				deck_scroll_pending = false;
 				deck_scroll_active = false;
 				deck_scroll_free = false;
-				if(is_draging && drag_source_in_deck) {
-					is_draging = false;
-					drag_source_in_deck = false;
-				}
-				if(!is_draging) {
-					drag_pending = false;
-					drag_start_seq = -1;
-					dragging_pointer = nullptr;
-				}
+				is_draging = false;
+				drag_pending = false;
+				drag_source_in_deck = false;
+				drag_start_seq = -1;
+				dragging_pointer = nullptr;
 				break;
 			}
 			if(search_result_scroll_pending) {
@@ -930,8 +926,18 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				break;
 			}
 			GetHoveredCard();
-			bool pushed = false;
 			const int targetPos = hovered_pos;
+			// A drag is accepted only over an actual Main/Extra/Side Deck card slot.
+			// Releasing over search results, empty panel space, or any other control cancels it.
+			if(targetPos < 1 || targetPos > 3) {
+				is_draging = false;
+				drag_pending = false;
+				drag_source_in_deck = false;
+				drag_start_seq = -1;
+				dragging_pointer = nullptr;
+				break;
+			}
+			bool pushed = false;
 			int targetSeq = hovered_seq;
 			int targetLast = is_lastcard;
 			if(drag_source_in_deck) {
@@ -954,8 +960,6 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				pushed = push_extra(dragging_pointer, targetSeq + targetLast, forceInput);
 			else if(targetPos == 3)
 				pushed = push_side(dragging_pointer, targetSeq + targetLast, forceInput);
-			else if(targetPos == 4 && !mainGame->is_siding)
-				pushed = true;
 			if(!pushed && drag_source_in_deck) {
 				if(click_pos == 1)
 					push_main(dragging_pointer, drag_start_seq, true);
@@ -964,14 +968,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				else if(click_pos == 3)
 					push_side(dragging_pointer, drag_start_seq, true);
 				pushed = true;
-			} else if(!pushed) {
-				if(click_pos == 1)
-					push_main(dragging_pointer);
-				else if(click_pos == 2)
-					push_extra(dragging_pointer);
-				else if(click_pos == 3)
-					push_side(dragging_pointer);
-			}
+
 			is_draging = false;
 			drag_pending = false;
 			drag_source_in_deck = false;
