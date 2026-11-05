@@ -65,9 +65,9 @@ namespace ygo {
 
 // Shared logical inset for screen-edge-aligned Duel and Deck Editor UI.
 constexpr int kUiEdgeMargin = 5;
-constexpr int kDeckSearchResultRowHeight = 66;
-constexpr int kDeckSearchResultViewportHeight = 470;
-constexpr int kDeckSearchResultThumbWidth = CARD_THUMB_WIDTH;
+constexpr int kDeckSearchResultRowHeight = 79;
+constexpr int kDeckSearchResultViewportHeight = 474;
+constexpr int kDeckSearchResultThumbWidth = 50;
 constexpr int kDeckSearchResultThumbHeight = (CARD_THUMB_WIDTH * 86 + 29) / 59;
 
 struct DeckGridLayout {
