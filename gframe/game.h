@@ -65,6 +65,10 @@ namespace ygo {
 
 // Shared logical inset for screen-edge-aligned Duel and Deck Editor UI.
 constexpr int kUiEdgeMargin = 5;
+constexpr int kDeckSearchResultRowHeight = 66;
+constexpr int kDeckSearchResultViewportHeight = 470;
+constexpr int kDeckSearchResultThumbWidth = CARD_THUMB_WIDTH;
+constexpr int kDeckSearchResultThumbHeight = (CARD_THUMB_WIDTH * 86 + 29) / 59;
 
 struct DeckGridLayout {
 	int gridLeft;
@@ -358,7 +362,6 @@ struct deck_edit_page_elements {
 	irr::gui::IGUIStaticText* stScale;
 	//filter
 	irr::gui::IGUIStaticText* wFilter;
-	irr::gui::IGUIScrollBar* scrFilter;
 	irr::gui::IGUIComboBox* cbCardType;
 	irr::gui::IGUIComboBox* cbCardType2;
 	irr::gui::IGUIComboBox* cbRace;
@@ -841,8 +844,6 @@ inline irr::core::rect<T> Game::Scale(const irr::core::rect<T>& rect) const {
 #define COMMAND_RESET		0x0200
 
 #define POSITION_HINT		0x8000
-
-#define DECK_SEARCH_SCROLL_STEP		100
 
 constexpr float FIELD_X = 4.2f;
 constexpr float FIELD_Y = 8.0f;
