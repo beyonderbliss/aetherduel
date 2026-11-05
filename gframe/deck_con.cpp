@@ -302,6 +302,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 	if(event.EventType == irr::EET_MOUSE_INPUT_EVENT &&
 	   event.MouseInput.Event == irr::EMIE_LMOUSE_LEFT_UP &&
 	   mainGame->wCardImg->isVisible() && mainGame->imgCard->isVisible() &&
+	   !is_draging && !drag_pending &&
 	   !deck_scroll_pending && !deck_scroll_active) {
 		const irr::core::vector2di tap(event.MouseInput.X, event.MouseInput.Y);
 		if(mainGame->imgCard->getAbsolutePosition().isPointInside(tap)) {
@@ -926,10 +927,39 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				GetHoveredCard();
 				break;
 			}
+			// The fullscreen artwork is a preview surface, not a deck drop target.
+			// Cancel the drag here so an underlying deck slot cannot receive it.
+			if(mainGame->cardViewFullscreen && mainGame->wCardImg->isVisible() &&
+			   mainGame->imgCard->isVisible() &&
+			   mainGame->imgCard->getAbsolutePosition().isPointInside(mouse_pos)) {
+				is_draging = false;
+				drag_pending = false;
+				drag_source_in_deck = false;
+				drag_start_seq = -1;
+				dragging_pointer = nullptr;
+				GetHoveredCard();
+				break;
+			}
 			GetHoveredCard();
 			const int targetPos = hovered_pos;
-			// A drag is accepted only over an actual Main/Extra/Side Deck card slot.
-			// Releasing over search results, empty panel space, or any other control cancels it.
+			// Dropping a card from a deck onto the Search Result area removes it
+			// from its source deck, matching the editor's original removal gesture.
+			if(targetPos == 4 && drag_source_in_deck) {
+				if(click_pos == 1)
+					pop_main(drag_start_seq);
+				else if(click_pos == 2)
+					pop_extra(drag_start_seq);
+				else if(click_pos == 3)
+					pop_side(drag_start_seq);
+				is_draging = false;
+				drag_pending = false;
+				drag_source_in_deck = false;
+				drag_start_seq = -1;
+				dragging_pointer = nullptr;
+				GetHoveredCard();
+				break;
+			}
+			// Other invalid targets cancel the drag without changing the deck.
 			if(targetPos < 1 || targetPos > 3) {
 				is_draging = false;
 				drag_pending = false;
