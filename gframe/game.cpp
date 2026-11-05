@@ -3443,7 +3443,7 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 	if(keep_ratio && layout::kStandardKeepAspectRatio) {
 		// Use the space freed by removing the tab-caption strip. Keep a 5-unit
 		// gap above the unchanged tab content area and scale both axes uniformly.
-		const irr::s32 targetBottom = ResizeY(300 - 5);
+		const irr::s32 targetBottom = ResizeY(300 + 2 - 5);
 		const irr::s32 availableHeight = std::max<irr::s32>(1, targetBottom - rect.UpperLeftCorner.Y);
 		const float artworkScale = static_cast<float>(availableHeight) / std::max<irr::s32>(1, rect.getHeight());
 		const irr::s32 enlargedWidth = static_cast<irr::s32>(std::round(rect.getWidth() * artworkScale));
