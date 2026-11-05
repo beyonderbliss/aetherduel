@@ -1829,13 +1829,6 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 				stopPropagation = true;
 				return true;
 			}
-			if(event.GUIEvent.Caller == mainGame->btnPanelCycle) {
-				const irr::s32 nextTab = (mainGame->wInfos->getActiveTab() + 1) % 4;
-				mainGame->wInfos->setActiveTab(nextTab);
-				static const uint32_t panelStringIds[] = { 1270, 1271, 1279, 2045 };
-				mainGame->btnPanelCycle->setText(gDataManager->GetSysString(panelStringIds[nextTab]).data());
-				return true;
-			}
 			switch(id) {
 			case BUTTON_CLEAR_LOG: {
 				mainGame->lstLog->clear();
