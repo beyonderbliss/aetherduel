@@ -884,15 +884,15 @@ void Game::Initialize() {
 	ebChatInput = env->addEditBox(L"", Scale(3, 2, 710, 22), true, wChat, EDITBOX_CHAT);
 	ebChatInput->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_LOWERRIGHT, irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_LOWERRIGHT);
 	//swap
-	btnSpectatorSwap = AlignElementWithParent(env->addButton(Scale(205, 50, 295, 85), 0, BUTTON_REPLAY_SWAP, gDataManager->GetSysString(1346).data()));
+	btnSpectatorSwap = AlignElementWithParent(env->addButton(Resize(211, 50, 301, 85), 0, BUTTON_REPLAY_SWAP, gDataManager->GetSysString(1346).data()));
 	defaultStrings.emplace_back(btnSpectatorSwap, 1346);
 	btnSpectatorSwap->setVisible(false);
 	//chain buttons
-	btnChainIgnore = AlignElementWithParent(env->addButton(Scale(205, 95, 295, 130), 0, BUTTON_CHAIN_IGNORE, gDataManager->GetSysString(1292).data()));
+	btnChainIgnore = AlignElementWithParent(env->addButton(Resize(211, 95, 301, 130), 0, BUTTON_CHAIN_IGNORE, gDataManager->GetSysString(1292).data()));
 	defaultStrings.emplace_back(btnChainIgnore, 1292);
-	btnChainAlways = AlignElementWithParent(env->addButton(Scale(205, 140, 295, 175), 0, BUTTON_CHAIN_ALWAYS, gDataManager->GetSysString(1293).data()));
+	btnChainAlways = AlignElementWithParent(env->addButton(Resize(211, 140, 301, 175), 0, BUTTON_CHAIN_ALWAYS, gDataManager->GetSysString(1293).data()));
 	defaultStrings.emplace_back(btnChainAlways, 1293);
-	btnChainWhenAvail = AlignElementWithParent(env->addButton(Scale(205, 185, 295, 220), 0, BUTTON_CHAIN_WHENAVAIL, gDataManager->GetSysString(1294).data()));
+	btnChainWhenAvail = AlignElementWithParent(env->addButton(Resize(211, 185, 301, 220), 0, BUTTON_CHAIN_WHENAVAIL, gDataManager->GetSysString(1294).data()));
 	defaultStrings.emplace_back(btnChainWhenAvail, 1294);
 	btnChainIgnore->setIsPushButton(true);
 	btnChainAlways->setIsPushButton(true);
@@ -905,17 +905,17 @@ void Game::Initialize() {
 	defaultStrings.emplace_back(btnShuffle, 1307);
 	btnShuffle->setVisible(false);
 	//settings shortcut in the duel action stack
-	btnSettingsMenu = AlignElementWithParent(env->addButton(Scale(205, 230, 295, 265), 0, BUTTON_SHOW_SETTINGS, L"Setting"));
+	btnSettingsMenu = AlignElementWithParent(env->addButton(Resize(211, 230, 301, 265), 0, BUTTON_SHOW_SETTINGS, L"Setting"));
 	btnSettingsMenu->setVisible(false);
 	//cancel or finish
-	btnCancelOrFinish = AlignElementWithParent(env->addButton(Scale(205, 275, 295, 310), 0, BUTTON_CANCEL_OR_FINISH, gDataManager->GetSysString(1295).data()));
+	btnCancelOrFinish = AlignElementWithParent(env->addButton(Resize(211, 275, 301, 310), 0, BUTTON_CANCEL_OR_FINISH, gDataManager->GetSysString(1295).data()));
 	defaultStrings.emplace_back(btnCancelOrFinish, 1295);
 	btnCancelOrFinish->setVisible(false);
 	//leave/surrender/exit
-	btnLeaveGame = AlignElementWithParent(env->addButton(Scale(205, 5, 295, 80), 0, BUTTON_LEAVE_GAME, L""));
+	btnLeaveGame = AlignElementWithParent(env->addButton(Resize(211, kUiEdgeMargin, 301, 40), 0, BUTTON_LEAVE_GAME, L""));
 	btnLeaveGame->setVisible(false);
 	//restart single
-	btnRestartSingle = AlignElementWithParent(env->addButton(Scale(205, 50, 295, 85), 0, BUTTON_RESTART_SINGLE, gDataManager->GetSysString(1366).data()));
+	btnRestartSingle = AlignElementWithParent(env->addButton(Resize(211, 50, 301, 85), 0, BUTTON_RESTART_SINGLE, gDataManager->GetSysString(1366).data()));
 	defaultStrings.emplace_back(btnRestartSingle, 1366);
 	btnRestartSingle->setVisible(false);
 	//tip
@@ -1462,8 +1462,8 @@ void Game::PopulateTabSettingsWindow() {
 	wInfos = AlignElementWithParent(irr::gui::CGUICustomTabControl::addCustomTabControl(env, Scale(kUiEdgeMargin, 275, 301, 640 - kUiEdgeMargin), 0, true));
 	static_cast<irr::gui::CGUICustomTabControl*>(wInfos)->setTabHeaderVisible(false);
 	wInfos->setVisible(false);
-	// Standalone panel switch button: right-aligned above the content panel with a 5-unit gap.
-	btnPanelCycle = env->addButton(Resize(211, 255, 301, 290), nullptr, -1, gDataManager->GetSysString(1270).data());
+	// Standalone panel switch button: right-aligned 5 units above the content panel.
+	btnPanelCycle = env->addButton(Resize(211, 235, 301, 270), nullptr, -1, gDataManager->GetSysString(1270).data());
 	defaultStrings.emplace_back(btnPanelCycle, 1270);
 	//info
 	{
@@ -3782,6 +3782,8 @@ void Game::OnResize() {
 	{
 		auto buttonRect = Resize(211, 255, 301, 290);
 		const auto panelRect = wInfos->getRelativePosition();
+		buttonRect.LowerRightCorner.Y = panelRect.UpperLeftCorner.Y - Scale(kUiEdgeMargin);
+		buttonRect.UpperLeftCorner.Y = buttonRect.LowerRightCorner.Y - buttonRect.getHeight();
 		buttonRect.UpperLeftCorner.X = panelRect.LowerRightCorner.X - buttonRect.getWidth();
 		buttonRect.LowerRightCorner.X = panelRect.LowerRightCorner.X;
 		btnPanelCycle->setRelativePosition(buttonRect);
