@@ -293,6 +293,7 @@ bool CGUICustomComboBox::OnEvent(const SEvent& event) {
 			case EMIE_LMOUSE_PRESSED_DOWN:
 			{
 				core::position2d<s32> p(event.MouseInput.X, event.MouseInput.Y);
+				MousePressedInside = AbsoluteRect.isPointInside(p);
 
 				// send to list box
 				if(ListBox && ListBox->isPointInside(p) && ListBox->OnEvent(event))
@@ -302,6 +303,16 @@ bool CGUICustomComboBox::OnEvent(const SEvent& event) {
 			}
 			case EMIE_LMOUSE_LEFT_UP:
 			{
+				core::position2d<s32> p(event.MouseInput.X, event.MouseInput.Y);
+				const bool pressedInside = MousePressedInside;
+				MousePressedInside = false;
+
+				// A release from a drag that began elsewhere must not activate this combo.
+				if(!pressedInside) {
+					if(ListBox && ListBox->getAbsolutePosition().isPointInside(p))
+						ListBox->OnEvent(event);
+					return true;
+				}
 				if(ArrowOnlyClick && !ListBox)
 					return true;
 				if(TouchWholeArea && !ListBox) {
@@ -309,7 +320,6 @@ bool CGUICustomComboBox::OnEvent(const SEvent& event) {
 					openCloseMenu();
 					return true;
 				}
-				core::position2d<s32> p(event.MouseInput.X, event.MouseInput.Y);
 
 				// send to list box
 				if(!(ListBox &&
