@@ -1881,9 +1881,17 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 				break;
 			}
 			case BUTTON_SHOW_SETTINGS: {
-				if (!mainGame->gSettings.window->isVisible())
-					mainGame->PopupElement(mainGame->gSettings.window);
-				mainGame->env->setFocus(mainGame->gSettings.window);
+				auto* settingsWindow = mainGame->gSettings.window;
+				if(event.GUIEvent.Caller == mainGame->btnSettings) {
+					if(settingsWindow->isVisible())
+						mainGame->HideElement(settingsWindow);
+					else
+						mainGame->PopupElement(settingsWindow);
+				} else if(!settingsWindow->isVisible()) {
+					mainGame->PopupElement(settingsWindow);
+				}
+				if(settingsWindow->isVisible())
+					mainGame->env->setFocus(settingsWindow);
 				break;
 			}
 			case BUTTON_APPLY_RESTART: {
