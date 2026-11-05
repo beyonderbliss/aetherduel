@@ -3438,11 +3438,11 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 	const irr::s32 contentBottom = Resize(0, contentTop, true).Y - 5;
 	auto rect = (keep_ratio && layout::kStandardKeepAspectRatio) ?
 		// Fill the available height up to 5 logical units before the actual page content.
-		// Cap the width to leave 5 units between the thumbnail and the 90-unit switch button.
+		// Keep the thumbnail to the left of the 90-unit switch button.
 		ResizeWithCappedWidth(
 			layout::kStandardPanelOriginX,
 			layout::kStandardPanelOriginY,
-			301 - 90 - 5,
+			301 - 90,
 			contentBottom,
 			wrapperAspect) :
 		Resize(
