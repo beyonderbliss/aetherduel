@@ -856,7 +856,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					updateSearchResultFreeScroll(logicalRelease.Y);
 					const uint32_t now = mainGame->device->getTimer()->getTime();
 					const uint32_t elapsed = now - search_result_scroll_last_time;
-					if(elapsed > 0 && elapsed <= 120) {
+					if(elapsed > 0 && elapsed <= 120 && logicalRelease.Y != search_result_scroll_last_y) {
 						const float delta = static_cast<float>(logicalRelease.Y - search_result_scroll_last_y);
 						search_result_scroll_velocity = std::clamp(-delta * 1000.0f / static_cast<float>(elapsed), -1800.0f, 1800.0f);
 					}
