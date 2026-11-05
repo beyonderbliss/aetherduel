@@ -968,6 +968,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				else if(click_pos == 3)
 					push_side(dragging_pointer, drag_start_seq, true);
 				pushed = true;
+			}
 
 			is_draging = false;
 			drag_pending = false;
