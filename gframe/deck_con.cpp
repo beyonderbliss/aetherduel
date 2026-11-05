@@ -195,6 +195,10 @@ void DeckBuilder::Initialize(bool refresh) {
 	is_draging = false;
 	drag_pending = false;
 	drag_start_seq = -1;
+	search_result_scroll_velocity = 0.0f;
+	search_result_scroll_inertia = false;
+	search_result_scroll_pending = false;
+	search_result_scroll_active = false;
 	deck_scroll_pending = false;
 	deck_scroll_active = false;
 	deck_scroll_free = false;
@@ -804,6 +808,8 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			if(hovered_pos == 0 || hovered_seq == -1)
 				break;
 			if(hovered_pos == 4) {
+				search_result_scroll_velocity = 0.0f;
+				search_result_scroll_inertia = false;
 				const int firstRow = static_cast<int>(std::floor(search_result_scroll_offset / kDeckSearchResultRowHeight));
 				const float rowOffset = search_result_scroll_offset - firstRow * kDeckSearchResultRowHeight;
 				const int row = static_cast<int>(std::floor((logicalPress.Y - 165 + rowOffset) / kDeckSearchResultRowHeight));
