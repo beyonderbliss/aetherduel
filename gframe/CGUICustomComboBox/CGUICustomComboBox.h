@@ -65,6 +65,7 @@ public:
 	//! sets the text alignment of the text part
 	virtual void setTextAlignment(EGUI_ALIGNMENT horizontal, EGUI_ALIGNMENT vertical) _IRR_OVERRIDE_;
 	void setTouchWholeArea(bool enabled);
+	void setArrowOnlyClick(bool enabled);
 
 	//! Set the maximal number of rows for the selection listbox
 	virtual void setMaxSelectionRows(u32 max) _IRR_OVERRIDE_;
@@ -111,6 +112,7 @@ private:
 	u32 MaxSelectionRows;
 	bool HasFocus;
 	bool TouchWholeArea = false;
+	bool ArrowOnlyClick = false;
 	IGUIFont* ActiveFont;
 };
 
