@@ -766,7 +766,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				break;
 			GetHoveredCard();
 			const auto logicalPress = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
-			if(results.size() > 7 && logicalPress.X >= 859 && logicalPress.X < 955 && logicalPress.Y >= 165 && logicalPress.Y < 631) {
+			if(results.size() > 7 && logicalPress.X >= 859 && logicalPress.X < 955 && logicalPress.Y >= 164 && logicalPress.Y < 631) {
 				search_result_scroll_pending = true;
 				search_result_scroll_active = false;
 				search_result_scroll_start_x = logicalPress.X;
@@ -854,6 +854,12 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					search_result_scroll_active = true;
 				if(search_result_scroll_active) {
 					updateSearchResultFreeScroll(logicalRelease.Y);
+					const uint32_t now = mainGame->device->getTimer()->getTime();
+					const uint32_t elapsed = now - search_result_scroll_last_time;
+					if(elapsed > 0 && elapsed <= 120) {
+						const float delta = static_cast<float>(logicalRelease.Y - search_result_scroll_last_y);
+						search_result_scroll_velocity = std::clamp(-delta * 1000.0f / static_cast<float>(elapsed), -1800.0f, 1800.0f);
+					}
 					if(std::abs(search_result_scroll_velocity) > 45.0f)
 						search_result_scroll_inertia = true;
 				}
