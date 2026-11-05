@@ -164,11 +164,12 @@ void DeckBuilder::Initialize(bool refresh) {
 	mainGame->wFilter->setVisible(true);
 	mainGame->wSort->setVisible(true);
 	mainGame->btnLeaveGame->setVisible(true);
-	mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, kUiEdgeMargin, 295, 40));
-	mainGame->btnHandTest->setRelativePosition(mainGame->Resize(205, 50, 295, 85));
-	mainGame->btnHandTestSettings->setRelativePosition(mainGame->Resize(205, 95, 295, 130));
-	mainGame->btnYdkeManage->setRelativePosition(mainGame->Resize(205, 140, 295, 175));
-	mainGame->btnSettingsMenu->setRelativePosition(mainGame->Resize(205, 185, 295, 220));
+	// Align the action stack's right edge with the content panel's right edge (X=301).
+	mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(211, kUiEdgeMargin, 301, 40));
+	mainGame->btnHandTest->setRelativePosition(mainGame->Resize(211, 50, 301, 85));
+	mainGame->btnHandTestSettings->setRelativePosition(mainGame->Resize(211, 95, 301, 130));
+	mainGame->btnYdkeManage->setRelativePosition(mainGame->Resize(211, 140, 301, 175));
+	mainGame->btnSettingsMenu->setRelativePosition(mainGame->Resize(211, 185, 301, 220));
 	mainGame->btnSettingsMenu->setVisible(true);
 	mainGame->btnLeaveGame->setText(gDataManager->GetSysString(1306).data());
 	mainGame->btnSideOK->setVisible(false);
