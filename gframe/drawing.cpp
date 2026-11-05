@@ -1334,7 +1334,7 @@ void Game::DrawDeckBd() {
 		const auto grid = GetDeckGridLayout();
 		float scrollRows = 0.0f;
 		if(deckBuilder.active_deck_tab == 0) {
-			const int unlockedRows = std::max(3, static_cast<int>((activeDeck->size() + 4) / 5));
+			const int unlockedRows = std::max(3, static_cast<int>(activeDeck->size() / 5) + 1);
 			const float maxScroll = static_cast<float>(unlockedRows - 3);
 			deckBuilder.main_deck_scroll_offset = std::clamp(deckBuilder.main_deck_scroll_offset, 0.0f, maxScroll);
 			scrollRows = deckBuilder.main_deck_scroll_offset;
@@ -1398,35 +1398,35 @@ void Game::DrawDeckBd() {
 		const int card_position = deckBuilder.scroll_pos;
 		const float fractionalOffset = deckBuilder.search_result_scroll_offset - card_position * kDeckSearchResultRowHeight;
 		const int height_offset = -static_cast<int>(std::round(fractionalOffset));
-		const irr::core::recti rect = Resize(805, 160, 1024 - kUiEdgeMargin, 640 - kUiEdgeMargin);
+		const irr::core::recti rect = Resize(805, 160, 1024 - kUiEdgeMargin, 634);
 
 		//loads the thumb of one card before and one after to make the scroll smoother
 		int i = (card_position > 0) ? -1 : 0;
-		for(; i < 9 && (i + card_position) < (int)deckBuilder.results.size(); ++i) {
+		for(; i < 8 && (i + card_position) < (int)deckBuilder.results.size(); ++i) {
 			auto ptr = deckBuilder.results[i + card_position];
 			if(deckBuilder.hovered_pos == 4 && deckBuilder.hovered_seq == i)
 				driver->draw2DRectangle(skin::DECK_WINDOW_HOVERED_CARD_RESULT_VAL, Resize(806, height_offset + 164 + i * kDeckSearchResultRowHeight, 1019, height_offset + 230 + i * kDeckSearchResultRowHeight), &rect);
 			DrawThumb(ptr, irr::core::vector2di(810, height_offset + 165 + i * kDeckSearchResultRowHeight), deckBuilder.filterList, false, &rect, draw_thumb,
 				kDeckSearchResultThumbWidth, kDeckSearchResultThumbHeight);
 			if(ptr->type & TYPE_MONSTER) {
-				DrawShadowTextPos(textFont, gDataManager->GetName(ptr->code), Resize(859, height_offset + 164 + i * kDeckSearchResultRowHeight, 955, height_offset + 185 + i * kDeckSearchResultRowHeight),
-								  Resize(860, height_offset + 165 + i * kDeckSearchResultRowHeight, 955, height_offset + 185 + i * kDeckSearchResultRowHeight), 0xffffffff, 0xff000000, false, false, &rect);
+				DrawShadowTextPos(textFont, gDataManager->GetName(ptr->code), Resize(870, height_offset + 164 + i * kDeckSearchResultRowHeight, 955, height_offset + 185 + i * kDeckSearchResultRowHeight),
+								  Resize(871, height_offset + 165 + i * kDeckSearchResultRowHeight, 955, height_offset + 185 + i * kDeckSearchResultRowHeight), 0xffffffff, 0xff000000, false, false, &rect);
 				if(ptr->type & TYPE_LINK) {
 					DrawShadowTextPos(textFont, epro::format(L"{}/{}", gDataManager->FormatAttribute(ptr->attribute), gDataManager->FormatRace(ptr->race)),
-									  Resize(859, height_offset + 186 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * kDeckSearchResultRowHeight),
-									  Resize(860, height_offset + 187 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * kDeckSearchResultRowHeight), 0xffffffff, 0xff000000, false, false, &rect);
+									  Resize(870, height_offset + 186 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * kDeckSearchResultRowHeight),
+									  Resize(871, height_offset + 187 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * kDeckSearchResultRowHeight), 0xffffffff, 0xff000000, false, false, &rect);
 				} else {
 					const wchar_t* form = L"\u2605";
 					if(ptr->type & TYPE_XYZ) form = L"\u2606";
 					DrawShadowTextPos(textFont, epro::format(L"{}/{} {}{}", gDataManager->FormatAttribute(ptr->attribute), gDataManager->FormatRace(ptr->race), form, ptr->level),
-									  Resize(859, height_offset + 186 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * kDeckSearchResultRowHeight),
-									  Resize(860, height_offset + 187 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * kDeckSearchResultRowHeight), 0xffffffff, 0xff000000, false, false, &rect);
+									  Resize(870, height_offset + 186 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * kDeckSearchResultRowHeight),
+									  Resize(871, height_offset + 187 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * kDeckSearchResultRowHeight), 0xffffffff, 0xff000000, false, false, &rect);
 				}
 			} else {
-				DrawShadowTextPos(textFont, gDataManager->GetName(ptr->code), Resize(859, height_offset + 164 + i * kDeckSearchResultRowHeight, 955, height_offset + 185 + i * kDeckSearchResultRowHeight),
-								  Resize(860, height_offset + 165 + i * kDeckSearchResultRowHeight, 955, height_offset + 185 + i * kDeckSearchResultRowHeight), 0xffffffff, 0xff000000, false, false, &rect);
-				DrawShadowTextPos(textFont, gDataManager->FormatType(ptr->type), Resize(859, height_offset + 186 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * kDeckSearchResultRowHeight),
-								  Resize(860, height_offset + 187 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * kDeckSearchResultRowHeight), 0xffffffff, 0xff000000, false, false, &rect);
+				DrawShadowTextPos(textFont, gDataManager->GetName(ptr->code), Resize(870, height_offset + 164 + i * kDeckSearchResultRowHeight, 955, height_offset + 185 + i * kDeckSearchResultRowHeight),
+								  Resize(871, height_offset + 165 + i * kDeckSearchResultRowHeight, 955, height_offset + 185 + i * kDeckSearchResultRowHeight), 0xffffffff, 0xff000000, false, false, &rect);
+				DrawShadowTextPos(textFont, gDataManager->FormatType(ptr->type), Resize(870, height_offset + 186 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * kDeckSearchResultRowHeight),
+								  Resize(871, height_offset + 187 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * kDeckSearchResultRowHeight), 0xffffffff, 0xff000000, false, false, &rect);
 			}
 			auto GetScopeString = [&ptr]()->std::wstring {
 				auto scope = gDataManager->FormatScope(ptr->ot, true);
@@ -1457,8 +1457,8 @@ void Game::DrawDeckBd() {
 					return epro::format(L"[{}]", scope);
 				return L"";
 			};
-			DrawShadowTextPos(textFont, GetScopeString(), Resize(859, height_offset + 208 + i * kDeckSearchResultRowHeight, 955, height_offset + 229 + i * kDeckSearchResultRowHeight),
-							  Resize(860, height_offset + 209 + i * kDeckSearchResultRowHeight, 955, height_offset + 229 + i * kDeckSearchResultRowHeight), 0xffffffff, 0xff000000, false, false, &rect);
+			DrawShadowTextPos(textFont, GetScopeString(), Resize(870, height_offset + 208 + i * kDeckSearchResultRowHeight, 955, height_offset + 229 + i * kDeckSearchResultRowHeight),
+							  Resize(871, height_offset + 209 + i * kDeckSearchResultRowHeight, 955, height_offset + 229 + i * kDeckSearchResultRowHeight), 0xffffffff, 0xff000000, false, false, &rect);
 		}
 	}
 	if(deckBuilder.is_draging && deckBuilder.dragging_pointer)
