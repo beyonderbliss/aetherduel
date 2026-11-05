@@ -1524,7 +1524,7 @@ void Game::PopulateTabSettingsWindow() {
 		mTabRepositories->setCloseHandling(irr::gui::ECONTEXT_MENU_CLOSE::ECMC_HIDE);
 	}
 	// Cycle the shared left-side panel without changing the Settings controls.
-	btnPanelCycle = env->addButton(Scale(301 - 10 - 90, 10, 301 - 10, 45), wInfos, -1, L"Card Info");
+	btnPanelCycle = env->addButton(Scale(301 - 10 - 90, 10, 301 - 10, 45), wInfos, -1, gDataManager->GetSysString(1270).data());
 }
 
 void Game::PopulateSettingsWindow() {
