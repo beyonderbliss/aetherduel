@@ -1463,7 +1463,13 @@ void Game::PopulateTabSettingsWindow() {
 	static_cast<irr::gui::CGUICustomTabControl*>(wInfos)->setTabHeaderVisible(false);
 	wInfos->setVisible(false);
 	// Standalone panel switch button: right-aligned 5 units above the content panel.
-	btnPanelCycle = env->addButton(Resize(211, 235, 301, 270), nullptr, -1, gDataManager->GetSysString(1270).data());
+	auto panelCycleRect = Resize(211, 255, 301, 290);
+	const auto panelRect = wInfos->getRelativePosition();
+	panelCycleRect.LowerRightCorner.Y = panelRect.UpperLeftCorner.Y - Scale(kUiEdgeMargin);
+	panelCycleRect.UpperLeftCorner.Y = panelCycleRect.LowerRightCorner.Y - panelCycleRect.getHeight();
+	panelCycleRect.UpperLeftCorner.X = panelRect.LowerRightCorner.X - panelCycleRect.getWidth();
+	panelCycleRect.LowerRightCorner.X = panelRect.LowerRightCorner.X;
+	btnPanelCycle = env->addButton(panelCycleRect, nullptr, -1, gDataManager->GetSysString(1270).data());
 	defaultStrings.emplace_back(btnPanelCycle, 1270);
 	//info
 	{
