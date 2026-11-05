@@ -1781,6 +1781,12 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 	}
 	return false;
 }
+static void UpdatePanelCycleButtonLabel(Game* game) {
+	static constexpr int panelStringIds[] = { 1270, 1271, 1279, 2045 };
+	const int activeTab = game->wInfos->getActiveTab();
+	if(activeTab >= 0 && activeTab < 4)
+		game->btnPanelCycle->setText(gDataManager->GetSysString(panelStringIds[activeTab]).data());
+}
 static bool IsTrulyVisible(const irr::gui::IGUIElement* elem) {
 	while(elem->isVisible()) {
 		elem = elem->getParent();
@@ -1825,6 +1831,12 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 			break;
 		}
 		case irr::gui::EGET_BUTTON_CLICKED: {
+			if(event.GUIEvent.Caller == mainGame->btnPanelCycle) {
+				const int nextTab = (mainGame->wInfos->getActiveTab() + 1) % 4;
+				mainGame->wInfos->setActiveTab(nextTab);
+				UpdatePanelCycleButtonLabel(mainGame);
+				return true;
+			}
 			if(mainGame->fadingList.size() || !IsTrulyVisible(event.GUIEvent.Caller)) {
 				stopPropagation = true;
 				return true;
@@ -1931,6 +1943,7 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 				int sel = mainGame->lstLog->getSelected();
 				if(sel != -1 && (int)mainGame->logParam.size() >= sel && mainGame->logParam[sel]) {
 					mainGame->wInfos->setActiveTab(0);
+					UpdatePanelCycleButtonLabel(mainGame);
 				}
 				return true;
 			}
@@ -2241,21 +2254,25 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 		case irr::KEY_KEY_1: {
 			if (event.KeyInput.Control && !event.KeyInput.PressedDown)
 				mainGame->wInfos->setActiveTab(0);
+				UpdatePanelCycleButtonLabel(mainGame);
 			break;
 		}
 		case irr::KEY_KEY_2: {
 			if (event.KeyInput.Control && !event.KeyInput.PressedDown)
 				mainGame->wInfos->setActiveTab(1);
+				UpdatePanelCycleButtonLabel(mainGame);
 			break;
 		}
 		case irr::KEY_KEY_3: {
 			if (event.KeyInput.Control && !event.KeyInput.PressedDown)
 				mainGame->wInfos->setActiveTab(2);
+				UpdatePanelCycleButtonLabel(mainGame);
 			break;
 		}
 		case irr::KEY_KEY_4: {
 			if (event.KeyInput.Control && !event.KeyInput.PressedDown)
 				mainGame->wInfos->setActiveTab(3);
+				UpdatePanelCycleButtonLabel(mainGame);
 			break;
 		}
 		default: break;
