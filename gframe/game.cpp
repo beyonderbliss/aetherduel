@@ -667,8 +667,16 @@ void Game::Initialize() {
 	stCategory = env->addStaticText(gDataManager->GetSysString(1311).data(), Scale(5, 7, 70, 27), false, false, wFilter);
 	defaultStrings.emplace_back(stCategory, 1311);
 	cbCardType = AlignElementWithParent(AddComboBox(env, Scale(60, 5, 120, 25), wFilter, COMBOBOX_MAINTYPE));
+#if EDOPRO_ANDROID || EDOPRO_IOS
+	static_cast<irr::gui::CGUICustomComboBox*>(cbCardType)->setTouchWholeArea(true);
+#endif
+	cbCardType->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	ReloadCBCardType();
 	cbCardType2 = AlignElementWithParent(AddComboBox(env, Scale(130, 5, 190, 25), wFilter, COMBOBOX_SECONDTYPE));
+#if EDOPRO_ANDROID || EDOPRO_IOS
+	static_cast<irr::gui::CGUICustomComboBox*>(cbCardType2)->setTouchWholeArea(true);
+#endif
+	cbCardType2->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	cbCardType2->setMaxSelectionRows(20);
 	cbCardType2->addItem(gDataManager->GetSysString(1310).data(), 0);
 	chkAnime = AlignElementWithParent(env->addCheckBox(gGameConfig->chkAnime, Scale(5, 98, 150, 120), wFilter, CHECKBOX_SHOW_ANIME, gDataManager->GetSysString(1999).data()));
@@ -676,16 +684,28 @@ void Game::Initialize() {
 	stLimit = env->addStaticText(gDataManager->GetSysString(1315).data(), Scale(205, 7, 280, 27), false, false, wFilter);
 	defaultStrings.emplace_back(stLimit, 1315);
 	cbLimit = AlignElementWithParent(AddComboBox(env, Scale(260, 5, 390, 25), wFilter, COMBOBOX_OTHER_FILT));
+#if EDOPRO_ANDROID || EDOPRO_IOS
+	static_cast<irr::gui::CGUICustomComboBox*>(cbLimit)->setTouchWholeArea(true);
+#endif
+	cbLimit->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	cbLimit->setMaxSelectionRows(10);
 	ReloadCBLimit();
 	stAttribute = env->addStaticText(gDataManager->GetSysString(1319).data(), Scale(5, 30, 70, 50), false, false, wFilter);
 	defaultStrings.emplace_back(stAttribute, 1319);
 	cbAttribute = AlignElementWithParent(AddComboBox(env, Scale(60, 28, 190, 48), wFilter, COMBOBOX_OTHER_FILT));
+#if EDOPRO_ANDROID || EDOPRO_IOS
+	static_cast<irr::gui::CGUICustomComboBox*>(cbAttribute)->setTouchWholeArea(true);
+#endif
+	cbAttribute->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	cbAttribute->setMaxSelectionRows(10);
 	ReloadCBAttribute();
 	stRace = env->addStaticText(gDataManager->GetSysString(1321).data(), Scale(5, 53, 70, 73), false, false, wFilter);
 	defaultStrings.emplace_back(stRace, 1321);
 	cbRace = AlignElementWithParent(AddComboBox(env, Scale(60, 51, 190, 71), wFilter, COMBOBOX_OTHER_FILT));
+#if EDOPRO_ANDROID || EDOPRO_IOS
+	static_cast<irr::gui::CGUICustomComboBox*>(cbRace)->setTouchWholeArea(true);
+#endif
+	cbRace->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	cbRace->setMaxSelectionRows(10);
 	ReloadCBRace();
 	stAttack = env->addStaticText(gDataManager->GetSysString(1322).data(), Scale(205, 30, 280, 50), false, false, wFilter);
