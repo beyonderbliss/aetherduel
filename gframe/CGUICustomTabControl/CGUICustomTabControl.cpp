@@ -551,19 +551,16 @@ void CGUICustomTabControl::draw() {
 			driver->draw2DRectangle(skin->getColor(EGDC_3D_DARK_SHADOW), tr, &AbsoluteClippingRect);
 		}
 	}
+
+	// enable scrollcontrols on need while the header is visible.
+	if(UpButton)
+		UpButton->setEnabled(needLeftScroll);
+	if(DownButton)
+		DownButton->setEnabled(needRightScroll);
+	refreshSprites();
 	}
 
 	skin->draw3DTabBody(this, Border, FillBackground, AbsoluteRect, &AbsoluteClippingRect, TabHeight, VerticalAlignment);
-
-	// enable scrollcontrols on need only while the header is visible.
-	if(TabHeaderVisible) {
-		if(UpButton)
-			UpButton->setEnabled(needLeftScroll);
-		if(DownButton)
-			DownButton->setEnabled(needRightScroll);
-		refreshSprites();
-	}
-
 	IGUIElement::draw();
 }
 
