@@ -82,6 +82,7 @@ public:
 	void StartFilter(bool force_refresh = false);
 	void RefreshCurrentDeck();
 	void UpdateMainDeckScroll(uint32_t deltaTime);
+	void UpdateSearchResultScroll(uint32_t deltaTime);
 private:
 	void GetHoveredCard();
 	bool FiltersChanged();
@@ -152,6 +153,16 @@ public:
 	int drag_start_seq = -1;
 	bool drag_source_in_deck = false;
 	int scroll_pos;
+	float search_result_scroll_offset = 0.0f;
+	float search_result_scroll_velocity = 0.0f;
+	bool search_result_scroll_inertia = false;
+	bool search_result_scroll_pending = false;
+	bool search_result_scroll_active = false;
+	int search_result_scroll_start_x = 0;
+	int search_result_scroll_start_y = 0;
+	int search_result_scroll_last_y = 0;
+	uint32_t search_result_scroll_last_time = 0;
+	float search_result_scroll_start_offset = 0.0f;
 	float main_deck_scroll_offset = 0.0f;
 	float main_deck_scroll_velocity = 0.0f;
 	bool main_deck_scroll_inertia = false;
