@@ -655,11 +655,6 @@ void Game::Initialize() {
 	defaultStrings.emplace_back(tmpptr, 2087);
 	tmpptr = env->addButton(nextYdkeManageRow(), wYdkeManage, BUTTON_CLOSE_YDKE_WINDOW, gDataManager->GetSysString(1210).data());
 	defaultStrings.emplace_back(tmpptr, 1210);
-	//
-	scrFilter = AlignElementWithParent(env->addScrollBar(false, Scale(999, 161, 1024 - kUiEdgeMargin, 640 - kUiEdgeMargin), 0, SCROLL_FILTER));
-	scrFilter->setLargeStep(DECK_SEARCH_SCROLL_STEP);
-	scrFilter->setSmallStep(DECK_SEARCH_SCROLL_STEP);
-	scrFilter->setVisible(false);
 	//sort type
 	wSort = AlignElementWithParent(env->addStaticText(L"", Scale(930, 132, 1024 - kUiEdgeMargin, 157), true, false, 0, -1, true));
 	cbSortType = AlignElementWithParent(AddComboBox(env, Scale(14, 3, 89, 25), wSort, COMBOBOX_SORTTYPE));
