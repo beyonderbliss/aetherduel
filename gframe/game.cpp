@@ -1955,6 +1955,8 @@ bool Game::MainLoop() {
 	}
 	while(!restart && device->run()) {
 		DispatchQueue();
+		// Keep the standalone panel switch visible only while its content panel is visible.
+		btnPanelCycle->setVisible(wInfos->isVisible());
 		if(suspend) {
 			epro::this_thread::sleep_for(std::chrono::milliseconds(1));
 			continue;
