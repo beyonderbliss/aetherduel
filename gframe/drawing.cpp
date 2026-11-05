@@ -1259,6 +1259,7 @@ void Game::DrawThumb(const CardDataC* cp, irr::core::vector2di pos, LFList* lfli
 #define DRAWOUTLINE(what,...) do { driver->draw2DRectangleOutline(Resize(__VA_ARGS__), SKCOLOR(what##_OUTLINE)); } while(0)
 void Game::DrawDeckBd() {
 	deckBuilder.UpdateMainDeckScroll(delta_time);
+	deckBuilder.UpdateSearchResultScroll(delta_time);
 	const auto GetDeckSizeStr = [&](const Deck::Vector& deck, const Deck::Vector& pre_deck)->std::wstring {
 		if(is_siding)
 			return epro::format(L"{} ({})", deck.size(), pre_deck.size());
@@ -1383,11 +1384,14 @@ void Game::DrawDeckBd() {
 		DRAWOUTLINE(SEARCH_RESULT, 804, 159, 1024 - kUiEdgeMargin, 640 - kUiEdgeMargin);
 
 		const int prev_pos = deckBuilder.scroll_pos;
-		deckBuilder.scroll_pos = floor(scrFilter->getPos() / DECK_SEARCH_SCROLL_STEP);
+		const float maxScroll = std::max(0.0f, static_cast<float>(deckBuilder.results.size()) * kDeckSearchResultRowHeight - kDeckSearchResultViewportHeight);
+		deckBuilder.search_result_scroll_offset = std::clamp(deckBuilder.search_result_scroll_offset, 0.0f, maxScroll);
+		deckBuilder.scroll_pos = static_cast<int>(std::floor(deckBuilder.search_result_scroll_offset / kDeckSearchResultRowHeight));
 
 		const bool draw_thumb = std::abs(prev_pos - deckBuilder.scroll_pos) < (10.0f * 60.0f / 1000.0f) * delta_time;
 		const int card_position = deckBuilder.scroll_pos;
-		const int height_offset = (scrFilter->getPos() % DECK_SEARCH_SCROLL_STEP) * -1.f * 0.65f;
+		const float fractionalOffset = deckBuilder.search_result_scroll_offset - card_position * kDeckSearchResultRowHeight;
+		const int height_offset = -static_cast<int>(std::round(fractionalOffset));
 		const irr::core::recti rect = Resize(805, 160, 1024 - kUiEdgeMargin, 640 - kUiEdgeMargin);
 
 		//loads the thumb of one card before and one after to make the scroll smoother
@@ -1395,27 +1399,28 @@ void Game::DrawDeckBd() {
 		for(; i < 9 && (i + card_position) < (int)deckBuilder.results.size(); ++i) {
 			auto ptr = deckBuilder.results[i + card_position];
 			if(deckBuilder.hovered_pos == 4 && deckBuilder.hovered_seq == i)
-				driver->draw2DRectangle(skin::DECK_WINDOW_HOVERED_CARD_RESULT_VAL, Resize(806, height_offset + 164 + i * 66, 1019, height_offset + 230 + i * 66), &rect);
-			DrawThumb(ptr, irr::core::vector2di(810, height_offset + 165 + i * 66), deckBuilder.filterList, false, &rect, draw_thumb);
+				driver->draw2DRectangle(skin::DECK_WINDOW_HOVERED_CARD_RESULT_VAL, Resize(806, height_offset + 164 + i * kDeckSearchResultRowHeight, 1019, height_offset + 230 + i * kDeckSearchResultRowHeight), &rect);
+			DrawThumb(ptr, irr::core::vector2di(810, height_offset + 165 + i * kDeckSearchResultRowHeight), deckBuilder.filterList, false, &rect, draw_thumb,
+				kDeckSearchResultThumbWidth, kDeckSearchResultThumbHeight);
 			if(ptr->type & TYPE_MONSTER) {
-				DrawShadowTextPos(textFont, gDataManager->GetName(ptr->code), Resize(859, height_offset + 164 + i * 66, 955, height_offset + 185 + i * 66),
-								  Resize(860, height_offset + 165 + i * 66, 955, height_offset + 185 + i * 66), 0xffffffff, 0xff000000, false, false, &rect);
+				DrawShadowTextPos(textFont, gDataManager->GetName(ptr->code), Resize(859, height_offset + 164 + i * kDeckSearchResultRowHeight, 955, height_offset + 185 + i * 66),
+								  Resize(860, height_offset + 165 + i * kDeckSearchResultRowHeight, 955, height_offset + 185 + i * 66), 0xffffffff, 0xff000000, false, false, &rect);
 				if(ptr->type & TYPE_LINK) {
 					DrawShadowTextPos(textFont, epro::format(L"{}/{}", gDataManager->FormatAttribute(ptr->attribute), gDataManager->FormatRace(ptr->race)),
-									  Resize(859, height_offset + 186 + i * 66, 955, height_offset + 207 + i * 66),
-									  Resize(860, height_offset + 187 + i * 66, 955, height_offset + 207 + i * 66), 0xffffffff, 0xff000000, false, false, &rect);
+									  Resize(859, height_offset + 186 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * 66),
+									  Resize(860, height_offset + 187 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * 66), 0xffffffff, 0xff000000, false, false, &rect);
 				} else {
 					const wchar_t* form = L"\u2605";
 					if(ptr->type & TYPE_XYZ) form = L"\u2606";
 					DrawShadowTextPos(textFont, epro::format(L"{}/{} {}{}", gDataManager->FormatAttribute(ptr->attribute), gDataManager->FormatRace(ptr->race), form, ptr->level),
-									  Resize(859, height_offset + 186 + i * 66, 955, height_offset + 207 + i * 66),
-									  Resize(860, height_offset + 187 + i * 66, 955, height_offset + 207 + i * 66), 0xffffffff, 0xff000000, false, false, &rect);
+									  Resize(859, height_offset + 186 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * 66),
+									  Resize(860, height_offset + 187 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * 66), 0xffffffff, 0xff000000, false, false, &rect);
 				}
 			} else {
-				DrawShadowTextPos(textFont, gDataManager->GetName(ptr->code), Resize(859, height_offset + 164 + i * 66, 955, height_offset + 185 + i * 66),
-								  Resize(860, height_offset + 165 + i * 66, 955, height_offset + 185 + i * 66), 0xffffffff, 0xff000000, false, false, &rect);
-				DrawShadowTextPos(textFont, gDataManager->FormatType(ptr->type), Resize(859, height_offset + 186 + i * 66, 955, height_offset + 207 + i * 66),
-								  Resize(860, height_offset + 187 + i * 66, 955, height_offset + 207 + i * 66), 0xffffffff, 0xff000000, false, false, &rect);
+				DrawShadowTextPos(textFont, gDataManager->GetName(ptr->code), Resize(859, height_offset + 164 + i * kDeckSearchResultRowHeight, 955, height_offset + 185 + i * 66),
+								  Resize(860, height_offset + 165 + i * kDeckSearchResultRowHeight, 955, height_offset + 185 + i * 66), 0xffffffff, 0xff000000, false, false, &rect);
+				DrawShadowTextPos(textFont, gDataManager->FormatType(ptr->type), Resize(859, height_offset + 186 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * 66),
+								  Resize(860, height_offset + 187 + i * kDeckSearchResultRowHeight, 955, height_offset + 207 + i * 66), 0xffffffff, 0xff000000, false, false, &rect);
 			}
 			auto GetScopeString = [&ptr]()->std::wstring {
 				auto scope = gDataManager->FormatScope(ptr->ot, true);
@@ -1446,12 +1451,13 @@ void Game::DrawDeckBd() {
 					return epro::format(L"[{}]", scope);
 				return L"";
 			};
-			DrawShadowTextPos(textFont, GetScopeString(), Resize(859, height_offset + 208 + i * 66, 955, height_offset + 229 + i * 66),
-							  Resize(860, height_offset + 209 + i * 66, 955, height_offset + 229 + i * 66), 0xffffffff, 0xff000000, false, false, &rect);
+			DrawShadowTextPos(textFont, GetScopeString(), Resize(859, height_offset + 208 + i * kDeckSearchResultRowHeight, 955, height_offset + 229 + i * 66),
+							  Resize(860, height_offset + 209 + i * kDeckSearchResultRowHeight, 955, height_offset + 229 + i * 66), 0xffffffff, 0xff000000, false, false, &rect);
 		}
 	}
 	if(deckBuilder.is_draging)
-		DrawThumb(deckBuilder.dragging_pointer, irr::core::vector2di(deckBuilder.dragx - Scale(CARD_THUMB_WIDTH / 2), deckBuilder.dragy - Scale(CARD_THUMB_HEIGHT / 2)), deckBuilder.filterList, true);
+		DrawThumb(deckBuilder.dragging_pointer, irr::core::vector2di(deckBuilder.dragx - Scale(kDeckSearchResultThumbWidth / 2), deckBuilder.dragy - Scale(kDeckSearchResultThumbHeight / 2)), deckBuilder.filterList, true, nullptr, true,
+			kDeckSearchResultThumbWidth, kDeckSearchResultThumbHeight);
 }
 #undef DRAWRECT
 #undef DECKCOLOR
