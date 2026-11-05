@@ -1788,7 +1788,7 @@ static void UpdatePanelCycleButtonLabel(Game* game) {
 		game->btnPanelCycle->setText(gDataManager->GetSysString(panelStringIds[activeTab]).data());
 }
 static void UpdatePanelCycleButtonPosition(Game* game) {
-	auto buttonRect = game->btnPanelCycle->getRelativePosition();
+	auto buttonRect = game->Resize(211, 255, 301, 290);
 	const auto panelRect = game->wInfos->getRelativePosition();
 	buttonRect.UpperLeftCorner.X = panelRect.LowerRightCorner.X - buttonRect.getWidth();
 	buttonRect.LowerRightCorner.X = panelRect.LowerRightCorner.X;
