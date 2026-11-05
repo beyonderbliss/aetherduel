@@ -1312,7 +1312,7 @@ void Game::DrawDeckBd() {
 		};
 		std::wstring categoryStats;
 		if(deckBuilder.active_deck_tab == 1) {
-			categoryStats = epro::format(L"Fusion {}  |  XYZ {}  |  Synchro {}  |  Link {}  |  Ritual {}",
+			categoryStats = epro::format(L"Fusion {}  |  XYZ {}  |  Synchro {}  |  Link {}  |  Ritual Rush {}",
 				CountType(*activeDeck, TYPE_FUSION), CountType(*activeDeck, TYPE_XYZ),
 				CountType(*activeDeck, TYPE_SYNCHRO), CountType(*activeDeck, TYPE_LINK),
 				CountType(*activeDeck, TYPE_RITUAL));
