@@ -90,6 +90,9 @@ public:
 	//! Set the height of the tabs
 	void setTabHeight(s32 height) override;
 
+	//! Show or hide the tab header without changing tab-page geometry.
+	void setTabHeaderVisible(bool visible);
+
 	//! Reads attributes of the element
 	void deserializeAttributes(io::IAttributes* in, io::SAttributeReadWriteOptions* options) override;
 
@@ -139,6 +142,7 @@ private:
 	s32 ActiveTab;
 	bool Border;
 	bool FillBackground;
+	bool TabHeaderVisible;
 	bool ScrollControl;
 	s32 TabHeight;
 	gui::EGUI_ALIGNMENT VerticalAlignment;
