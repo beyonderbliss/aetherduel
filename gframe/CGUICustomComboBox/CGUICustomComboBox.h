@@ -113,6 +113,7 @@ private:
 	bool HasFocus;
 	bool TouchWholeArea = false;
 	bool ArrowOnlyClick = false;
+	bool MousePressedInside = false;
 	IGUIFont* ActiveFont;
 };
 
