@@ -89,7 +89,7 @@ void DeckBuilder::CancelDeckNameInput() {
 	deck_name_input_mode = 0;
 	mainGame->ebDeckname->setText(L"");
 	mainGame->UpdateDeckMenuLayout();
-	mainGame->env->setFocus(mainGame->cbDBDecks);
+	mainGame->env->setFocus(mainGame->btnRenameDeck);
 }
 
 void DeckBuilder::CommitDeckNameInput() {
