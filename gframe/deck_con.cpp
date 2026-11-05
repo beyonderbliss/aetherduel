@@ -804,9 +804,10 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			if(hovered_pos == 0 || hovered_seq == -1)
 				break;
 			if(hovered_pos == 4) {
-				const float rowOffset = std::fmod(search_result_scroll_offset, static_cast<float>(kDeckSearchResultRowHeight));
+				const int firstRow = static_cast<int>(std::floor(search_result_scroll_offset / kDeckSearchResultRowHeight));
+				const float rowOffset = search_result_scroll_offset - firstRow * kDeckSearchResultRowHeight;
 				const int row = static_cast<int>(std::floor((logicalPress.Y - 165 + rowOffset) / kDeckSearchResultRowHeight));
-				const float imageTop = 165.0f + row * kDeckSearchResultRowHeight - search_result_scroll_offset;
+				const float imageTop = 165.0f + row * kDeckSearchResultRowHeight - rowOffset;
 				const bool onCardImage = logicalPress.X >= 810 && logicalPress.X < 810 + kDeckSearchResultThumbWidth &&
 					logicalPress.Y >= imageTop && logicalPress.Y < imageTop + kDeckSearchResultThumbHeight;
 				if(!onCardImage)
