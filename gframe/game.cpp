@@ -661,7 +661,10 @@ void Game::Initialize() {
 	defaultStrings.emplace_back(tmpptr, 1210);
 	//sort type
 	wSort = AlignElementWithParent(env->addStaticText(L"", Scale(930, 132, 1024 - kUiEdgeMargin, 157), true, false, 0, -1, true));
-	cbSortType = AlignElementWithParent(AddComboBox(env, Scale(14, 3, 89, 25), wSort, COMBOBOX_SORTTYPE));
+	cbSortType = AlignElementWithParent(AddComboBox(env, Scale(5, 2, 84, 23), wSort, COMBOBOX_SORTTYPE));
+#if EDOPRO_ANDROID || EDOPRO_IOS
+	static_cast<irr::gui::CGUICustomComboBox*>(cbSortType)->setArrowOnlyClick(true);
+#endif
 	cbSortType->setMaxSelectionRows(10);
 	ReloadCBSortType();
 	wSort->setVisible(false);
