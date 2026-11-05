@@ -1460,6 +1460,7 @@ void Game::PopulateTabSettingsWindow() {
 	//tab
 	infosExpanded = 0;
 	wInfos = AlignElementWithParent(irr::gui::CGUICustomTabControl::addCustomTabControl(env, Scale(kUiEdgeMargin, 275, 301, 640 - kUiEdgeMargin), 0, true));
+	static_cast<irr::gui::CGUICustomTabControl*>(wInfos)->setTabHeaderVisible(false);
 	wInfos->setVisible(false);
 	//info
 	{
