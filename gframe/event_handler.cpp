@@ -1832,8 +1832,8 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 			if(event.GUIEvent.Caller == mainGame->btnPanelCycle) {
 				const irr::s32 nextTab = (mainGame->wInfos->getActiveTab() + 1) % 4;
 				mainGame->wInfos->setActiveTab(nextTab);
-				static const wchar_t* const panelNames[] = { L"Card Info", L"Log", L"Chat", L"Repositories" };
-				mainGame->btnPanelCycle->setText(panelNames[nextTab]);
+				static const uint32_t panelStringIds[] = { 1270, 1271, 1279, 2045 };
+				mainGame->btnPanelCycle->setText(gDataManager->GetSysString(panelStringIds[nextTab]).data());
 				return true;
 			}
 			switch(id) {
