@@ -762,7 +762,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				break;
 			GetHoveredCard();
 			const auto logicalPress = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
-			if(results.size() > 6 && logicalPress.X >= 859 && logicalPress.X < 955 && logicalPress.Y >= 164 && logicalPress.Y < 631) {
+			if(results.size() > 6 && logicalPress.X >= 870 && logicalPress.X < 955 && logicalPress.Y >= 164 && logicalPress.Y < 634) {
 				search_result_scroll_pending = true;
 				search_result_scroll_active = false;
 				search_result_scroll_start_x = logicalPress.X;
