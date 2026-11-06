@@ -522,6 +522,16 @@ jobs:
           set -euo pipefail
           A=src/main/assets/defaults
           mkdir -p "$A/config" "$A/fonts" "$A/textures" "$A/pics" "$A/deck"
+          # Package PrimaNyx skin for fresh installs and app updates.
+          SKIN_SOURCE="deps/edopro/skin/PrimaNyx/skin.xml"
+          test -s "$SKIN_SOURCE"
+
+          mkdir -p \
+            "$A/skin/PrimaNyx" \
+            "src/main/assets/update/skin/PrimaNyx"
+
+          cp "$SKIN_SOURCE" "$A/skin/PrimaNyx/skin.xml"
+          cp "$SKIN_SOURCE" "src/main/assets/update/skin/PrimaNyx/skin.xml"
           test -d deps/edopro/deck
           cp -a deps/edopro/deck/. "$A/deck/"
           test -s "$A/deck/[TEST] Dark Magician.ydk"
