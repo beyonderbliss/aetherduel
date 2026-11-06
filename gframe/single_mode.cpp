@@ -79,7 +79,6 @@ int SingleMode::SinglePlayThread(DuelOptions&& duelOptions) {
 		last_replay.Flush();
 		new_replay.Write<uint64_t>(opt);
 	};
-	mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 45));
 	is_continuing = false;
 	is_restarting = false;
 	auto rnd = Utils::GetRandomNumberGenerator();
@@ -182,7 +181,6 @@ restart:
 				mainGame->closeDuelWindow = true;
 				mainGame->closeDoneSignal.Wait(lock);
 			}
-			mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 80));
 			if(!hand_test) {
 				mainGame->ShowElement(mainGame->wSinglePlay);
 				mainGame->stTip->setVisible(false);
@@ -190,18 +188,17 @@ restart:
 			mainGame->SetMessageWindow();
 			mainGame->device->setEventReceiver(&mainGame->menuHandler);
 			if(hand_test) {
-				mainGame->btnChainIgnore->setVisible(false);
-				mainGame->btnChainAlways->setVisible(false);
-				mainGame->btnChainWhenAvail->setVisible(false);
-				mainGame->btnCancelOrFinish->setVisible(false);
+				mainGame->SetVerticalButtonVisible(mainGame->btnChainIgnore, false);
+				mainGame->SetVerticalButtonVisible(mainGame->btnChainAlways, false);
+				mainGame->SetVerticalButtonVisible(mainGame->btnChainWhenAvail, false);
+				mainGame->SetVerticalButtonVisible(mainGame->btnCancelOrFinish, false);
 				mainGame->btnShuffle->setVisible(false);
 				mainGame->wChat->setVisible(false);
-				mainGame->btnRestartSingle->setVisible(false);
+				mainGame->SetVerticalButtonVisible(mainGame->btnRestartSingle, false);
 				mainGame->wPhase->setVisible(false);
 				mainGame->deckBuilder.Initialize(false);
 			}
 		} else
-			mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 80));
 		is_restarting = false;
 		return 0;
 	}
@@ -214,9 +211,10 @@ restart:
 	mainGame->mTopMenu->setVisible(false);
 	mainGame->wCardImg->setVisible(true);
 	mainGame->wInfos->setVisible(true);
-	mainGame->btnLeaveGame->setVisible(true);
+	mainGame->SetVerticalButtonVisible(mainGame->btnLeaveGame, true);
 	mainGame->btnLeaveGame->setText(gDataManager->GetSysString(1210).data());
-	mainGame->btnRestartSingle->setVisible(true);
+	mainGame->SetVerticalButtonVisible(mainGame->btnRestartSingle, true);
+	mainGame->UpdateVerticalButtonLayout();
 	mainGame->wPhase->setVisible(true);
 	mainGame->dField.Clear();
 	mainGame->dInfo.isFirst = true;
@@ -258,7 +256,6 @@ restart:
 		open_file = false;
 		is_restarting = false;
 		mainGame->gMutex.lock();
-		mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 80));
 		mainGame->gMutex.unlock();
 		return 0;
 	}
@@ -309,7 +306,6 @@ restart:
 			mainGame->closeDuelWindow = true;
 			mainGame->closeDoneSignal.Wait(lock);
 		}
-		mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(205, 5, 295, 80));
 		if(!hand_test) {
 			mainGame->ShowElement(mainGame->wSinglePlay);
 			mainGame->stTip->setVisible(false);
@@ -317,13 +313,13 @@ restart:
 		mainGame->SetMessageWindow();
 		mainGame->device->setEventReceiver(&mainGame->menuHandler);
 		if(hand_test) {
-			mainGame->btnChainIgnore->setVisible(false);
-			mainGame->btnChainAlways->setVisible(false);
-			mainGame->btnChainWhenAvail->setVisible(false);
-			mainGame->btnCancelOrFinish->setVisible(false);
+			mainGame->SetVerticalButtonVisible(mainGame->btnChainIgnore, false);
+			mainGame->SetVerticalButtonVisible(mainGame->btnChainAlways, false);
+			mainGame->SetVerticalButtonVisible(mainGame->btnChainWhenAvail, false);
+			mainGame->SetVerticalButtonVisible(mainGame->btnCancelOrFinish, false);
 			mainGame->btnShuffle->setVisible(false);
 			mainGame->wChat->setVisible(false);
-			mainGame->btnRestartSingle->setVisible(false);
+			mainGame->SetVerticalButtonVisible(mainGame->btnRestartSingle, false);
 			mainGame->wPhase->setVisible(false);
 			mainGame->deckBuilder.Initialize(false);
 		}

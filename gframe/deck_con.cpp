@@ -163,22 +163,16 @@ void DeckBuilder::Initialize(bool refresh) {
 	mainGame->UpdateDeckMenuLayout();
 	mainGame->wFilter->setVisible(true);
 	mainGame->wSort->setVisible(true);
-	mainGame->btnLeaveGame->setVisible(true);
-	// Align the action stack's right edge with the content panel's right edge (X=301).
-	mainGame->btnLeaveGame->setRelativePosition(mainGame->Resize(211, kUiEdgeMargin, 301, 40));
-	mainGame->btnHandTest->setRelativePosition(mainGame->Resize(211, 50, 301, 85));
-	mainGame->btnHandTestSettings->setRelativePosition(mainGame->Resize(211, 95, 301, 130));
-	mainGame->btnYdkeManage->setRelativePosition(mainGame->Resize(211, 140, 301, 175));
-	mainGame->btnSettingsMenu->setRelativePosition(mainGame->Resize(211, 185, 301, 220));
-	mainGame->btnSettingsMenu->setVisible(true);
+	mainGame->SetVerticalButtonVisible(mainGame->btnLeaveGame, true);
+	mainGame->SetVerticalButtonVisible(mainGame->btnSettingsMenu, true);
 	mainGame->btnLeaveGame->setText(gDataManager->GetSysString(1306).data());
 	mainGame->btnSideOK->setVisible(false);
 	mainGame->btnSideShuffle->setVisible(false);
 	mainGame->btnSideSort->setVisible(false);
 	mainGame->btnSideReload->setVisible(false);
-	mainGame->btnHandTest->setVisible(true);
-	mainGame->btnHandTestSettings->setVisible(true);
-	mainGame->btnYdkeManage->setVisible(true);
+	mainGame->SetVerticalButtonVisible(mainGame->btnHandTest, true);
+	mainGame->SetVerticalButtonVisible(mainGame->btnHandTestSettings, true);
+	mainGame->SetVerticalButtonVisible(mainGame->btnYdkeManage, true);
 	filterList = &gdeckManager->_lfList[mainGame->cbDBLFList->getSelected()];
 	if(refresh) {
 		ClearSearch();
@@ -210,6 +204,7 @@ void DeckBuilder::Initialize(bool refresh) {
 	prev_deck = mainGame->cbDBDecks->getSelected();
 	prev_operation = 0;
 	mainGame->SetMessageWindow();
+	mainGame->UpdateVerticalButtonLayout();
 	mainGame->device->setEventReceiver(this);
 }
 void DeckBuilder::Terminate(bool showmenu) {
@@ -230,21 +225,22 @@ void DeckBuilder::Terminate(bool showmenu) {
 	if(showmenu) {
 		mainGame->wCardImg->setVisible(false);
 		mainGame->wInfos->setVisible(false);
-		mainGame->btnLeaveGame->setVisible(false);
-		mainGame->btnSettingsMenu->setVisible(false);
+		mainGame->SetVerticalButtonVisible(mainGame->btnLeaveGame, false);
+		mainGame->SetVerticalButtonVisible(mainGame->btnSettingsMenu, false);
 		mainGame->PopupElement(mainGame->wMainMenu);
 		mainGame->ClearTextures();
 		mainGame->ClearCardInfo(0);
 		gdeckManager->ClearDummies();
 	}
-	mainGame->btnHandTest->setVisible(false);
-	mainGame->btnHandTestSettings->setVisible(false);
-	mainGame->btnYdkeManage->setVisible(false);
+	mainGame->SetVerticalButtonVisible(mainGame->btnHandTest, false);
+	mainGame->SetVerticalButtonVisible(mainGame->btnHandTestSettings, false);
+	mainGame->SetVerticalButtonVisible(mainGame->btnYdkeManage, false);
 	mainGame->wYdkeManage->setVisible(false);
 	mainGame->wHandTest->setVisible(false);
 	mainGame->device->setEventReceiver(&mainGame->menuHandler);
 	mainGame->wACMessage->setVisible(false);
 	mainGame->SetMessageWindow();
+	mainGame->UpdateVerticalButtonLayout();
 	int sel = mainGame->cbDBDecks->getSelected();
 	if(sel >= 0)
 		gGameConfig->lastdeck = mainGame->cbDBDecks->getItem(sel);

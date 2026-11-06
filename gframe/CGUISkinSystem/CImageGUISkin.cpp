@@ -18,6 +18,7 @@ CImageGUISkin::~CImageGUISkin() {
 	FallbackSkin->drop();
 	properties.clear();
 	custom_colors.clear();
+	element_alpha.clear();
 
 }
 
@@ -41,6 +42,52 @@ video::SColor CImageGUISkin::getCustomColor(ygo::skin::CustomSkinElements key, v
 }
 void CImageGUISkin::loadConfig(const SImageGUISkinConfig& config) {
 	Config = config;
+}
+
+void CImageGUISkin::setElementAlpha(const IGUIElement* element, u8 alpha) {
+	if(!element)
+		return;
+	if(alpha == 255)
+		element_alpha.erase(element);
+	else
+		element_alpha[element] = alpha;
+}
+
+u8 CImageGUISkin::getElementAlpha(const IGUIElement* element) const {
+	const auto found = element_alpha.find(element);
+	return found == element_alpha.end() ? 255 : found->second;
+}
+
+void CImageGUISkin::drawFallbackButtonPane(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip, u8 state) {
+	const u8 alpha = getElementAlpha(element);
+	if(alpha == 255) {
+		if(state == 1)
+			FallbackSkin->draw3DButtonPaneDisabled(element, rect, clip);
+		else if(state == 2)
+			FallbackSkin->draw3DButtonPanePressed(element, rect, clip);
+		else
+			FallbackSkin->draw3DButtonPaneStandard(element, rect, clip);
+		return;
+	}
+
+	video::SColor originalColors[EGDC_COUNT];
+	for(s32 i = 0; i < EGDC_COUNT; ++i) {
+		const auto colorId = static_cast<EGUI_DEFAULT_COLOR>(i);
+		originalColors[i] = FallbackSkin->getColor(colorId);
+		auto fadedColor = originalColors[i];
+		fadedColor.setAlpha(static_cast<u32>(fadedColor.getAlpha()) * alpha / 255);
+		FallbackSkin->setColor(colorId, fadedColor);
+	}
+
+	if(state == 1)
+		FallbackSkin->draw3DButtonPaneDisabled(element, rect, clip);
+	else if(state == 2)
+		FallbackSkin->draw3DButtonPanePressed(element, rect, clip);
+	else
+		FallbackSkin->draw3DButtonPaneStandard(element, rect, clip);
+
+	for(s32 i = 0; i < EGDC_COUNT; ++i)
+		FallbackSkin->setColor(static_cast<EGUI_DEFAULT_COLOR>(i), originalColors[i]);
 }
 
 video::SColor CImageGUISkin::getColor(EGUI_DEFAULT_COLOR color) const {
@@ -93,21 +140,25 @@ void CImageGUISkin::setIcon(EGUI_DEFAULT_ICON icon, u32 index) {
 }
 
 void CImageGUISkin::draw3DButtonPaneStandard(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip) {
+	const u8 alpha = getElementAlpha(element);
 	if(element->isEnabled()) {
 		if(!Config.Button.Texture) {
-			FallbackSkin->draw3DButtonPaneStandard(element, rect, clip);
+			drawFallbackButtonPane(element, rect, clip, 0);
 			return;
 		}
 
-		drawElementStyle(Config.Button, rect, clip);
+		auto style = Config.Button;
+		style.Color.setAlpha(static_cast<u32>(style.Color.getAlpha()) * alpha / 255);
+		drawElementStyle(style, rect, clip);
 	} else {
 		if(!Config.ButtonDisabled.Texture) {
-			draw3DButtonPaneDisabled(element, rect, clip);
-			//FallbackSkin->draw3DButtonPaneStandard( element, rect, clip );
+			drawFallbackButtonPane(element, rect, clip, 1);
 			return;
 		}
 
-		drawElementStyle(Config.ButtonDisabled, rect, clip);
+		auto style = Config.ButtonDisabled;
+		style.Color.setAlpha(static_cast<u32>(style.Color.getAlpha()) * alpha / 255);
+		drawElementStyle(style, rect, clip);
 	}
 }
 
@@ -116,6 +167,10 @@ void CImageGUISkin::draw3DButtonPaneDisabled(IGUIElement* element,
 											 const core::rect<s32>* clip) {
 	if(!VideoDriver)
 		return;
+	if(!Config.ButtonDisabled.Texture) {
+		drawFallbackButtonPane(element, r, clip, 1);
+		return;
+	}
 
 	core::rect<s32> rect = r;
 
@@ -155,12 +210,15 @@ void CImageGUISkin::draw3DButtonPaneDisabled(IGUIElement* element,
 }
 
 void CImageGUISkin::draw3DButtonPanePressed(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip) {
+	const u8 alpha = getElementAlpha(element);
 	if(!Config.Button.Texture) {
-		FallbackSkin->draw3DButtonPanePressed(element, rect, clip);
+		drawFallbackButtonPane(element, rect, clip, 2);
 		return;
 	}
 
-	drawElementStyle(Config.ButtonPressed, rect, clip);
+	auto style = Config.ButtonPressed;
+	style.Color.setAlpha(static_cast<u32>(style.Color.getAlpha()) * alpha / 255);
+	drawElementStyle(style, rect, clip);
 }
 
 void CImageGUISkin::draw3DSunkenPane(IGUIElement* element,

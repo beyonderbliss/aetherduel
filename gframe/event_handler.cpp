@@ -1839,6 +1839,10 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 		}
 		case irr::gui::EGET_BUTTON_CLICKED: {
 			if(event.GUIEvent.Caller == mainGame->btnPanelCycle) {
+				if(mainGame->IsVerticalButtonAnimating(event.GUIEvent.Caller)) {
+					stopPropagation = true;
+					return true;
+				}
 				const int nextTab = (mainGame->wInfos->getActiveTab() + 1) % 4;
 				mainGame->wInfos->setActiveTab(nextTab);
 				UpdatePanelCycleButtonLabel(mainGame);
@@ -1872,6 +1876,7 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 					wInfosSize.LowerRightCorner.X = mainGame->ResizeX(mainGame->infosExpanded ? 1023 : 301);
 					mainGame->wInfos->setRelativePosition(wInfosSize);
 				}
+				mainGame->UpdateVerticalButtonLayout();
 				auto lstsSize = mainGame->Resize(10, 10, mainGame->infosExpanded ? 1012 : 290, 0);
 				lstsSize.LowerRightCorner.Y = mainGame->ResizeY(300 - mainGame->Scale(7)) - mainGame->Scale(10);
 				mainGame->lstLog->setRelativePosition(lstsSize);

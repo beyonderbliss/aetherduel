@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <sstream>
 #include <nlohmann/json.hpp>
 #include <irrlicht.h>
@@ -1962,7 +1963,7 @@ bool Game::MainLoop() {
 	while(!restart && device->run()) {
 		DispatchQueue();
 		// Keep the standalone panel switch visible only while its content panel is visible.
-		btnPanelCycle->setVisible(wInfos->isVisible());
+		SetVerticalButtonVisible(btnPanelCycle, wInfos->isVisible());
 		if(suspend) {
 			epro::this_thread::sleep_for(std::chrono::milliseconds(1));
 			continue;
@@ -2320,10 +2321,16 @@ bool Game::ApplySkin(const epro::path_string& skinname, bool reload, bool firstr
 		return false;
 	if(!reload)
 		prev_skin = skinname;
+	auto applyFallbackSkin = [this]() {
+		auto fallbackSkin = env->createSkin(irr::gui::EGST_WINDOWS_METALLIC);
+		auto* wrappedSkin = new irr::gui::CImageGUISkin(driver, fallbackSkin);
+		wrappedSkin->loadConfig(irr::gui::SImageGUISkinConfig{});
+		env->setSkin(wrappedSkin);
+		wrappedSkin->drop();
+		fallbackSkin->drop();
+	};
 	if(prev_skin == NoSkinLabel()) {
-		auto skin = env->createSkin(irr::gui::EGST_WINDOWS_METALLIC);
-		env->setSkin(skin);
-		skin->drop();
+		applyFallbackSkin();
 		skin::ResetDefaults();
 		imageManager.ResetTextures();
 	} else {
@@ -2338,9 +2345,7 @@ bool Game::ApplySkin(const epro::path_string& skinname, bool reload, bool firstr
 			if(firstrun)
 				return false;
 			applied = false;
-			auto skin = env->createSkin(irr::gui::EGST_WINDOWS_METALLIC);
-			env->setSkin(skin);
-			skin->drop();
+			applyFallbackSkin();
 			skin::ResetDefaults();
 			imageManager.ResetTextures();
 		}
@@ -3001,14 +3006,14 @@ void Game::CloseDuelWindow() {
 	btnSideShuffle->setVisible(false);
 	btnSideSort->setVisible(false);
 	btnSideReload->setVisible(false);
-	btnLeaveGame->setVisible(false);
-	btnSettingsMenu->setVisible(false);
-	btnRestartSingle->setVisible(false);
-	btnSpectatorSwap->setVisible(false);
-	btnChainIgnore->setVisible(false);
-	btnChainAlways->setVisible(false);
-	btnChainWhenAvail->setVisible(false);
-	btnCancelOrFinish->setVisible(false);
+	SetVerticalButtonVisible(btnLeaveGame, false);
+	SetVerticalButtonVisible(btnSettingsMenu, false);
+	SetVerticalButtonVisible(btnRestartSingle, false);
+	SetVerticalButtonVisible(btnSpectatorSwap, false);
+	SetVerticalButtonVisible(btnChainIgnore, false);
+	SetVerticalButtonVisible(btnChainAlways, false);
+	SetVerticalButtonVisible(btnChainWhenAvail, false);
+	SetVerticalButtonVisible(btnCancelOrFinish, false);
 	btnShuffle->setVisible(false);
 	wChat->setVisible(false);
 	lstLog->clear();
@@ -3771,6 +3776,57 @@ void Game::ReloadElementsStrings() {
 
 	ReloadCBCurrentSkin();
 }
+void Game::UpdateVerticalButtonLayout() {
+	if(!wInfos || !btnPanelCycle)
+		return;
+
+	const auto panelRect = wInfos->getRelativePosition();
+	const auto marginRect = Resize(211, 0, 301, kUiEdgeMargin);
+	const irr::s32 top = marginRect.LowerRightCorner.Y;
+	const irr::s32 bottom = panelRect.UpperLeftCorner.Y - marginRect.getHeight();
+	const irr::s32 available = bottom - top;
+	if(available <= 0)
+		return;
+
+	const bool deckEditorLayout = is_building;
+	const irr::s32 slotCount = deckEditorLayout ? 6 : 8;
+	const irr::s32 maxButtonHeight = Resize(211, 0, 301, 35).getHeight();
+	const irr::s32 minGap = Resize(211, 0, 301, 3).getHeight();
+	const irr::s32 buttonHeight = std::min(maxButtonHeight, (available - (slotCount - 1) * minGap) / slotCount);
+	if(buttonHeight <= 0)
+		return;
+
+	const irr::s32 buttonWidth = Resize(211, 0, 301, 0).getWidth();
+	const irr::s32 right = panelRect.LowerRightCorner.X;
+	const irr::s32 left = right - buttonWidth;
+	const float slotStep = static_cast<float>(available - buttonHeight) / (slotCount - 1);
+	auto setSlot = [&](irr::gui::IGUIButton* button, irr::s32 slot) {
+		if(!button)
+			return;
+		const irr::s32 y = top + static_cast<irr::s32>(std::lround(slotStep * slot));
+		button->setRelativePosition(irr::core::recti(left, y, right, y + buttonHeight));
+	};
+
+	if(deckEditorLayout) {
+		setSlot(btnLeaveGame, 0);
+		setSlot(btnHandTest, 1);
+		setSlot(btnHandTestSettings, 2);
+		setSlot(btnYdkeManage, 3);
+		setSlot(btnSettingsMenu, 4);
+		setSlot(btnPanelCycle, 5);
+	} else {
+		setSlot(btnLeaveGame, 0);
+		setSlot(btnRestartSingle, 1);
+		setSlot(btnSpectatorSwap, 1);
+		setSlot(btnChainIgnore, 2);
+		setSlot(btnChainAlways, 3);
+		setSlot(btnChainWhenAvail, 4);
+		setSlot(btnSettingsMenu, 5);
+		setSlot(btnCancelOrFinish, 6);
+		setSlot(btnPanelCycle, 7);
+	}
+}
+
 void Game::OnResize() {
 	env->getRootGUIElement()->setRelativePosition(irr::core::recti(0, 0, window_size.Width, window_size.Height));
 	{
@@ -3785,16 +3841,7 @@ void Game::OnResize() {
 	wRoomListPlaceholder->setRelativePosition(irr::core::recti(0, 0, window_size.Width, window_size.Height));
 	wMainMenu->setRelativePosition(ResizeWin(mainMenuLeftX, 200, mainMenuRightX, 450));
 	wBtnSettings->setRelativePosition(ResizeWin(0, 610, 30, 640));
-	{
-		auto buttonRect = Resize(211, 255, 301, 290);
-		const auto panelRect = wInfos->getRelativePosition();
-		buttonRect.LowerRightCorner.Y = panelRect.UpperLeftCorner.Y - Scale(kUiEdgeMargin);
-		buttonRect.UpperLeftCorner.Y = buttonRect.LowerRightCorner.Y - buttonRect.getHeight();
-		buttonRect.UpperLeftCorner.X = panelRect.LowerRightCorner.X - buttonRect.getWidth();
-		buttonRect.LowerRightCorner.X = panelRect.LowerRightCorner.X;
-		btnPanelCycle->setRelativePosition(buttonRect);
-	}
-	SetCentered(wCommitsLog);
+		SetCentered(wCommitsLog);
 	SetCentered(updateWindow, false);
 
 	SetCentered(wYdkeManage, false);
@@ -3847,6 +3894,7 @@ void Game::OnResize() {
 
 	ResizeCardinfoWindow(gGameConfig->keep_cardinfo_aspect_ratio);
 	UpdateDeckMenuLayout();
+	UpdateVerticalButtonLayout();
 	for(auto& window : repoInfoGui) {
 		window.second.progress2->setRelativePosition(Scale(5, 20 + 15, (300 - 8) * window_scale.X, 20 + 30));
 		window.second.history_button2->setRelativePosition(irr::core::recti(ResizeX(200), 5, ResizeX(300 - 5), Scale(20 + 10)));

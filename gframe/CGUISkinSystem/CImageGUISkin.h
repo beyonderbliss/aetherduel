@@ -4,6 +4,7 @@
 #include <IGUISkin.h>
 #include <irrString.h>
 #include <irrMap.h>
+#include <unordered_map>
 #include "../custom_skin_enum.h"
 
 namespace irr {
@@ -39,6 +40,7 @@ public:
 	~CImageGUISkin() override;
 
 	void loadConfig(const SImageGUISkinConfig& config);
+	void setElementAlpha(const IGUIElement* element, u8 alpha);
 
 	//! returns default color
 	video::SColor getColor(EGUI_DEFAULT_COLOR color) const override;
@@ -137,6 +139,8 @@ public:
 
 private:
 	void drawElementStyle(const SImageGUIElementStyle& elem, const core::rect<s32>& rect, const core::rect<s32>* clip, video::SColor* color = 0);
+	u8 getElementAlpha(const IGUIElement* element) const;
+	void drawFallbackButtonPane(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip, u8 state);
 
 	video::IVideoDriver* VideoDriver;
 	IGUISkin* FallbackSkin;
@@ -144,6 +148,7 @@ private:
 
 	core::map<core::stringw, core::stringw> properties;
 	core::map<ygo::skin::CustomSkinElements, video::SColor> custom_colors;
+	std::unordered_map<const IGUIElement*, u8> element_alpha;
 };
 
 }

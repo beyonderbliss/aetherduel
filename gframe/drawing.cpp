@@ -8,6 +8,7 @@
 #include "deck_manager.h"
 #include "duelclient.h"
 #include "CGUITTFont/CGUITTFont.h"
+#include "CGUISkinSystem/CImageGUISkin.h"
 #include "CGUIImageButton/CGUIImageButton.h"
 #include "custom_skin_enum.h"
 #include "image_manager.h"
@@ -762,6 +763,77 @@ void Game::DrawStackIndicator(epro::wstringview text, const Materials::QuadVerte
 	DrawShadowText(numFont, utext, irr::core::recti(coords.X - dim.Width, coords.Y - dim.Height, coords.X + dim.Width, coords.Y + dim.Height),
 				   Resize(0, 1, 0, 1), skin::DUELFIELD_STACK_VAL, 0xff000000);
 }
+void Game::SetVerticalButtonVisible(irr::gui::IGUIButton* button, bool visible) {
+	if(!button)
+		return;
+
+	auto found = std::find_if(verticalButtonFades.begin(), verticalButtonFades.end(),
+		[button](const VerticalButtonFade& fade) { return fade.button == button; });
+	if(found == verticalButtonFades.end()) {
+		if(button->isVisible() == visible)
+			return;
+		VerticalButtonFade fade;
+		fade.button = button;
+		fade.alpha = visible ? 0.0f : 255.0f;
+		fade.targetAlpha = visible ? 255 : 0;
+		fade.hideWhenDone = !visible;
+		fade.previousOverrideColorEnabled = button->isOverrideColorEnabled();
+		fade.previousOverrideColor = button->getOverrideColor();
+		if(visible)
+			button->setVisible(true);
+		verticalButtonFades.push_back(fade);
+	} else {
+		found->targetAlpha = visible ? 255 : 0;
+		found->hideWhenDone = !visible;
+		if(visible)
+			button->setVisible(true);
+	}
+}
+
+bool Game::IsVerticalButtonAnimating(const irr::gui::IGUIElement* element) const {
+	return std::any_of(verticalButtonFades.begin(), verticalButtonFades.end(),
+		[element](const VerticalButtonFade& fade) { return fade.button == element; });
+}
+
+void Game::UpdateVerticalButtonFades() {
+	const float step = 255.0f * static_cast<float>(std::min<uint32_t>(delta_time, 50)) / 150.0f;
+	auto* imageSkin = dynamic_cast<irr::gui::CImageGUISkin*>(env->getSkin());
+
+	for(auto it = verticalButtonFades.begin(); it != verticalButtonFades.end();) {
+		auto& fade = *it;
+		if(fade.alpha < fade.targetAlpha)
+			fade.alpha = std::min<float>(fade.targetAlpha, fade.alpha + step);
+		else if(fade.alpha > fade.targetAlpha)
+			fade.alpha = std::max<float>(fade.targetAlpha, fade.alpha - step);
+
+		const auto alpha = static_cast<irr::u8>(std::lround(fade.alpha));
+		auto textColor = fade.previousOverrideColorEnabled
+			? fade.previousOverrideColor
+			: env->getSkin()->getColor(irr::gui::EGDC_BUTTON_TEXT);
+		textColor.setAlpha(static_cast<irr::u32>(textColor.getAlpha()) * alpha / 255);
+		fade.button->setOverrideColor(textColor);
+		fade.button->enableOverrideColor(true);
+		if(imageSkin)
+			imageSkin->setElementAlpha(fade.button, alpha);
+
+		if(alpha == fade.targetAlpha) {
+			if(fade.hideWhenDone)
+				fade.button->setVisible(false);
+			if(fade.previousOverrideColorEnabled) {
+				fade.button->setOverrideColor(fade.previousOverrideColor);
+				fade.button->enableOverrideColor(true);
+			} else {
+				fade.button->enableOverrideColor(false);
+			}
+			if(imageSkin)
+				imageSkin->setElementAlpha(fade.button, 255);
+			it = verticalButtonFades.erase(it);
+		} else {
+			++it;
+		}
+	}
+}
+
 void Game::DrawGUI() {
 	if(imageLoading.size()) {
 		for(auto mit = imageLoading.begin(); mit != imageLoading.end();) {
@@ -868,6 +940,7 @@ void Game::DrawGUI() {
 			fit = fadingList.erase(fthis);
 		}
 	}
+	UpdateVerticalButtonFades();
 	env->drawAll();
 }
 void Game::DrawSpec() {

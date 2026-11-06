@@ -659,14 +659,14 @@ void DuelClient::HandleSTOCPacketLanAsync(const std::vector<uint8_t>& data) {
 		if(mainGame->wANCard->isVisible())
 			mainGame->HideElement(mainGame->wANCard);
 		if(mainGame->dInfo.player_type < 7) {
-			mainGame->btnLeaveGame->setVisible(false);
-			mainGame->btnSettingsMenu->setVisible(false);
+			mainGame->SetVerticalButtonVisible(mainGame->btnLeaveGame, false);
+			mainGame->SetVerticalButtonVisible(mainGame->btnSettingsMenu, false);
 		}
-		mainGame->btnSpectatorSwap->setVisible(false);
-		mainGame->btnChainIgnore->setVisible(false);
-		mainGame->btnChainAlways->setVisible(false);
-		mainGame->btnChainWhenAvail->setVisible(false);
-		mainGame->btnCancelOrFinish->setVisible(false);
+		mainGame->SetVerticalButtonVisible(mainGame->btnSpectatorSwap, false);
+		mainGame->SetVerticalButtonVisible(mainGame->btnChainIgnore, false);
+		mainGame->SetVerticalButtonVisible(mainGame->btnChainAlways, false);
+		mainGame->SetVerticalButtonVisible(mainGame->btnChainWhenAvail, false);
+		mainGame->SetVerticalButtonVisible(mainGame->btnCancelOrFinish, false);
 		mainGame->deckBuilder.result_string = L"0";
 		mainGame->deckBuilder.results.clear();
 		mainGame->deckBuilder.hovered_code = 0;
@@ -958,6 +958,7 @@ void DuelClient::HandleSTOCPacketLanAsync(const std::vector<uint8_t>& data) {
 		mainGame->mTopMenu->setVisible(false);
 		mainGame->wCardImg->setVisible(true);
 		mainGame->wInfos->setVisible(true);
+		mainGame->UpdateVerticalButtonLayout();
 		mainGame->wPhase->setVisible(true);
 		mainGame->btnSideOK->setVisible(false);
 		mainGame->btnDP->setVisible(false);
@@ -992,9 +993,9 @@ void DuelClient::HandleSTOCPacketLanAsync(const std::vector<uint8_t>& data) {
 		if(selftype >= mainGame->dInfo.team1 + mainGame->dInfo.team2) {
 			mainGame->dInfo.player_type = 7;
 			mainGame->btnLeaveGame->setText(gDataManager->GetSysString(1350).data());
-			mainGame->btnLeaveGame->setVisible(true);
-			mainGame->btnSettingsMenu->setVisible(true);
-			mainGame->btnSpectatorSwap->setVisible(true);
+			mainGame->SetVerticalButtonVisible(mainGame->btnLeaveGame, true);
+			mainGame->SetVerticalButtonVisible(mainGame->btnSettingsMenu, true);
+			mainGame->SetVerticalButtonVisible(mainGame->btnSpectatorSwap, true);
 			mainGame->dInfo.isFirst = true;
 			mainGame->dInfo.isTeam1 = true;
 		} else {
@@ -1012,15 +1013,15 @@ void DuelClient::HandleSTOCPacketLanAsync(const std::vector<uint8_t>& data) {
 		{
 			std::unique_lock<epro::mutex> lock(mainGame->gMutex);
 			if(mainGame->dInfo.player_type < 7) {
-				mainGame->btnLeaveGame->setVisible(false);
-				mainGame->btnSettingsMenu->setVisible(false);
+				mainGame->SetVerticalButtonVisible(mainGame->btnLeaveGame, false);
+				mainGame->SetVerticalButtonVisible(mainGame->btnSettingsMenu, false);
 			}
-			mainGame->btnSpectatorSwap->setVisible(false);
-			mainGame->btnChainIgnore->setVisible(false);
-			mainGame->btnChainAlways->setVisible(false);
-			mainGame->btnChainWhenAvail->setVisible(false);
+			mainGame->SetVerticalButtonVisible(mainGame->btnSpectatorSwap, false);
+			mainGame->SetVerticalButtonVisible(mainGame->btnChainIgnore, false);
+			mainGame->SetVerticalButtonVisible(mainGame->btnChainAlways, false);
+			mainGame->SetVerticalButtonVisible(mainGame->btnChainWhenAvail, false);
 			mainGame->stMessage->setText(gDataManager->GetSysString(1500).data());
-			mainGame->btnCancelOrFinish->setVisible(false);
+			mainGame->SetVerticalButtonVisible(mainGame->btnCancelOrFinish, false);
 			if(mainGame->wQuery->isVisible())
 				mainGame->HideElement(mainGame->wQuery);
 			if(mainGame->wOptions->isVisible())
@@ -2938,20 +2939,20 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		mainGame->dInfo.turn++;
 		if(!mainGame->dInfo.isReplay && !mainGame->dInfo.isSingleMode && mainGame->dInfo.player_type < (mainGame->dInfo.team1 + mainGame->dInfo.team2)) {
 			mainGame->btnLeaveGame->setText(gDataManager->GetSysString(1351).data());
-			mainGame->btnLeaveGame->setVisible(true);
-			mainGame->btnSettingsMenu->setVisible(true);
+			mainGame->SetVerticalButtonVisible(mainGame->btnLeaveGame, true);
+			mainGame->SetVerticalButtonVisible(mainGame->btnSettingsMenu, true);
 		}
 		if(!mainGame->dInfo.isReplay && mainGame->dInfo.player_type < 7) {
 			if(!mainGame->gSettings.chkHideChainButtons->isChecked()) {
-				mainGame->btnChainIgnore->setVisible(true);
-				mainGame->btnChainAlways->setVisible(true);
-				mainGame->btnChainWhenAvail->setVisible(true);
+				mainGame->SetVerticalButtonVisible(mainGame->btnChainIgnore, true);
+				mainGame->SetVerticalButtonVisible(mainGame->btnChainAlways, true);
+				mainGame->SetVerticalButtonVisible(mainGame->btnChainWhenAvail, true);
 				//mainGame->dField.UpdateChainButtons();
 			} else {
-				mainGame->btnChainIgnore->setVisible(false);
-				mainGame->btnChainAlways->setVisible(false);
-				mainGame->btnChainWhenAvail->setVisible(false);
-				mainGame->btnCancelOrFinish->setVisible(false);
+				mainGame->SetVerticalButtonVisible(mainGame->btnChainIgnore, false);
+				mainGame->SetVerticalButtonVisible(mainGame->btnChainAlways, false);
+				mainGame->SetVerticalButtonVisible(mainGame->btnChainWhenAvail, false);
+				mainGame->SetVerticalButtonVisible(mainGame->btnCancelOrFinish, false);
 			}
 		}
 		if(!mainGame->dInfo.isCatchingUp) {
@@ -4647,13 +4648,13 @@ void DuelClient::ReplayPrompt(bool local_stream) {
 	std::unique_lock<epro::mutex> lock(mainGame->gMutex);
 	mainGame->wPhase->setVisible(false);
 	if(mainGame->dInfo.player_type < 7) {
-		mainGame->btnLeaveGame->setVisible(false);
-		mainGame->btnSettingsMenu->setVisible(false);
+		mainGame->SetVerticalButtonVisible(mainGame->btnLeaveGame, false);
+		mainGame->SetVerticalButtonVisible(mainGame->btnSettingsMenu, false);
 	}
-	mainGame->btnChainIgnore->setVisible(false);
-	mainGame->btnChainAlways->setVisible(false);
-	mainGame->btnChainWhenAvail->setVisible(false);
-	mainGame->btnCancelOrFinish->setVisible(false);
+	mainGame->SetVerticalButtonVisible(mainGame->btnChainIgnore, false);
+	mainGame->SetVerticalButtonVisible(mainGame->btnChainAlways, false);
+	mainGame->SetVerticalButtonVisible(mainGame->btnChainWhenAvail, false);
+	mainGame->SetVerticalButtonVisible(mainGame->btnCancelOrFinish, false);
 	auto now = std::time(nullptr);
 	mainGame->PopupSaveWindow(gDataManager->GetSysString(1340), epro::format(L"{:%Y-%m-%d %H-%M-%S}", epro::localtime(now)), gDataManager->GetSysString(1342));
 	mainGame->replaySignal.Wait(lock);

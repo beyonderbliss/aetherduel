@@ -144,6 +144,15 @@ struct FadingUnit {
 	bool wasEnabled;
 };
 
+struct VerticalButtonFade {
+	irr::gui::IGUIButton* button = nullptr;
+	float alpha = 255.0f;
+	irr::u8 targetAlpha = 255;
+	bool hideWhenDone = false;
+	bool previousOverrideColorEnabled = false;
+	irr::video::SColor previousOverrideColor{ 255, 255, 255, 255 };
+};
+
 struct info_panel_elements {
 	//card image
 	irr::gui::IGUIStaticText* wCardImg;
@@ -555,6 +564,10 @@ public:
 	void ShowElement(irr::gui::IGUIElement* element, int autoframe = 0);
 	void HideElement(irr::gui::IGUIElement* element, bool set_action = false);
 	void PopupElement(irr::gui::IGUIElement* element, int hideframe = 0);
+	void SetVerticalButtonVisible(irr::gui::IGUIButton* button, bool visible);
+	bool IsVerticalButtonAnimating(const irr::gui::IGUIElement* element) const;
+	void UpdateVerticalButtonFades();
+	void UpdateVerticalButtonLayout();
 	void WaitFrameSignal(int frame, std::unique_lock<epro::mutex>& _lck);
 	void DrawThumb(const CardDataC* cp, irr::core::vector2di pos, LFList* lflist, bool drag = false, const irr::core::recti* cliprect = nullptr, bool loadimage = true, int thumbWidth = CARD_THUMB_WIDTH, int thumbHeight = CARD_THUMB_HEIGHT);
 	void DrawDeckBd();
@@ -668,6 +681,7 @@ public:
 	std::wstring corename;
 	bool restart = false;
 	std::list<FadingUnit> fadingList;
+	std::list<VerticalButtonFade> verticalButtonFades;
 	std::vector<int> logParam;
 	std::wstring chatMsg[8];
 	std::map<std::string, RepoGui> repoInfoGui;
