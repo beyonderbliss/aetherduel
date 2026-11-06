@@ -8,14 +8,24 @@
     "gravity": "BOTTOM"
   },
   "panel": {
-    "padding": { "left": 8, "top": 8, "right": 8, "bottom": 10 },
+    "padding": {
+      "left": 8,
+      "top": 8,
+      "right": 8,
+      "bottom": 10
+    },
     "radius": 12,
     "color": "#181b22",
     "stroke": "#4b525e"
   },
   "preview": {
     "height": 38,
-    "margin": { "left": 2, "top": 2, "right": 2, "bottom": 7 },
+    "margin": {
+      "left": 2,
+      "top": 2,
+      "right": 2,
+      "bottom": 7
+    },
     "paddingX": 12,
     "radius": 7,
     "color": "#262b34"
@@ -35,16 +45,125 @@
   },
   "rows": {
     "letters": [
-      { "left": ["q", "w", "e", "r", "t"], "right": ["y", "u", "i", "o", "p"] },
-      { "left": ["a", "s", "d", "f", "g"], "right": ["h", "j", "k", "l"] },
-      { "left": ["SHIFT", "z", "x", "c", "v"], "right": ["b", "n", "m", "⌫"] },
-      { "left": ["?123", ",", "SPACE"], "right": [".", "CANCEL", "DONE"] }
+      {
+        "left": [
+          "q",
+          "w",
+          "e",
+          "r",
+          "t"
+        ],
+        "right": [
+          "y",
+          "u",
+          "i",
+          "o",
+          "p"
+        ]
+      },
+      {
+        "left": [
+          "a",
+          "s",
+          "d",
+          "f",
+          "g"
+        ],
+        "right": [
+          "h",
+          "j",
+          "k",
+          "l"
+        ]
+      },
+      {
+        "left": [
+          "SHIFT",
+          "z",
+          "x",
+          "c",
+          "v"
+        ],
+        "right": [
+          "b",
+          "n",
+          "m",
+          "⌫"
+        ]
+      },
+      {
+        "left": [
+          "?123",
+          ",",
+          "SPACE"
+        ],
+        "right": [
+          ".",
+          "CANCEL",
+          "DONE"
+        ]
+      }
     ],
     "symbols": [
-      { "left": ["1", "2", "3", "4", "5"], "right": ["6", "7", "8", "9", "0"] },
-      { "left": ["@", "#", "$", "%", "&"], "right": ["-", "+", "(", ")", "/"] },
-      { "left": ["=", "*", "'", "\"":", ":"], "right": [";", "!", "?", "⌫"] },
-      { "left": ["?123", ",", "SPACE"], "right": [".", "CANCEL", "DONE"] }
+      {
+        "left": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "right": [
+          "6",
+          "7",
+          "8",
+          "9",
+          "0"
+        ]
+      },
+      {
+        "left": [
+          "@",
+          "#",
+          "$",
+          "%",
+          "&"
+        ],
+        "right": [
+          "-",
+          "+",
+          "(",
+          ")",
+          "/"
+        ]
+      },
+      {
+        "left": [
+          "=",
+          "*",
+          "'",
+          "\"",
+          ":"
+        ],
+        "right": [
+          ";",
+          "!",
+          "?",
+          "⌫"
+        ]
+      },
+      {
+        "left": [
+          "?123",
+          ",",
+          "SPACE"
+        ],
+        "right": [
+          ".",
+          "CANCEL",
+          "DONE"
+        ]
+      }
     ]
   }
 }
