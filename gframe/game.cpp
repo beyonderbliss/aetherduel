@@ -3786,21 +3786,21 @@ void Game::UpdateVerticalButtonLayout() {
 	const auto panelRect = wInfos->getRelativePosition();
 	const auto marginRect = Resize(211, 0, 301, kUiEdgeMargin);
 	const irr::s32 top = marginRect.LowerRightCorner.Y;
-	const irr::s32 bottom = panelRect.UpperLeftCorner.Y - marginRect.getHeight();
+	const irr::s32 panelGap = Scale(kUiEdgeMargin);
+	const irr::s32 bottom = panelRect.UpperLeftCorner.Y - panelGap;
 	const irr::s32 available = bottom - top;
 	if(available <= 0)
 		return;
 
 	const bool deckEditorLayout = is_building;
-	const irr::s32 slotCount = deckEditorLayout ? 6 : 8;
-	constexpr irr::s32 duelModeSlotCount = 8;
+	constexpr irr::s32 slotCount = 8;
 	const irr::s32 maxButtonHeight = Resize(211, 0, 301, 35).getHeight();
 	const irr::s32 minGap = Resize(211, 0, 301, 3).getHeight();
 
-	// Duel Mode defines the shared button size. Deck Editor uses fewer slots,
-	// but must never enlarge its buttons when switching modes.
+	// Both modes share the same eight-slot grid and button dimensions.
+	// Unused Deck Editor slots remain empty instead of redistributing buttons.
 	const irr::s32 buttonHeight = std::min(maxButtonHeight,
-		(available - (duelModeSlotCount - 1) * minGap) / duelModeSlotCount);
+		(available - (slotCount - 1) * minGap) / slotCount);
 	if(buttonHeight <= 0)
 		return;
 
@@ -3826,8 +3826,8 @@ void Game::UpdateVerticalButtonLayout() {
 		setSlot(btnHandTest, 1);
 		setSlot(btnHandTestSettings, 2);
 		setSlot(btnYdkeManage, 3);
-		setSlot(btnSettingsMenu, 4);
-		setSlot(btnPanelCycle, 5, true);
+		setSlot(btnSettingsMenu, 5);
+		setSlot(btnPanelCycle, 7, true);
 	} else {
 		setSlot(btnLeaveGame, 0);
 		setSlot(btnRestartSingle, 1);
