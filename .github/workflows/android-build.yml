@@ -286,10 +286,10 @@ jobs:
 
           # Apply the shared PrimaNyx treatment to every native combo dropdown.
           choice_pattern = (
-              r'new AlertDialog\\.Builder\\(EpNativeActivity\\.this\\)\\s*'
-              r'(?://\\.setCancelable\\(false\\)\\s*)?'
-              r'\\.setItems\\(parameters,\\s*\\(dialog,\\s*id\\)\\s*->\\s*putComboBoxResult\\(id\\)\\)\\s*'
-              r'\\.show\\(\\);'
+              r'new AlertDialog\.Builder\(EpNativeActivity\.this\)\s*'
+              r'(?://\.setCancelable\(false\)\s*)?'
+              r'\.setItems\(parameters,\s*\(dialog,\s*id\)\s*->\s*putComboBoxResult\(id\)\)\s*'
+              r'\.show\(\);'
           )
           choice_replacement = """if (parameters != null && parameters.length > 0) {
               final float density = getResources().getDisplayMetrics().density;
