@@ -59,10 +59,50 @@ u8 CImageGUISkin::getElementAlpha(const IGUIElement* element) const {
 }
 
 void CImageGUISkin::drawFallbackButtonPane(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip, u8 state) {
+	const auto drawDisabledPane = [&]() {
+		if(!VideoDriver)
+			return;
+
+		core::rect<s32> disabledRect = rect;
+		auto skintype = FallbackSkin->getType();
+
+		if(skintype == EGST_BURNING_SKIN) {
+			disabledRect.UpperLeftCorner.X -= 1;
+			disabledRect.UpperLeftCorner.Y -= 1;
+			disabledRect.LowerRightCorner.X += 1;
+			disabledRect.LowerRightCorner.Y += 1;
+			draw3DSunkenPane(element,
+				getColor(EGDC_WINDOW).getInterpolated(0xFFFFFFFF, 0.9f),
+				false, true, disabledRect, clip);
+			return;
+		}
+
+		VideoDriver->draw2DRectangle(getColor(EGDC_3D_DARK_SHADOW), disabledRect, clip);
+
+		disabledRect.LowerRightCorner.X -= 1;
+		disabledRect.LowerRightCorner.Y -= 1;
+		VideoDriver->draw2DRectangle(getColor(EGDC_3D_SHADOW), disabledRect, clip);
+
+		disabledRect.UpperLeftCorner.X += 1;
+		disabledRect.UpperLeftCorner.Y += 1;
+		VideoDriver->draw2DRectangle(getColor(EGDC_3D_SHADOW), disabledRect, clip);
+
+		disabledRect.LowerRightCorner.X -= 1;
+		disabledRect.LowerRightCorner.Y -= 1;
+
+		if(!((skintype == EGST_WINDOWS_METALLIC) || (skintype == EGST_BURNING_SKIN))) {
+			VideoDriver->draw2DRectangle(getColor(EGDC_3D_FACE), disabledRect, clip);
+		} else {
+			const video::SColor c1 = getColor(EGDC_3D_FACE);
+			const video::SColor c2 = c1.getInterpolated(getColor(EGDC_3D_DARK_SHADOW), 0.4f);
+			VideoDriver->draw2DRectangle(disabledRect, c1, c1, c2, c2, clip);
+		}
+	};
+
 	const u8 alpha = getElementAlpha(element);
 	if(alpha == 255) {
 		if(state == 1)
-			FallbackSkin->draw3DButtonPaneDisabled(element, rect, clip);
+			drawDisabledPane();
 		else if(state == 2)
 			FallbackSkin->draw3DButtonPanePressed(element, rect, clip);
 		else
@@ -80,7 +120,7 @@ void CImageGUISkin::drawFallbackButtonPane(IGUIElement* element, const core::rec
 	}
 
 	if(state == 1)
-		FallbackSkin->draw3DButtonPaneDisabled(element, rect, clip);
+		drawDisabledPane();
 	else if(state == 2)
 		FallbackSkin->draw3DButtonPanePressed(element, rect, clip);
 	else
