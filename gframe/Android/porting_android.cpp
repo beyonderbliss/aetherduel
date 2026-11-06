@@ -357,8 +357,8 @@ void setDeckNameInputMode(bool active) {
 	jnienv->CallVoidMethod(activity, method, active ? JNI_TRUE : JNI_FALSE);
 }
 
-void showInputDialog(epro::path_stringview current) {
-	jmethodID showdialog = jnienv->GetMethodID(nativeActivity, "showDialog", JPARAMS(JSTRING)JVOID);
+void showInputDialog(epro::path_stringview current, bool deckNameInput) {
+	jmethodID showdialog = jnienv->GetMethodID(nativeActivity, "showDialog", JPARAMS(JSTRING JBOOL)JVOID);
 
 	if(showdialog == 0) {
 		assert("porting::showInputDialog unable to find java show dialog method" == 0);
@@ -366,7 +366,8 @@ void showInputDialog(epro::path_stringview current) {
 
 	jstring jcurrent = NewJavaString(jnienv, current);
 
-	jnienv->CallVoidMethod(app_global->activity->clazz, showdialog, jcurrent);
+	jnienv->CallVoidMethod(app_global->activity->clazz, showdialog, jcurrent,
+		deckNameInput ? JNI_TRUE : JNI_FALSE);
 
 	jnienv->DeleteLocalRef(jcurrent);
 }
@@ -401,11 +402,9 @@ bool transformEvent(const irr::SEvent& event, bool& stopPropagation) {
 							ygo::mainGame->env->setFocus(hovered);
 						const bool deckNameInput = hovered == ygo::mainGame->ebDeckname &&
 							ygo::mainGame->deckBuilder.deck_name_input_mode != 0;
-						if(ygo::gGameConfig->native_keyboard || deckNameInput) {
-							porting::displayKeyboard(true);
-						} else {
-							porting::showInputDialog(BufferIO::EncodeUTF8(((irr::gui::IGUIEditBox*)hovered)->getText()));
-						}
+						porting::showInputDialog(
+							BufferIO::EncodeUTF8(((irr::gui::IGUIEditBox*)hovered)->getText()),
+							deckNameInput);
 						stopPropagation = retval;
 						return retval;
 					}
