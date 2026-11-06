@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+
+<Skin>
+    <Properties>
+        <Name data="PrimaNyx"/>
+        <Author data="PrimaNyx"/>
+        <Version data="1.0"/>
+        <Desc data="PrimaNyx graphite identity skin"/>
+        <Fallback skin="EGST_WINDOWS_METALLIC"/>
+    </Properties>
+
+    <Global guialpha="255">
+        <EGDC_3D_DARK_SHADOW a="255" r="24" g="27" b="34"/>
+        <EGDC_3D_SHADOW a="255" r="75" g="82" b="94"/>
+        <EGDC_3D_FACE a="255" r="38" g="43" b="52"/>
+        <EGDC_3D_HIGH_LIGHT a="255" r="54" g="59" b="69"/>
+        <EGDC_3D_LIGHT a="255" r="75" g="82" b="94"/>
+
+        <EGDC_ACTIVE_BORDER a="255" r="75" g="82" b="94"/>
+        <EGDC_ACTIVE_CAPTION a="255" r="255" g="255" b="255"/>
+        <EGDC_APP_WORKSPACE a="255" r="24" g="27" b="34"/>
+
+        <EGDC_BUTTON_TEXT a="255" r="255" g="255" b="255"/>
+        <EGDC_GRAY_TEXT a="255" r="148" g="153" b="163"/>
+
+        <EGDC_HIGH_LIGHT a="255" r="54" g="59" b="69"/>
+        <EGDC_HIGH_LIGHT_TEXT a="255" r="255" g="255" b="255"/>
+
+        <EGDC_INACTIVE_BORDER a="255" r="75" g="82" b="94"/>
+        <EGDC_INACTIVE_CAPTION a="255" r="148" g="153" b="163"/>
+
+        <EGDC_TOOLTIP a="255" r="255" g="255" b="255"/>
+        <EGDC_TOOLTIP_BACKGROUND a="255" r="38" g="43" b="52"/>
+
+        <EGDC_SCROLLBAR a="255" r="75" g="82" b="94"/>
+        <EGDC_WINDOW a="255" r="24" g="27" b="34"/>
+        <EGDC_WINDOW_SYMBOL a="255" r="255" g="255" b="255"/>
+
+        <EGDC_ICON a="255" r="255" g="255" b="255"/>
+        <EGDC_ICON_HIGH_LIGHT a="255" r="54" g="59" b="69"/>
+        <EGDC_GRAY_WINDOW_SYMBOL a="255" r="148" g="153" b="163"/>
+
+        <EGDC_EDITABLE a="255" r="38" g="43" b="52"/>
+        <EGDC_GRAY_EDITABLE a="255" r="24" g="27" b="34"/>
+        <EGDC_FOCUSED_EDITABLE a="255" r="54" g="59" b="69"/>
+
+        <CheckBoxColor a="255" r="255" g="255" b="255"/>
+    </Global>
+</Skin>
