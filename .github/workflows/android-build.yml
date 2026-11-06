@@ -268,21 +268,78 @@ jobs:
                   && "Spell".equalsIgnoreCase(parameters[2])
                   && "Trap".equalsIgnoreCase(parameters[3])
                   && "Skill".equalsIgnoreCase(parameters[4])) {
-              android.widget.ArrayAdapter<String> categoryAdapter =
-                      new android.widget.ArrayAdapter<String>(EpNativeActivity.this,
-                              android.R.layout.simple_list_item_1, parameters) {
-                          @Override
-                          public android.view.View getView(int position, android.view.View convertView,
-                                  android.view.ViewGroup parent) {
-                              android.widget.TextView item = (android.widget.TextView)
-                                      super.getView(position, convertView, parent);
-                              item.setTextColor(android.graphics.Color.parseColor("#E8D58A"));
-                              return item;
-                          }
-                      };
-              new AlertDialog.Builder(EpNativeActivity.this)
-                      .setAdapter(categoryAdapter, (dialog, id) -> putComboBoxResult(id))
-                      .show();
+              final float density = getResources().getDisplayMetrics().density;
+              final int panelWidth = Math.min(
+                      Math.round(getResources().getDisplayMetrics().widthPixels * 0.55f),
+                      Math.round(390 * density));
+
+              android.widget.FrameLayout dialogRoot =
+                      new android.widget.FrameLayout(EpNativeActivity.this);
+              android.widget.LinearLayout categoryPanel =
+                      new android.widget.LinearLayout(EpNativeActivity.this);
+              categoryPanel.setOrientation(android.widget.LinearLayout.VERTICAL);
+              categoryPanel.setPadding(Math.round(9 * density), Math.round(9 * density),
+                      Math.round(9 * density), Math.round(9 * density));
+
+              android.graphics.drawable.GradientDrawable panelBackground =
+                      new android.graphics.drawable.GradientDrawable();
+              panelBackground.setColor(android.graphics.Color.parseColor("#232933"));
+              panelBackground.setCornerRadius(14 * density);
+              panelBackground.setStroke(Math.max(1, Math.round(density)),
+                      android.graphics.Color.parseColor("#525B6A"));
+              categoryPanel.setBackground(panelBackground);
+              categoryPanel.setElevation(12 * density);
+
+              final AlertDialog categoryDialog =
+                      new AlertDialog.Builder(EpNativeActivity.this)
+                              .setView(dialogRoot)
+                              .create();
+
+              for (int i = 0; i < parameters.length; i++) {
+                  final int choiceIndex = i;
+                  android.widget.TextView item =
+                          new android.widget.TextView(EpNativeActivity.this);
+                  item.setText(parameters[i]);
+                  item.setTextColor(android.graphics.Color.parseColor("#E8D58A"));
+                  item.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15);
+                  item.setGravity(android.view.Gravity.CENTER);
+
+                  android.graphics.drawable.GradientDrawable itemBackground =
+                          new android.graphics.drawable.GradientDrawable();
+                  itemBackground.setColor(android.graphics.Color.parseColor("#262B34"));
+                  itemBackground.setCornerRadius(9 * density);
+                  itemBackground.setStroke(Math.max(1, Math.round(density)),
+                          android.graphics.Color.parseColor("#525B6A"));
+                  item.setBackground(itemBackground);
+
+                  android.widget.LinearLayout.LayoutParams itemParams =
+                          new android.widget.LinearLayout.LayoutParams(
+                                  android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                                  Math.round(42 * density));
+                  if (i < parameters.length - 1)
+                      itemParams.bottomMargin = Math.round(8 * density);
+                  categoryPanel.addView(item, itemParams);
+                  item.setOnClickListener(view -> {
+                      putComboBoxResult(choiceIndex);
+                      categoryDialog.dismiss();
+                  });
+              }
+
+              android.widget.FrameLayout.LayoutParams panelParams =
+                      new android.widget.FrameLayout.LayoutParams(panelWidth,
+                              android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                              android.view.Gravity.CENTER);
+              dialogRoot.addView(categoryPanel, panelParams);
+              categoryDialog.show();
+              android.view.Window categoryWindow = categoryDialog.getWindow();
+              if (categoryWindow != null) {
+                  categoryWindow.setBackgroundDrawable(
+                          new android.graphics.drawable.ColorDrawable(
+                                  android.graphics.Color.TRANSPARENT));
+                  categoryWindow.setLayout(android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                          android.view.WindowManager.LayoutParams.WRAP_CONTENT);
+                  categoryWindow.setGravity(android.view.Gravity.CENTER);
+              }
           } else {
               new AlertDialog.Builder(EpNativeActivity.this)
                       .setItems(parameters, (dialog, id) -> putComboBoxResult(id))
