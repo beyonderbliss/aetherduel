@@ -173,7 +173,8 @@
     "rows": 4,
     "snap": 1,
     "rowGap": 2,
-    "keyMargin": 2
+    "keyMargin": 2,
+    "centerGap": 8
   },
   "buttons": {
     "letters": {
