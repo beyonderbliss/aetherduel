@@ -156,7 +156,7 @@ jobs:
           assert "putBackKeyEvent" not in text, "Back callback already exists"
           text = text.replace(anchor, anchor + declaration)
           input_mode_java = """
-\tprivate int deckNamePreviousSystemUiVisibility = -1;
+          \tprivate int deckNamePreviousSystemUiVisibility = -1;
           private boolean deckNameInputModeActive = false;
 
           \tpublic void setDeckNameInputMode(boolean active) {
@@ -235,14 +235,14 @@ jobs:
           )
           text = text.replace(oncreate_anchor, oncreate_back)
           old_show_dialog = """
-\tpublic void showDialog(String current) {
+          \tpublic void showDialog(String current) {
           \t\tvar intent = new Intent();
           \t\tintent.putExtra("current", current);
           \t\tintent.setAction("INPUT_TEXT");
           \t\tLocalBroadcastManager.getInstance(this).sendBroadcast(intent);
           \t}"""
           new_show_dialog = """
-\tpublic void showDialog(String current, boolean deckNameInput) {
+          \tpublic void showDialog(String current, boolean deckNameInput) {
           \t\tvar intent = new Intent();
           \t\tintent.putExtra("current", current);
           \t\tintent.putExtra("deckNameInput", deckNameInput);
