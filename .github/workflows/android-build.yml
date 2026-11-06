@@ -304,7 +304,7 @@ jobs:
                   preview.setTextSize(16);
                   preview.setSingleLine(true);
                   preview.setHorizontallyScrolling(true);
-                  preview.setGravity(Gravity.CENTER_VERTICAL);
+                  preview.setGravity(Gravity.CENTER);
                   preview.setPadding(dp(12), 0, dp(12), 0);
                   preview.setBackground(makeKeyBackground(false));
                   LinearLayout.LayoutParams previewParams =
