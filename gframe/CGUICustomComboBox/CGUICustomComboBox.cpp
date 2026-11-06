@@ -419,10 +419,11 @@ void CGUICustomComboBox::draw() {
 		LastFocus = currentFocus;
 	}
 
-	// set colors each time as skin-colors can be changed
-	SelectedText->setBackgroundColor(skin->getColor(EGDC_HIGH_LIGHT));
+	// Keep the selected-value field visibly distinct from the surrounding panel.
+	// Use the editable surface at rest and the focused editable surface when active.
 	if(isEnabled()) {
-		SelectedText->setDrawBackground(HasFocus);
+		SelectedText->setBackgroundColor(skin->getColor(HasFocus ? EGDC_FOCUSED_EDITABLE : EGDC_EDITABLE));
+		SelectedText->setDrawBackground(true);
 		SelectedText->setOverrideColor(skin->getColor(HasFocus ? EGDC_HIGH_LIGHT_TEXT : EGDC_BUTTON_TEXT));
 	} else {
 		SelectedText->setDrawBackground(false);
