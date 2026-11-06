@@ -119,19 +119,21 @@ private:
 			return;
 		}
 
-		VideoDriver->draw2DRectangle(color,
-			irr::core::rect<irr::s32>(rect.UpperLeftCorner.X + radius, rect.UpperLeftCorner.Y,
-				rect.LowerRightCorner.X - radius, rect.LowerRightCorner.Y), &clip);
+		const irr::s32 width = rect.getWidth();
+		const irr::s32 height = rect.getHeight();
+		for(irr::s32 row = 0; row < radius; ++row) {
+			const irr::f64 dy = radius - (row + 0.5);
+			const irr::s32 inset = static_cast<irr::s32>(std::ceil(radius - std::sqrt(radius * radius - dy * dy)));
+			VideoDriver->draw2DRectangle(color,
+				irr::core::rect<irr::s32>(rect.UpperLeftCorner.X + inset, rect.UpperLeftCorner.Y + row,
+					rect.UpperLeftCorner.X + width - inset, rect.UpperLeftCorner.Y + row + 1), &clip);
+			VideoDriver->draw2DRectangle(color,
+				irr::core::rect<irr::s32>(rect.UpperLeftCorner.X + inset, rect.LowerRightCorner.Y - row - 1,
+					rect.UpperLeftCorner.X + width - inset, rect.LowerRightCorner.Y - row), &clip);
+		}
 		VideoDriver->draw2DRectangle(color,
 			irr::core::rect<irr::s32>(rect.UpperLeftCorner.X, rect.UpperLeftCorner.Y + radius,
 				rect.LowerRightCorner.X, rect.LowerRightCorner.Y - radius), &clip);
-
-		const irr::s32 right = rect.LowerRightCorner.X - radius;
-		const irr::s32 bottom = rect.LowerRightCorner.Y - radius;
-		VideoDriver->draw2DPolygon({ rect.UpperLeftCorner.X + radius, rect.UpperLeftCorner.Y + radius }, (irr::f32)radius, color, 24);
-		VideoDriver->draw2DPolygon({ right, rect.UpperLeftCorner.Y + radius }, (irr::f32)radius, color, 24);
-		VideoDriver->draw2DPolygon({ rect.UpperLeftCorner.X + radius, bottom }, (irr::f32)radius, color, 24);
-		VideoDriver->draw2DPolygon({ right, bottom }, (irr::f32)radius, color, 24);
 	}
 
 	irr::gui::IGUIEnvironment* EnvironmentRef;
