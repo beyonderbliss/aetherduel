@@ -258,9 +258,9 @@ jobs:
           text = text.replace(old_text_entry_receiver, new_text_entry_receiver)
           # Apply PrimaNyx gold only to the five card-category choices.
           choice_pattern = (
-              r'new AlertDialog\\.Builder\\(EpNativeActivity\\.this\\)\\s*'
-              r'\\.setItems\\(parameters,\\s*\\(dialog,\\s*id\\)\\s*->\\s*putComboBoxResult\\(id\\)\\)\\s*'
-              r'\\.show\\(\\);'
+              r'new AlertDialog\.Builder\(EpNativeActivity\.this\)\s*'
+              r'\.setItems\(parameters,\s*\(dialog,\s*id\)\s*->\s*putComboBoxResult\(id\)\)\s*'
+              r'\.show\(\);'
           )
           choice_replacement = """if (parameters != null && parameters.length == 5
                   && "All".equalsIgnoreCase(parameters[0])
