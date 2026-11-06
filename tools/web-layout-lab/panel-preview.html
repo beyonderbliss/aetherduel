@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#11151C">
+<title>PrimaNyx · Panel Radius Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#11151C;--panel:#232933;--surface:#262B34;--active:#363B45;--border:#525B6A;--muted:#A3ADBC;--gold:#E8D58A;--white:#E7EAF0;--main-r:12px;--deck-r:12px;--filter-r:12px;--sort-r:8px;--category-r:12px;--button-r:6px}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--white);font:14px/1.4 system-ui,-apple-system,Segoe UI,sans-serif}
+body{padding:12px}
+header{max-width:1100px;margin:0 auto 12px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-size:17px;margin:0;color:var(--gold)}header p{font-size:11px;color:var(--muted);margin:3px 0 0}
+a,.nav button,button,select{border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--gold);padding:7px 10px;font:inherit;font-size:11px;text-decoration:none}
+main{max-width:1100px;margin:auto;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:12px;align-items:start}
+.stage-wrap{min-width:0}
+.nav{display:flex;gap:7px;margin-bottom:8px}.nav button{flex:1}.nav button.active,.preset button.active{background:var(--active);border-color:var(--gold)}
+.stage{width:100%;aspect-ratio:16/10;min-height:300px;max-height:calc(100svh - 118px);position:relative;overflow:hidden;border:1px solid #3B4350;border-radius:12px;background:radial-gradient(ellipse at 50% 45%,#252D39 0,#171D27 68%,#11151C 100%);container-type:inline-size}
+.app{position:absolute;inset:3.5%;border:1px solid #343D4B;border-radius:5px;background:linear-gradient(145deg,#1A202A,#141922);overflow:hidden}
+.topbar{height:7%;min-height:18px;background:#202733;border-bottom:1px solid #3C4655;display:flex;align-items:center;padding:0 1.5%;font-size:clamp(7px,1.1cqw,11px);color:#B9C1CD;justify-content:space-between}
+.brand{color:var(--gold);font-weight:700;letter-spacing:.08em}
+.panel{background:var(--panel);border:1px solid var(--border);box-shadow:0 5px 16px #0005}
+.main-menu{position:absolute;left:50%;top:51%;transform:translate(-50%,-50%);width:31%;min-width:150px;max-width:300px;padding:1.1%;border-radius:var(--main-r);text-align:center}
+.menu-title{font-size:clamp(8px,1.5cqw,15px);font-weight:700;letter-spacing:.06em;color:var(--gold);margin:1% 0 5%}
+.menu-btn{height:clamp(19px,4.1cqw,34px);margin:2.2% 1%;border:1px solid #596476;border-radius:var(--button-r);background:linear-gradient(#3A424F,#303743);display:flex;align-items:center;justify-content:center;color:#E6E9EF;font-size:clamp(7px,1.15cqw,12px)}
+.menu-btn.primary{color:var(--gold);border-color:#8C805A}
+.version{position:absolute;bottom:2%;left:2%;font-size:clamp(6px,.8cqw,9px);color:#778395}
+.deck-layout{position:absolute;inset:10% 2% 3%;display:grid;grid-template-columns:28% 1fr 27%;grid-template-rows:22% 1fr;gap:1.5%}
+.deck-top{grid-column:1/4;display:grid;grid-template-columns:30% 1fr 23%;gap:1.2%}
+.deck-controls{border-radius:var(--deck-r);padding:2%;display:grid;grid-template-columns:1fr 1fr;gap:4%;align-content:center}
+.field{height:clamp(15px,3cqw,26px);border:1px solid #626C7D;border-radius:5px;background:#303743;color:var(--gold);font-size:clamp(6px,.95cqw,10px);display:flex;align-items:center;justify-content:center}
+.deck-actions{border-radius:var(--deck-r);padding:2%;display:flex;align-items:center;justify-content:space-around;gap:2%}
+.action{padding:2% 3%;background:#363E4B;border:1px solid #626C7D;border-radius:var(--button-r);font-size:clamp(6px,.9cqw,10px);color:var(--gold)}
+.deck-name{border-radius:var(--deck-r);padding:3%;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:clamp(7px,1cqw,11px)}
+.card-area{border:1px solid #3A4554;border-radius:5px;background:repeating-linear-gradient(0deg,#1A222D 0 20px,#1D2632 20px 21px);display:grid;grid-template-columns:repeat(3,1fr);gap:3%;padding:3%;align-content:start}
+.card{aspect-ratio:5/7;border:1px solid #697384;border-radius:3px;background:linear-gradient(145deg,#354353,#202A37);position:relative}
+.card:after{content:"";position:absolute;inset:12%;border:1px solid #7E8998;border-radius:2px;opacity:.35}
+.deck-side{display:flex;flex-direction:column;gap:2%;min-height:0}
+.sort-panel{border-radius:var(--sort-r);padding:3%;height:15%;display:flex;align-items:center;justify-content:space-between;color:var(--gold);font-size:clamp(6px,.9cqw,10px)}
+.filter-panel{border-radius:var(--filter-r);padding:4%;flex:1;min-height:0;display:flex;flex-direction:column;gap:3%;overflow:hidden}
+.panel-heading{font-size:clamp(7px,1cqw,11px);font-weight:700;color:var(--gold);border-bottom:1px solid #515C6D;padding-bottom:2%}
+.filter-row{display:flex;align-items:center;justify-content:space-between;gap:3%;font-size:clamp(6px,.85cqw,9px);color:#C6CDD8}
+.filter-value{background:#303743;border:1px solid #596476;border-radius:5px;padding:2% 4%;color:var(--gold);min-width:42%;text-align:center}
+.category-panel{border-radius:var(--category-r);padding:4%;height:33%;display:grid;grid-template-columns:1fr 1fr;gap:4%;align-content:center}
+.category{border:1px solid #5A6576;border-radius:5px;background:#303743;color:#E4E8EF;text-align:center;padding:4% 1%;font-size:clamp(6px,.8cqw,9px)}
+.category.active{border-color:var(--gold);color:var(--gold);background:#363B45}
+.deck-footer{position:absolute;bottom:1%;left:30%;right:28%;height:6%;border:1px solid #465161;border-radius:5px;background:#222A35;color:#B7C0CE;font-size:clamp(6px,.8cqw,9px);display:flex;align-items:center;justify-content:center}
+.controls{background:var(--panel);border:1px solid #3B4350;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:12px}
+.controls h2{font-size:11px;letter-spacing:.08em;color:var(--gold);margin:0}
+.group{display:flex;flex-direction:column;gap:7px}.group-title{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.preset{display:flex;gap:6px}.preset button{flex:1}
+.control{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;font-size:10px;color:#CBD2DE}
+output{color:var(--gold);font-variant-numeric:tabular-nums}input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--gold);margin:0}
+.note{font-size:10px;color:var(--muted);line-height:1.5}
+@media(max-width:720px){body{padding:9px}main{grid-template-columns:1fr}.stage{max-height:none}.controls{display:grid;grid-template-columns:1fr 1fr}.controls h2,.note{grid-column:1/-1}.group{min-width:0}}
+@media(max-width:430px){.controls{grid-template-columns:1fr 1fr}.stage{min-height:210px}.nav button{padding:6px 4px;font-size:10px}}
+@media(orientation:landscape) and (max-height:540px){body{padding:6px}header{margin-bottom:6px}main{grid-template-columns:minmax(0,1fr) 220px;gap:8px}.stage{max-height:calc(100svh - 66px);min-height:220px}.controls{padding:8px;gap:8px}.group{gap:4px}}
+</style>
+</head>
+<body>
+<header><div><h1>PrimaNyx · Panel Radius Lab</h1><p>Native-inspired layout preview · 1024 × 640 reference · visual experiment only</p></div><a href="./index.html">← Keyboard Lab</a></header>
+<main>
+<section class="stage-wrap">
+<div class="nav"><button class="active" data-view="menu">Main Menu</button><button data-view="deck">Deck Editor</button></div>
+<div class="stage" id="stage">
+<div class="app">
+<div class="topbar"><span class="brand">PRIMANYX</span><span>EDOPRO · DECK / DUEL CLIENT</span><span>⋮</span></div>
+<section class="main-menu panel" id="mainMenu">
+<div class="menu-title">PRIMANYX</div>
+<div class="menu-btn primary">ONLINE MULTIPLAYER</div><div class="menu-btn">LAN MODE</div><div class="menu-btn">SINGLE MODE</div><div class="menu-btn">REPLAY</div><div class="menu-btn">DECK EDITOR</div><div class="menu-btn">EXIT</div>
+</section>
+<section class="deck-layout" id="deckEditor" hidden>
+<div class="deck-top">
+<div class="deck-controls panel"><div class="field">Banlist</div><div class="field">Deck</div><div class="field">Advanced</div><div class="field">40 / 60</div></div>
+<div class="deck-actions panel"><span class="action">SAVE</span><span class="action">RENAME</span><span class="action">SHUFFLE</span><span class="action">SORT</span></div>
+<div class="deck-name panel">My Deck</div>
+</div>
+<div class="card-area"><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div></div>
+<div class="deck-side"><div class="sort-panel panel"><span>SORT</span><span class="filter-value">TYPE ▾</span></div><div class="filter-panel panel"><div class="panel-heading">CARD FILTERS</div><div class="filter-row"><span>Category</span><span class="filter-value">Monster ▾</span></div><div class="filter-row"><span>Attribute</span><span class="filter-value">All ▾</span></div><div class="filter-row"><span>Race</span><span class="filter-value">All ▾</span></div><div class="filter-row"><span>Limit</span><span class="filter-value">All ▾</span></div><div class="filter-row"><span>Keyword</span><span class="filter-value">Search…</span></div><div class="filter-row"><span>Level</span><span class="filter-value">Any ▾</span></div></div><div class="category-panel panel"><div class="category active">All</div><div class="category">Monster</div><div class="category">Spell</div><div class="category">Trap</div></div></div>
+<div class="deck-footer">CARD DETAILS · SELECTED CARD INFORMATION</div>
+</section>
+<div class="version">REFERENCE MOCKUP · PANEL SURFACES ONLY</div>
+</div>
+</div>
+</section>
+<aside class="controls">
+<h2>RADIUS TUNING</h2>
+<div class="group"><div class="group-title">Quick presets</div><div class="preset"><button data-preset="8">8 px</button><button class="active" data-preset="12">12 px</button><button data-preset="16">16 px</button></div></div>
+<div class="group"><div class="group-title">Main menu</div><label class="control">Outer panel <output id="mainOut">12 px</output><input id="mainRadius" type="range" min="0" max="24" value="12"></label></div>
+<div class="group"><div class="group-title">Deck editor</div><label class="control">Deck controls <output id="deckOut">12 px</output><input id="deckRadius" type="range" min="0" max="24" value="12"></label><label class="control">Filter panel <output id="filterOut">12 px</output><input id="filterRadius" type="range" min="0" max="24" value="12"></label><label class="control">Sort panel <output id="sortOut">8 px</output><input id="sortRadius" type="range" min="0" max="24" value="8"></label><label class="control">Category panel <output id="categoryOut">12 px</output><input id="categoryRadius" type="range" min="0" max="24" value="12"></label></div>
+<div class="group"><div class="group-title">Inner controls</div><label class="control">Buttons & fields <output id="buttonOut">6 px</output><input id="buttonRadius" type="range" min="0" max="16" value="6"></label></div>
+<p class="note">Only the large panel surfaces are being tested. Dropdowns, buttons, card frames, and dense controls keep their own smaller geometry. This is a visual mockup, not an exact native renderer capture.</p>
+</aside>
+</main>
+<script>
+const root=document.documentElement;
+const sliders=[['mainRadius','--main-r','mainOut'],['deckRadius','--deck-r','deckOut'],['filterRadius','--filter-r','filterOut'],['sortRadius','--sort-r','sortOut'],['categoryRadius','--category-r','categoryOut'],['buttonRadius','--button-r','buttonOut']];
+function apply(id,css,out){const el=document.getElementById(id),o=document.getElementById(out);const update=()=>{root.style.setProperty(css,el.value+'px');o.textContent=el.value+' px'};el.addEventListener('input',update);update()}
+sliders.forEach(v=>apply(...v));
+document.querySelectorAll('[data-preset]').forEach(btn=>btn.addEventListener('click',()=>{const n=Number(btn.dataset.preset);[['mainRadius',n],['deckRadius',n],['filterRadius',n],['sortRadius',Math.max(0,n-4)],['categoryRadius',n],['buttonRadius',Math.max(4,n/2)]].forEach(([id,v])=>{const el=document.getElementById(id);el.value=v;el.dispatchEvent(new Event('input'))});document.querySelectorAll('[data-preset]').forEach(x=>x.classList.toggle('active',x===btn))}));
+document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',()=>{const deck=btn.dataset.view==='deck';document.getElementById('mainMenu').hidden=deck;document.getElementById('deckEditor').hidden=!deck;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x===btn))}));
+</script>
+</body>
+</html>
