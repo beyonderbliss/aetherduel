@@ -168,9 +168,9 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 					mainGame->wCardImg->setVisible(false);
 					mainGame->wInfos->setVisible(false);
 					mainGame->wPhase->setVisible(false);
-					mainGame->btnLeaveGame->setVisible(false);
-					mainGame->btnSettingsMenu->setVisible(false);
-					mainGame->btnSpectatorSwap->setVisible(false);
+					mainGame->SetVerticalButtonVisible(mainGame->btnLeaveGame, false);
+					mainGame->SetVerticalButtonVisible(mainGame->btnSettingsMenu, false);
+					mainGame->SetVerticalButtonVisible(mainGame->btnSpectatorSwap, false);
 					mainGame->wChat->setVisible(false);
 					mainGame->btnCreateHost->setEnabled(true);
 					mainGame->btnJoinHost->setEnabled(true);
@@ -857,9 +857,9 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 			case CHECKBOX_CHAIN_BUTTONS: {
 				if(mainGame->dInfo.isStarted && !mainGame->dInfo.isReplay && mainGame->dInfo.player_type < 7) {
 					const bool checked = !mainGame->gSettings.chkHideChainButtons->isChecked();
-					mainGame->btnChainIgnore->setVisible(checked);
-					mainGame->btnChainAlways->setVisible(checked);
-					mainGame->btnChainWhenAvail->setVisible(checked);
+					mainGame->SetVerticalButtonVisible(mainGame->btnChainIgnore, checked);
+					mainGame->SetVerticalButtonVisible(mainGame->btnChainAlways, checked);
+					mainGame->SetVerticalButtonVisible(mainGame->btnChainWhenAvail, checked);
 				}
 				break;
 			}
@@ -1788,11 +1788,7 @@ static void UpdatePanelCycleButtonLabel(Game* game) {
 		game->btnPanelCycle->setText(gDataManager->GetSysString(panelStringIds[activeTab]).data());
 }
 static void UpdatePanelCycleButtonPosition(Game* game) {
-	auto buttonRect = game->Resize(211, 255, 301, 290);
-	const auto panelRect = game->wInfos->getRelativePosition();
-	buttonRect.UpperLeftCorner.X = panelRect.LowerRightCorner.X - buttonRect.getWidth();
-	buttonRect.LowerRightCorner.X = panelRect.LowerRightCorner.X;
-	game->btnPanelCycle->setRelativePosition(buttonRect);
+	game->UpdateVerticalButtonLayout();
 }
 static bool IsTrulyVisible(const irr::gui::IGUIElement* elem) {
 	while(elem->isVisible()) {
@@ -1848,7 +1844,7 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 				UpdatePanelCycleButtonLabel(mainGame);
 				return true;
 			}
-			if(mainGame->fadingList.size() || !IsTrulyVisible(event.GUIEvent.Caller)) {
+			if(mainGame->fadingList.size() || mainGame->IsVerticalButtonAnimating(event.GUIEvent.Caller) || !IsTrulyVisible(event.GUIEvent.Caller)) {
 				stopPropagation = true;
 				return true;
 			}
@@ -2773,20 +2769,20 @@ void ClientField::ShowCancelOrFinishButton(int buttonOp) {
 		switch (buttonOp) {
 		case 1:
 			mainGame->btnCancelOrFinish->setText(gDataManager->GetSysString(1295).data());
-			mainGame->btnCancelOrFinish->setVisible(true);
+			mainGame->SetVerticalButtonVisible(mainGame->btnCancelOrFinish, true);
 			break;
 		case 2:
 			mainGame->btnCancelOrFinish->setText(gDataManager->GetSysString(1296).data());
-			mainGame->btnCancelOrFinish->setVisible(true);
+			mainGame->SetVerticalButtonVisible(mainGame->btnCancelOrFinish, true);
 			break;
 		case 0:
 		default:
-			mainGame->btnCancelOrFinish->setVisible(false);
+			mainGame->SetVerticalButtonVisible(mainGame->btnCancelOrFinish, false);
 			break;
 		}
 	}
 	else {
-		mainGame->btnCancelOrFinish->setVisible(false);
+		mainGame->SetVerticalButtonVisible(mainGame->btnCancelOrFinish, false);
 	}
 }
 void ClientField::SetShowMark(ClientCard* pcard, bool enable) {
