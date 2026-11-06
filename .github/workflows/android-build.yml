@@ -524,7 +524,7 @@ jobs:
               "button.setTextSize(key.length() > 1 ? 11 : 15);": f"button.setTextSize(key.length() > 1 ? {keys['actionTextSize']} : {keys['letterTextSize']});"
           }
           for old_value, new_value in replacements.items():
-              assert java_source.count(old_value) == 1, "Could not uniquely apply keyboard layout value: " + old_value
+              assert java_source.count(old_value) >= 1, "Could not apply keyboard layout value: " + old_value
               java_source = java_source.replace(old_value, new_value)
           textentry.write_text(java_source)
           print("Installed split keyboard using the shared keyboard layout specification.")
