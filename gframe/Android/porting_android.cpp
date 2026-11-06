@@ -374,7 +374,7 @@ void showInputDialog(epro::path_stringview current, bool deckNameInput) {
 
 void showComboBox(const std::vector<std::string>& parameters, int selected, bool isCardCategory) {
 	(void)selected;
-	jmethodID showbox = jnienv->GetMethodID(nativeActivity, "showComboBox", JPARAMS(JARRAY(JSTRING) JBOOL)JVOID);
+	jmethodID showbox = jnienv->GetMethodID(nativeActivity, "showComboBox", JPARAMS(JARRAY(JSTRING)JBOOL)JVOID);
 
 	jsize len = parameters.size();
 	jobjectArray jlist = jnienv->NewObjectArray(len, jnienv->FindClass("java/lang/String"), 0);
