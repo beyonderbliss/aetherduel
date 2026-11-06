@@ -78,7 +78,9 @@ public:
 		irr::video::IVideoDriver* videoDriver, irr::s32 cornerRadius,
 		irr::gui::EGUI_DEFAULT_COLOR backgroundColor)
 		: irr::gui::IGUIElement(irr::gui::EGUIET_ELEMENT, env, parent, id, rectangle),
-		EnvironmentRef(env), VideoDriver(videoDriver), Radius(cornerRadius), BackgroundColor(backgroundColor) {}
+		EnvironmentRef(env), VideoDriver(videoDriver), Radius(cornerRadius), BackgroundColor(backgroundColor) {
+		setAlignment(irr::gui::EGUIA_SCALE, irr::gui::EGUIA_SCALE, irr::gui::EGUIA_SCALE, irr::gui::EGUIA_SCALE);
+	}
 
 	void setAnchor(irr::gui::IGUIElement* anchor) { Anchor = anchor; }
 
