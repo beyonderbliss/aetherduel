@@ -18,7 +18,7 @@ jobs:
       - name: Checkout clean AetherDuel source
         uses: actions/checkout@v5
         with:
-          ref: feature/keyboard-layout-lab
+          ref: ${{ github.ref }}
           path: aetherduel-source
 
       - name: Checkout pinned Android wrapper and submodules
