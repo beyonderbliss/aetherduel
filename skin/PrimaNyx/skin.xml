@@ -12,7 +12,7 @@
     <Global guialpha="255">
         <EGDC_3D_DARK_SHADOW a="255" r="24" g="27" b="34"/>
         <EGDC_3D_SHADOW a="255" r="75" g="82" b="94"/>
-        <EGDC_3D_FACE a="255" r="38" g="43" b="52"/>
+        <EGDC_3D_FACE a="255" r="54" g="59" b="69"/>
         <EGDC_3D_HIGH_LIGHT a="255" r="54" g="59" b="69"/>
         <EGDC_3D_LIGHT a="255" r="75" g="82" b="94"/>
 
@@ -46,4 +46,11 @@
 
         <CheckBoxColor a="255" r="255" g="255" b="255"/>
     </Global>
+
+    <Custom>
+        <CARDINFO_TYPES_COLOR a="255" r="232" g="213" b="138"/>
+        <CARDINFO_STATS_COLOR a="255" r="232" g="213" b="138"/>
+        <CARDINFO_ARCHETYPE_TEXT_COLOR a="255" r="232" g="213" b="138"/>
+        <CARDINFO_PASSCODE_SCOPE_TEXT_COLOR a="255" r="232" g="213" b="138"/>
+    </Custom>
 </Skin>
