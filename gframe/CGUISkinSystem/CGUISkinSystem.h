@@ -30,7 +30,7 @@ private:
 	irr::io::path skinsPath;
 	irr::io::path workingDir;
 	std::vector<epro::path_string> skinsList;
-	irr::gui::IGUISkin* loaded_skin;
+	irr::gui::CImageGUISkin* loaded_skin;
 
 	CXMLRegistry* registry;
 	irr::gui::CImageGUISkin* loadSkinFromFile(const irr::fschar_t* skinfile);
@@ -52,6 +52,7 @@ public:
 	};
 	bool loadSkinList();
 	bool applySkin(const irr::fschar_t* skinname);
+	irr::gui::CImageGUISkin* getLoadedSkin() const { return loaded_skin; }
 	irr::gui::CGUIProgressBar* addProgressBar(irr::gui::IGUIElement* parent, irr::core::recti rect, bool bindColorsToSkin = true);
 	// Gets property from current skin
 	irr::core::stringw getProperty(irr::core::stringw key);
