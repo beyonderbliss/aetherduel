@@ -88,7 +88,6 @@ public:
 private:
 
 	void openCloseMenu();
-	bool isCardCategoryCombo() const;
 	void sendSelectionChangedEvent();
 	void updateListButtonWidth(s32 width);
 
