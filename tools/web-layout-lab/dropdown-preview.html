@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#11151C">
+<title>PrimaNyx · Native Dropdown Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#11151C;--panel:#232933;--surface:#262B34;--active:#363B45;--border:#525B6A;--muted:#697384;--gold:#E8D58A;--text:#E8D58A;--panel-width: min(88vw,390px);--item-height:46px;--item-gap:8px;--item-radius:9px;--panel-radius:14px;--font-size:15px}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--gold);font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+body{padding:16px 12px 28px}
+header{max-width:900px;margin:0 auto 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{margin:0;font-size:17px;letter-spacing:.02em}header p{margin:3px 0 0;color:var(--muted);font-size:11px}
+a{color:var(--gold);text-decoration:none;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:11px;white-space:nowrap}
+main{max-width:900px;margin:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,290px);gap:14px;align-items:start}
+.preview-stage{min-height:360px;border:1px solid #363B45;border-radius:16px;background:linear-gradient(145deg,#181D26,#11151C);display:grid;place-items:center;padding:22px 12px;overflow:hidden}
+.dropdown{width:var(--panel-width);max-width:100%;display:flex;flex-direction:column;gap:10px}
+.label{font-size:12px;letter-spacing:.12em;font-weight:650;text-align:center;color:var(--gold)}
+.trigger{height:44px;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--gold);font-size:var(--font-size);font-weight:550}
+.menu{padding:9px;background:var(--panel);border:1px solid var(--border);border-radius:var(--panel-radius);display:flex;flex-direction:column;gap:var(--item-gap);box-shadow:0 12px 30px #0006}
+.option{height:var(--item-height);min-height:34px;border:1px solid var(--border);border-radius:var(--item-radius);background:var(--surface);display:grid;place-items:center;color:var(--gold);font-size:var(--font-size);font-weight:500;cursor:pointer;user-select:none;transition:background .12s,border-color .12s}
+.option.active{background:var(--active);border-color:var(--gold);font-weight:650}
+.option:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.controls{background:var(--panel);border:1px solid #3B4350;border-radius:14px;padding:13px;display:flex;flex-direction:column;gap:13px}
+.controls h2{font-size:12px;margin:0;color:var(--gold);letter-spacing:.08em}
+.control{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center;color:#C7CED9;font-size:11px}
+.control output{color:var(--gold);font-variant-numeric:tabular-nums}
+input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--gold);margin:0}
+select{background:var(--surface);color:var(--gold);border:1px solid var(--border);border-radius:7px;padding:6px;font:inherit}
+.actions{display:flex;gap:8px}
+button{flex:1;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--gold);padding:8px;font:inherit;font-size:11px}
+.note{max-width:900px;margin:12px auto 0;color:var(--muted);font-size:10px;text-align:center}
+@media(max-width:620px){main{grid-template-columns:1fr}.preview-stage{min-height:330px}.controls{display:grid;grid-template-columns:1fr 1fr}.controls h2,.actions{grid-column:1/-1}}
+@media(orientation:landscape) and (max-height:520px){body{padding:8px 12px}header{margin-bottom:8px}main{grid-template-columns:minmax(0,1fr) 250px;gap:10px}.preview-stage{min-height:calc(100svh - 74px);padding:8px}.dropdown{gap:7px}.menu{padding:7px;gap:var(--item-gap)}.option{height:clamp(30px,var(--item-height),42px)}.controls{padding:9px;gap:8px}.controls h2{font-size:10px}.control{font-size:10px}}
+</style>
+</head>
+<body>
+<header>
+<div><h1>PrimaNyx · Native Dropdown Lab</h1><p>Compact selection menu · Landscape preview · Live controls</p></div>
+<a href="./index.html">← Keyboard Lab</a>
+</header>
+<main>
+<section class="preview-stage" aria-label="Dropdown preview">
+<div class="dropdown">
+<div class="label">ELEMENT TYPE</div>
+<div class="trigger" id="currentValue">Water</div>
+<div class="menu" id="menu" role="listbox" aria-label="Element type">
+<div class="option" role="option" tabindex="0" data-value="Earth">Earth</div>
+<div class="option active" role="option" tabindex="0" aria-selected="true" data-value="Water">Water</div>
+<div class="option" role="option" tabindex="0" data-value="Fire">Fire</div>
+<div class="option" role="option" tabindex="0" data-value="Wind">Wind</div>
+<div class="option" role="option" tabindex="0" data-value="Light">Light</div>
+<div class="option" role="option" tabindex="0" data-value="Dark">Dark</div>
+</div>
+</div>
+</section>
+<aside class="controls">
+<h2>GEOMETRY · LIVE TUNING</h2>
+<label class="control">Panel width <output id="widthOut">88%</output><input id="width" type="range" min="55" max="100" value="88"></label>
+<label class="control">Item height <output id="heightOut">46 px</output><input id="height" type="range" min="34" max="64" value="46"></label>
+<label class="control">Item spacing <output id="gapOut">8 px</output><input id="gap" type="range" min="2" max="16" value="8"></label>
+<label class="control">Item radius <output id="radiusOut">9 px</output><input id="radius" type="range" min="0" max="18" value="9"></label>
+<label class="control">Panel radius <output id="panelRadiusOut">14 px</output><input id="panelRadius" type="range" min="0" max="24" value="14"></label>
+<label class="control">Text size <output id="fontOut">15 px</output><input id="font" type="range" min="12" max="20" value="15"></label>
+<label class="control">Visible options <select id="count"><option value="4">4 options</option><option value="5">5 options</option><option value="6" selected>6 options</option></select></label>
+<div class="actions"><button id="reset" type="button">Reset values</button><button id="toggle" type="button">Toggle active item</button></div>
+</aside>
+</main>
+<p class="note">Preview only · Gold typography #E8D58A · No Android source or build is changed here.</p>
+<script>
+const root=document.documentElement;
+const controls=[
+ ['width','--panel-width',v=>Math.min(100,Number(v))+'%',v=>v+'%'],
+ ['height','--item-height',v=>v+'px',v=>v+' px'],
+ ['gap','--item-gap',v=>v+'px',v=>v+' px'],
+ ['radius','--item-radius',v=>v+'px',v=>v+' px'],
+ ['panelRadius','--panel-radius',v=>v+'px',v=>v+' px'],
+ ['font','--font-size',v=>v+'px',v=>v+' px']
+];
+controls.forEach(([id,css,format,out])=>{const el=document.getElementById(id),output=document.getElementById(id+'Out');const apply=()=>{root.style.setProperty(css,format(el.value));output.textContent=out(el.value)};el.addEventListener('input',apply);apply()});
+const options=[...document.querySelectorAll('.option')];
+function choose(option){options.forEach(item=>{const active=item===option;item.classList.toggle('active',active);item.setAttribute('aria-selected',String(active))});document.getElementById('currentValue').textContent=option.dataset.value}
+options.forEach(option=>{option.addEventListener('click',()=>choose(option));option.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose(option)}})});
+document.getElementById('count').addEventListener('change',e=>options.forEach((item,i)=>item.hidden=i>=Number(e.target.value)));
+document.getElementById('reset').addEventListener('click',()=>{[['width',88],['height',46],['gap',8],['radius',9],['panelRadius',14],['font',15]].forEach(([id,value])=>{document.getElementById(id).value=value;document.getElementById(id).dispatchEvent(new Event('input'))});document.getElementById('count').value='6';options.forEach(item=>item.hidden=false);choose(options[1])});
+document.getElementById('toggle').addEventListener('click',()=>{const current=options.findIndex(item=>item.classList.contains('active'));choose(options[(current+1)%Number(document.getElementById('count').value)])});
+</script>
+</body>
+</html>
