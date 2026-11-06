@@ -397,7 +397,7 @@ void CGUICustomComboBox::updateListButtonWidth(s32 width) {
 	}
 }
 
-//! draws the element and its children
+// Identify the card-category filter using stable item data.
 bool CGUICustomComboBox::isCardCategoryCombo() const {
 	return Items.size() == 5 &&
 		Items[0].Data == ygo::DeckBuilder::CARD_TYPE_FILTER_ALL &&
