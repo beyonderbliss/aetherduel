@@ -353,7 +353,7 @@ jobs:
                               new String[]{"6", "7", "8", "9", "0"});
                       addSplitRow(new String[]{"@", "#", "$", "%", "&"},
                               new String[]{"-", "+", "(", ")", "/"});
-                      addSplitRow(new String[]{"=", "*", "'", "\" ", ":"},
+                      addSplitRow(new String[]{"=", "*", "'", "\"", ":"},
                               new String[]{";", "!", "?", "⌫"});
                   }
                   addSplitRow(new String[]{"?123", ",", "SPACE"},
