@@ -232,18 +232,18 @@ jobs:
           )
           text = text.replace(oncreate_anchor, oncreate_back)
           old_show_dialog = """	public void showDialog(String current) {
-		var intent = new Intent();
-		intent.putExtra("current", current);
-		intent.setAction("INPUT_TEXT");
-		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-	}"""
+          		var intent = new Intent();
+          		intent.putExtra("current", current);
+          		intent.setAction("INPUT_TEXT");
+          		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+          	}"""
           new_show_dialog = """	public void showDialog(String current, boolean deckNameInput) {
-		var intent = new Intent();
-		intent.putExtra("current", current);
-		intent.putExtra("deckNameInput", deckNameInput);
-		intent.setAction("INPUT_TEXT");
-		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-	}"""
+          		var intent = new Intent();
+          		intent.putExtra("current", current);
+          		intent.putExtra("deckNameInput", deckNameInput);
+          		intent.setAction("INPUT_TEXT");
+          		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+          	}"""
           assert text.count(old_show_dialog) == 1, "Could not locate showDialog method"
           text = text.replace(old_show_dialog, new_show_dialog)
           old_text_entry_receiver = "new TextEntry().Show(EpNativeActivity.this, intent.getStringExtra(\"current\"));"
