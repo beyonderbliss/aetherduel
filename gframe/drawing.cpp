@@ -797,7 +797,7 @@ bool Game::IsVerticalButtonAnimating(const irr::gui::IGUIElement* element) const
 
 void Game::UpdateVerticalButtonFades() {
 	const float step = 255.0f * static_cast<float>(std::min<uint32_t>(delta_time, 50)) / 150.0f;
-	auto* imageSkin = dynamic_cast<irr::gui::CImageGUISkin*>(env->getSkin());
+	auto* imageSkin = verticalButtonImageSkin;
 
 	for(auto it = verticalButtonFades.begin(); it != verticalButtonFades.end();) {
 		auto& fade = *it;
