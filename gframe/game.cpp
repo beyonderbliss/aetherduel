@@ -120,7 +120,6 @@ private:
 		}
 
 		const irr::s32 width = rect.getWidth();
-		const irr::s32 height = rect.getHeight();
 		for(irr::s32 row = 0; row < radius; ++row) {
 			const irr::f64 dy = radius - (row + 0.5);
 			const irr::s32 inset = static_cast<irr::s32>(std::ceil(radius - std::sqrt(radius * radius - dy * dy)));
