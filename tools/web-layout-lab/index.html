@@ -1,126 +1,57 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#17191d">
-<title>PrimaNyx · Keyboard Layout Lab</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#17191d"><title>PrimaNyx · Keyboard Layout Lab</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#17191d;color:#e8eaf0;font:14px/1.4 system-ui,sans-serif}
-body{padding-bottom:16px}header{padding:10px 12px;background:#22252b;border-bottom:1px solid #3b3f48}
-header strong{display:block;font-size:14px}header span{font-size:11px;color:#aeb4c0}
-.toolbar,.fields{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:9px 10px;background:#202329;border-bottom:1px solid #383d46}
-.fields{background:#1c1f24}.control{display:flex;align-items:center;gap:5px;color:#cbd0da;font-size:11px}
-input[type=number],button,select{min-height:31px;border:1px solid #555d69;border-radius:5px;background:#2a2f37;color:#f1f3f7;padding:4px 7px;font:inherit;font-size:12px}
-input[type=number]{width:62px}button{cursor:pointer}
-main{padding:12px 0}.stage{width:100%;max-width:none;margin:0;border:0;border-radius:0;background:transparent;padding:0}
-.stage-label{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;color:#aeb4c0;font-size:10px}
-.keyboard{width:100%;padding:var(--pt) var(--pr) var(--pb) var(--pl);border-radius:var(--panel-radius);background:var(--panel-color);border:0}
-.preview{height:var(--preview-height);margin:var(--preview-top) var(--preview-right) var(--preview-bottom) var(--preview-left);padding:0 var(--preview-pad);display:flex;align-items:center;border-radius:var(--preview-radius);background:var(--preview-color);border:1px solid var(--key-stroke);color:white;font-size:13px}
-.row{display:flex;gap:0;height:var(--row-height);margin:var(--row-gap) 0}
-.half{display:flex;flex:1;min-width:0}
-.center-gap{flex:0 0 var(--center-gap)}
-.key{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;margin:0 var(--key-margin);border-radius:var(--key-radius);border:1px solid var(--key-stroke);background:var(--key-color);color:var(--key-text);font-size:var(--letter-size);font-weight:500;overflow:hidden}
-.key.action{font-size:var(--action-size)}.key.space{flex:2}.key.special{background:#414957}
-.status{padding:8px 10px;color:#aeb4c0;font-size:11px;white-space:pre-wrap}
-.group-title{font-size:10px;color:#8993a2;text-transform:uppercase;letter-spacing:.06em}
-@media(max-width:480px){header{padding:9px}.toolbar,.fields{gap:6px;padding:8px}.control{font-size:10px}input[type=number]{width:55px}main{padding:9px 0}.stage{padding:0}}
-</style>
-</head>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#17191d;color:#e8eaf0;font:14px/1.4 system-ui,sans-serif}body{padding-bottom:18px}
+header{padding:10px 12px;background:#22252b;border-bottom:1px solid #3b3f48}header strong{display:block}header span{font-size:11px;color:#aeb4c0}
+.toolbar,.fields{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:9px 10px;background:#202329;border-bottom:1px solid #383d46}.fields{background:#1c1f24}.control{display:flex;align-items:center;gap:5px;color:#cbd0da;font-size:11px}
+input[type=number],button,select{min-height:31px;border:1px solid #555d69;border-radius:5px;background:#2a2f37;color:#f1f3f7;padding:4px 7px;font:inherit;font-size:12px}input[type=number]{width:60px}button{cursor:pointer}.group-title{font-size:10px;color:#8993a2;text-transform:uppercase;letter-spacing:.06em}
+main{padding:12px 0}.stage{width:100%;padding:0}.stage-label{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;padding:0 10px;color:#aeb4c0;font-size:10px}
+.keyboard{position:relative;display:grid;width:100%;grid-template-columns:repeat(24,minmax(0,1fr));grid-auto-rows:var(--row-height);column-gap:0;row-gap:var(--row-gap);padding:var(--pt) var(--pr) var(--pb) var(--pl);border-radius:var(--panel-radius);background-color:var(--panel-color);background-image:linear-gradient(to right,rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.07) 1px,transparent 1px);background-size:calc((100% - var(--pl) - var(--pr))/24) calc(var(--row-height) + var(--row-gap));background-position:var(--pl) var(--pt)}
+.key{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;margin:0 var(--key-margin);border:1px solid var(--key-stroke);border-radius:var(--key-radius);background:var(--key-color);color:var(--key-text);font-size:var(--letter-size);font-weight:500;overflow:visible;touch-action:none;user-select:none;cursor:grab}
+.key.action{font-size:var(--action-size)}.key.special{background:#414957}.key.selected{outline:2px solid #f1c75b;outline-offset:1px;z-index:3}.resize-handle{position:absolute;width:12px;height:12px;right:-3px;bottom:-3px;border:1px solid #17191d;border-radius:3px;background:#f1c75b;touch-action:none;cursor:nwse-resize}
+.status{padding:8px 10px;color:#aeb4c0;font-size:11px;white-space:pre-wrap}.editor{display:flex;flex-wrap:wrap;gap:8px;align-items:end;padding:10px;background:#242830;border-top:1px solid #3b414b}.editor .control{display:flex;flex-direction:column;align-items:flex-start}.editor input{width:68px}.editor .selected-name{min-width:110px;color:#f1c75b;font-weight:600}
+@media(max-width:480px){header{padding:9px}.toolbar,.fields{gap:6px;padding:8px}.control{font-size:10px}main{padding:9px 0}.editor{gap:6px;padding:8px}.editor input{width:58px}}
+</style></head>
 <body>
-<header><strong>PrimaNyx · Keyboard Layout Lab</strong><span>Single JSON geometry source · Android dp units · MATCH_PARENT × WRAP_CONTENT</span></header>
+<header><strong>PrimaNyx · Keyboard Layout Lab</strong><span>Grid editor · 24 columns × 4 rows · snap enabled · Android dp</span></header>
 <section class="toolbar">
 <label class="control">Layout <select id="layout"><option value="letters">Letters</option><option value="symbols">Symbols</option></select></label>
+<label class="control">Snap <select id="snap"><option value="1">1 cell</option><option value="2">2 cells</option><option value="3">3 cells</option></select></label>
 <button id="reset">Reset</button><button id="copy">Copy JSON</button>
 </section>
-<section class="fields" id="geometry">
-<span class="group-title">Geometry · dp</span>
-<label class="control">Panel L/R <input id="panelSide" type="number" min="0"></label>
-<label class="control">Panel top <input id="panelTop" type="number" min="0"></label>
-<label class="control">Panel bottom <input id="panelBottom" type="number" min="0"></label>
-<label class="control">Preview H <input id="previewHeight" type="number" min="1"></label>
-<label class="control">Row H <input id="rowHeight" type="number" min="1"></label>
-<label class="control">Row gap <input id="rowGap" type="number" min="0"></label>
-<label class="control">Center gap <input id="centerGap" type="number" min="0"></label>
-<label class="control">Key margin <input id="keyMargin" type="number" min="0"></label>
-</section>
 <section class="fields">
-<span class="group-title">Palette</span>
-<label class="control">Panel <input id="panelColor" type="color"></label>
-<label class="control">Key <input id="keyColor" type="color"></label>
-<label class="control">Preview <input id="previewColor" type="color"></label>
-<label class="control">Text <input id="textColor" type="color"></label>
+<span class="group-title">Panel geometry · dp</span>
+<label class="control">Side <input id="panelSide" type="number" min="0"></label><label class="control">Top <input id="panelTop" type="number" min="0"></label><label class="control">Bottom <input id="panelBottom" type="number" min="0"></label>
+<label class="control">Row height <input id="rowHeight" type="number" min="1"></label><label class="control">Row gap <input id="rowGap" type="number" min="0"></label><label class="control">Key margin <input id="keyMargin" type="number" min="0"></label>
 </section>
-<main><div class="stage"><div class="stage-label"><span>ANDROID WINDOW PREVIEW</span><span id="viewport">MATCH_PARENT · WRAP_CONTENT</span></div><div id="keyboard" class="keyboard"></div></div></main>
+<section class="fields"><span class="group-title">Palette</span>
+<label class="control">Panel <input id="panelColor" type="color"></label><label class="control">Key <input id="keyColor" type="color"></label><label class="control">Text <input id="textColor" type="color"></label>
+</section>
+<main><div class="stage"><div class="stage-label"><span>ANDROID KEYBOARD · DRAG TO MOVE · CORNER HANDLE TO RESIZE</span><span id="viewport">24 × 4 GRID</span></div><div id="keyboard" class="keyboard"></div></div></main>
+<section class="editor">
+<div class="selected-name" id="selectedName">Select a key</div>
+<label class="control">Column X <input id="keyX" type="number" min="0" max="23"></label><label class="control">Row Y <input id="keyY" type="number" min="0" max="3"></label><label class="control">Width <input id="keyW" type="number" min="1" max="24"></label><label class="control">Height <input id="keyH" type="number" min="1" max="4"></label>
+<button id="applyKey">Apply</button>
+</section>
 <div id="status" class="status">Loading shared keyboard specification…</div>
-<script type="module">
-const $=s=>document.querySelector(s), status=$('#status'), keyboard=$('#keyboard');
-let spec,initial;
-const fields={
- panelSide:v=>{spec.panel.padding.left=v;spec.panel.padding.right=v},
- panelTop:v=>spec.panel.padding.top=v,panelBottom:v=>spec.panel.padding.bottom=v,
- previewHeight:v=>spec.preview.height=v,rowHeight:v=>spec.keys.rowHeight=v,
- rowGap:v=>spec.keys.rowGap=v,centerGap:v=>spec.keys.centerGap=v,
- keyMargin:v=>spec.keys.horizontalMargin=v
-};
-function css(){
- const p=spec.panel,k=spec.keys,v=spec.preview;
- const vars={
- '--pl':p.padding.left+'px','--pr':p.padding.right+'px','--pt':p.padding.top+'px','--pb':p.padding.bottom+'px',
- '--panel-radius':p.radius+'px','--panel-color':p.color,'--panel-stroke':p.stroke,
- '--preview-height':v.height+'px','--preview-left':v.margin.left+'px','--preview-right':v.margin.right+'px',
- '--preview-top':v.margin.top+'px','--preview-bottom':v.margin.bottom+'px','--preview-pad':v.paddingX+'px',
- '--preview-radius':v.radius+'px','--preview-color':v.color,
- '--row-height':k.rowHeight+'px','--row-gap':k.rowGap+'px','--center-gap':k.centerGap+'px',
- '--key-margin':k.horizontalMargin+'px','--key-radius':k.radius+'px','--key-color':k.color,
- '--key-stroke':k.stroke,'--key-text':k.textColor,'--letter-size':k.letterTextSize+'px','--action-size':k.actionTextSize+'px'
- };
- Object.entries(vars).forEach(([a,b])=>keyboard.style.setProperty(a,b));
-}
-function render(){
- if(!spec)return;css();keyboard.innerHTML='';
- const rows=spec.rows[$('#layout').value];
- rows.forEach((r,i)=>{
-  const row=document.createElement('div');row.className='row';
-  const left=document.createElement('div');left.className='half';
-  const gap=document.createElement('div');gap.className='center-gap';
-  const right=document.createElement('div');right.className='half';
-  [...r.left].forEach(key=>left.append(makeKey(key)));
-  [...r.right].forEach(key=>right.append(makeKey(key)));
-  row.append(left,gap,right);keyboard.append(row);
- });
- const total=spec.panel.padding.top+spec.panel.padding.bottom+spec.preview.margin.top+spec.preview.height+spec.preview.margin.bottom+
-  rows.length*(spec.keys.rowHeight+2*spec.keys.rowGap);
- status.textContent='Viewport width: Android window MATCH_PARENT\nViewport height: content-driven WRAP_CONTENT\nComputed content height: '+total+' dp (excludes window/system insets)\nGeometry source: layout-spec/keyboard.json';
-}
-function makeKey(label){
- const el=document.createElement('div');el.className='key';
- if(label.length>1){el.classList.add('action');}
- if(label==='SPACE'){el.classList.add('space');el.textContent='Space';}
- else if(label==='SHIFT')el.textContent='⇧';
- else if(label==='DONE')el.textContent='Enter';
- else if(label==='CANCEL')el.textContent='Cancel';
- else if(label==='?123')el.textContent=$('#layout').value==='symbols'?'ABC':'?123';
- else el.textContent=label;
- if(['SHIFT','?123','CANCEL','DONE','⌫'].includes(label))el.classList.add('special');
- return el;
-}
-function sync(){
- const vals={panelSide:spec.panel.padding.left,panelTop:spec.panel.padding.top,panelBottom:spec.panel.padding.bottom,
- previewHeight:spec.preview.height,rowHeight:spec.keys.rowHeight,rowGap:spec.keys.rowGap,
- centerGap:spec.keys.centerGap,keyMargin:spec.keys.horizontalMargin};
- Object.entries(vals).forEach(([id,v])=>$('#'+id).value=v);
- $('#panelColor').value=spec.panel.color;$('#keyColor').value=spec.keys.color;
- $('#previewColor').value=spec.preview.color;$('#textColor').value=spec.keys.textColor;render();
-}
-Object.keys(fields).forEach(id=>$('#'+id).addEventListener('input',e=>{const v=Number(e.target.value);if(Number.isFinite(v)&&v>=0){fields[id](v);render();}}));
-[['panelColor',v=>spec.panel.color=v],['keyColor',v=>spec.keys.color=v],['previewColor',v=>spec.preview.color=v],['textColor',v=>spec.keys.textColor=v]]
- .forEach(([id,set])=>$('#'+id).addEventListener('input',e=>{set(e.target.value);render();}));
-$('#layout').addEventListener('change',render);
-$('#reset').addEventListener('click',()=>{spec=JSON.parse(JSON.stringify(initial));sync();});
-$('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(JSON.stringify(spec,null,2));status.textContent='Keyboard JSON copied. Apply it to tools/web-layout-lab/layout-spec/keyboard.json.';}catch{status.textContent='Clipboard unavailable; use browser site permissions.';}});
-fetch('./layout-spec/keyboard.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Cannot load keyboard.json ('+r.status+')');return r.json();})
-.then(data=>{spec=data;initial=JSON.parse(JSON.stringify(data));sync();}).catch(e=>status.textContent=e.message);
-</script>
-</body>
-</html>
+<script>
+const $=s=>document.querySelector(s),status=$('#status'),keyboard=$('#keyboard');let spec,initial,selected=null,drag=null;
+const labelFor=k=>({'SPACE':'Space','SHIFT':'⇧','DONE':'Enter','CANCEL':'Cancel','?123':$('#layout').value==='symbols'?'ABC':'?123'})[k]||k;
+function css(){const p=spec.panel,k=spec.keys;const vars={'--pl':p.padding.left+'px','--pr':p.padding.right+'px','--pt':p.padding.top+'px','--pb':p.padding.bottom+'px','--panel-radius':p.radius+'px','--panel-color':p.color,'--row-height':k.rowHeight+'px','--row-gap':spec.grid.rowGap+'px','--key-margin':spec.grid.keyMargin+'px','--key-radius':k.radius+'px','--key-color':k.color,'--key-stroke':k.stroke,'--key-text':k.textColor,'--letter-size':k.letterTextSize+'px','--action-size':k.actionTextSize+'px'};Object.entries(vars).forEach(([a,b])=>keyboard.style.setProperty(a,b));}
+function getButtons(){return spec.buttons[$('#layout').value]}
+function selectKey(key){selected=key;syncEditor();render()}
+function syncEditor(){const b=selected&&getButtons()[selected];$('#selectedName').textContent=b?selected:'Select a key';['X','Y','W','H'].forEach((v,i)=>$('#key'+v).value=b?[b.x,b.y,b.w,b.h][i]: '');}
+function render(){if(!spec)return;css();keyboard.innerHTML='';const buttons=getButtons();Object.entries(buttons).forEach(([key,b])=>{const el=document.createElement('div');el.className='key'+(key.length>1?' action':'')+(['SHIFT','?123','CANCEL','DONE','⌫'].includes(key)?' special':'')+(selected===key?' selected':'');el.textContent=labelFor(key);el.style.gridColumn=(b.x+1)+' / span '+b.w;el.style.gridRow=(b.y+1)+' / span '+b.h;el.dataset.key=key;el.addEventListener('pointerdown',onPointerDown);const handle=document.createElement('span');handle.className='resize-handle';handle.addEventListener('pointerdown',e=>onResizeDown(e,key));el.append(handle);keyboard.append(el);});}
+function snap(v){const n=Number($('#snap').value);return Math.round(v/n)*n}
+function onPointerDown(e){if(e.target.classList.contains('resize-handle'))return;const key=e.currentTarget.dataset.key;selectKey(key);const b=getButtons()[key];drag={mode:'move',key,startX:e.clientX,startY:e.clientY,orig:{...b}};e.currentTarget.setPointerCapture(e.pointerId);e.preventDefault()}
+function onResizeDown(e,key){e.stopPropagation();const b=getButtons()[key];drag={mode:'resize',key,startX:e.clientX,startY:e.clientY,orig:{...b}};e.currentTarget.parentElement.setPointerCapture(e.pointerId);e.preventDefault()}
+keyboard.addEventListener('pointermove',e=>{if(!drag)return;const rect=keyboard.getBoundingClientRect(),unit=(rect.width-spec.panel.padding.left-spec.panel.padding.right)/spec.grid.columns,step=Number($('#snap').value);const dx=snap((e.clientX-drag.startX)/unit),dy=snap((e.clientY-drag.startY)/(spec.keys.rowHeight+spec.grid.rowGap));const b=getButtons()[drag.key],o=drag.orig;if(drag.mode==='move'){b.x=Math.max(0,Math.min(24-o.w,o.x===undefined?o.x:o.x+dx));b.y=Math.max(0,Math.min(4-o.h,o.y+dy));}else{b.w=Math.max(1,Math.min(24-o.x,o.w+dx));b.h=Math.max(1,Math.min(4-o.y,o.h+dy));}syncEditor();render()});
+keyboard.addEventListener('pointerup',()=>{drag=null});keyboard.addEventListener('pointercancel',()=>{drag=null});
+$('#applyKey').addEventListener('click',()=>{if(!selected)return;const b=getButtons()[selected];b.x=Math.max(0,Math.min(23,Number($('#keyX').value)||0));b.y=Math.max(0,Math.min(3,Number($('#keyY').value)||0));b.w=Math.max(1,Math.min(24-b.x,Number($('#keyW').value)||1));b.h=Math.max(1,Math.min(4-b.y,Number($('#keyH').value)||1));render();syncEditor()});
+function sync(){const p=spec.panel,k=spec.keys;$('#panelSide').value=p.padding.left;$('#panelTop').value=p.padding.top;$('#panelBottom').value=p.padding.bottom;$('#rowHeight').value=k.rowHeight;$('#rowGap').value=spec.grid.rowGap;$('#keyMargin').value=spec.grid.keyMargin;$('#panelColor').value=p.color;$('#keyColor').value=k.color;$('#textColor').value=k.textColor;render();syncEditor()}
+[['panelSide',v=>{spec.panel.padding.left=v;spec.panel.padding.right=v}],['panelTop',v=>spec.panel.padding.top=v],['panelBottom',v=>spec.panel.padding.bottom=v],['rowHeight',v=>spec.keys.rowHeight=v],['rowGap',v=>spec.grid.rowGap=v],['keyMargin',v=>spec.grid.keyMargin=v]].forEach(([id,set])=>$('#'+id).addEventListener('change',e=>{set(Math.max(0,Number(e.target.value)||0));render()}));
+[['panelColor',v=>spec.panel.color=v],['keyColor',v=>spec.keys.color=v],['textColor',v=>spec.keys.textColor=v]].forEach(([id,set])=>$('#'+id).addEventListener('input',e=>{set(e.target.value);render()}));
+$('#layout').addEventListener('change',()=>{selected=null;render();syncEditor()});$('#reset').addEventListener('click',()=>{spec=JSON.parse(JSON.stringify(initial));selected=null;sync()});
+$('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(JSON.stringify(spec,null,2));status.textContent='JSON copied. Commit the updated layout-spec/keyboard.json to apply it to Android.'}catch{status.textContent='Clipboard unavailable in this browser.'}});
+fetch('./layout-spec/keyboard.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Cannot load keyboard.json ('+r.status+')');return r.json()}).then(d=>{spec=d;initial=JSON.parse(JSON.stringify(d));sync()}).catch(e=>status.textContent=e.message);
+</script></body></html>
