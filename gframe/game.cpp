@@ -3793,9 +3793,14 @@ void Game::UpdateVerticalButtonLayout() {
 
 	const bool deckEditorLayout = is_building;
 	const irr::s32 slotCount = deckEditorLayout ? 6 : 8;
+	constexpr irr::s32 duelModeSlotCount = 8;
 	const irr::s32 maxButtonHeight = Resize(211, 0, 301, 35).getHeight();
 	const irr::s32 minGap = Resize(211, 0, 301, 3).getHeight();
-	const irr::s32 buttonHeight = std::min(maxButtonHeight, (available - (slotCount - 1) * minGap) / slotCount);
+
+	// Duel Mode defines the shared button size. Deck Editor uses fewer slots,
+	// but must never enlarge its buttons when switching modes.
+	const irr::s32 buttonHeight = std::min(maxButtonHeight,
+		(available - (duelModeSlotCount - 1) * minGap) / duelModeSlotCount);
 	if(buttonHeight <= 0)
 		return;
 
@@ -3806,7 +3811,11 @@ void Game::UpdateVerticalButtonLayout() {
 	auto setSlot = [&](irr::gui::IGUIButton* button, irr::s32 slot, bool alignToPanel = false) {
 		if(!button)
 			return;
-		const irr::s32 y = top + static_cast<irr::s32>(std::lround(slotStep * slot));
+		// Anchor Switch directly to the information panel, independent of
+		// the number of slots used by the current mode.
+		const irr::s32 y = alignToPanel
+			? bottom - buttonHeight
+			: top + static_cast<irr::s32>(std::lround(slotStep * slot));
 		const irr::s32 left = alignToPanel ? switchLeft : stackRect.UpperLeftCorner.X;
 		const irr::s32 right = alignToPanel ? switchRight : stackRect.LowerRightCorner.X;
 		button->setRelativePosition(irr::core::recti(left, y, right, y + buttonHeight));
