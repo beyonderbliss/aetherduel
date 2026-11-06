@@ -234,6 +234,25 @@ jobs:
               + "\t\t}\n"
           )
           text = text.replace(oncreate_anchor, oncreate_back)
+          old_show_combo = """
+          	@SuppressWarnings({"unused", "deprecation"})
+          	public void showComboBox(String[] parameters) {
+          		var intent = new Intent();
+          		intent.putExtra("args", parameters);
+          		intent.setAction("MAKE_CHOICE");
+          		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+          	}"""
+          new_show_combo = """
+          	@SuppressWarnings({"unused", "deprecation"})
+          	public void showComboBox(String[] parameters, boolean isCardCategory) {
+          		var intent = new Intent();
+          		intent.putExtra("args", parameters);
+          		intent.putExtra("isCardCategory", isCardCategory);
+          		intent.setAction("MAKE_CHOICE");
+          		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+          	}"""
+          assert text.count(old_show_combo) == 1, "Could not locate showComboBox method"
+          text = text.replace(old_show_combo, new_show_combo)
           old_show_dialog = """
           \tpublic void showDialog(String current) {
           \t\tvar intent = new Intent();
@@ -256,19 +275,25 @@ jobs:
           \t\t\t\t\t\t\tintent.getBooleanExtra("deckNameInput", false));"""
           assert text.count(old_text_entry_receiver) == 1, "Could not locate TextEntry receiver"
           text = text.replace(old_text_entry_receiver, new_text_entry_receiver)
-          # Apply PrimaNyx gold only to the five card-category choices.
+          # Carry the explicit native category marker into the MAKE_CHOICE receiver.
+          choice_receiver_anchor = """				case "MAKE_CHOICE": {
+          					final var parameters = intent.getStringArrayExtra("args");
+          					new AlertDialog.Builder(EpNativeActivity.this)"""
+          choice_receiver_replacement = """				case "MAKE_CHOICE": {
+          					final var parameters = intent.getStringArrayExtra("args");
+          					final boolean isCardCategory = intent.getBooleanExtra("isCardCategory", false);
+          					new AlertDialog.Builder(EpNativeActivity.this)"""
+          assert text.count(choice_receiver_anchor) == 1, "Could not locate MAKE_CHOICE receiver"
+          text = text.replace(choice_receiver_anchor, choice_receiver_replacement)
+
+          # Apply PrimaNyx styling only when native code explicitly marks the card-category combo.
           choice_pattern = (
               r'new AlertDialog\.Builder\(EpNativeActivity\.this\)\s*'
               r'(?://\.setCancelable\(false\)\s*)?'
               r'\.setItems\(parameters,\s*\(dialog,\s*id\)\s*->\s*putComboBoxResult\(id\)\)\s*'
               r'\.show\(\);'
           )
-          choice_replacement = """if (parameters != null && parameters.length == 5
-                  && "All".equalsIgnoreCase(parameters[0])
-                  && "Monster".equalsIgnoreCase(parameters[1])
-                  && "Spell".equalsIgnoreCase(parameters[2])
-                  && "Trap".equalsIgnoreCase(parameters[3])
-                  && "Skill".equalsIgnoreCase(parameters[4])) {
+          choice_replacement = """if (isCardCategory && parameters != null && parameters.length == 5) {
               final float density = getResources().getDisplayMetrics().density;
               final int panelWidth = Math.min(
                       Math.round(getResources().getDisplayMetrics().widthPixels * 0.55f),
