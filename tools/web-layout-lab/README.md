@@ -1,6 +1,6 @@
 # PrimaNyx Keyboard Layout Lab
 
-The lab edits the custom Android text-entry keyboard using a 24-column × 4-row logical grid. Every key has its own grid X/Y position and width in cells. The editor supports pointer/touch dragging, horizontal resizing from the lower-right handle, adjustable snap increments, and numeric position/width controls. It prevents keys from overlapping. The preview also has a Center gap slider (4–8) that redistributes the two 10-cell halves in the browser without changing the saved Android geometry.
+The lab edits the custom Android text-entry keyboard using a 24-column × 4-row logical grid. Every key has its own grid X/Y position and width in cells. The editor supports pointer/touch dragging, horizontal resizing from the lower-right handle, adjustable snap increments, and numeric position/width controls. It prevents keys from overlapping. The preview has a Center gap slider (4–8). Its selected value is saved as `grid.centerGap` in the shared JSON and drives the same weighted gap in the Android keyboard.
 
 ## Viewport and units
 
