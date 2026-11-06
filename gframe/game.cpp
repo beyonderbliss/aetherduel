@@ -1471,6 +1471,7 @@ void Game::PopulateTabSettingsWindow() {
 	panelCycleRect.UpperLeftCorner.X = panelRect.LowerRightCorner.X - panelCycleRect.getWidth();
 	panelCycleRect.LowerRightCorner.X = panelRect.LowerRightCorner.X;
 	btnPanelCycle = env->addButton(panelCycleRect, nullptr, -1, gDataManager->GetSysString(1270).data());
+	btnPanelCycle->setVisible(false);
 	defaultStrings.emplace_back(btnPanelCycle, 1270);
 	//info
 	{

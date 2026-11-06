@@ -809,7 +809,7 @@ void Game::UpdateVerticalButtonFades() {
 		const auto alpha = static_cast<irr::u8>(std::lround(fade.alpha));
 		auto textColor = fade.previousOverrideColorEnabled
 			? fade.previousOverrideColor
-			: env->getSkin()->getColor(irr::gui::EGDC_BUTTON_TEXT);
+			: env->getSkin()->getColor(fade.button->isEnabled() ? irr::gui::EGDC_BUTTON_TEXT : irr::gui::EGDC_GRAY_TEXT);
 		textColor.setAlpha(static_cast<irr::u32>(textColor.getAlpha()) * alpha / 255);
 		fade.button->setOverrideColor(textColor);
 		fade.button->enableOverrideColor(true);
