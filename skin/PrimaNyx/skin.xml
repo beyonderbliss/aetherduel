@@ -10,11 +10,11 @@
     </Properties>
 
     <Global guialpha="255">
-        <EGDC_3D_DARK_SHADOW a="255" r="24" g="27" b="34"/>
-        <EGDC_3D_SHADOW a="255" r="75" g="82" b="94"/>
+        <EGDC_3D_DARK_SHADOW a="255" r="17" g="21" b="28"/>
+        <EGDC_3D_SHADOW a="255" r="35" g="41" b="51"/>
         <EGDC_3D_FACE a="255" r="54" g="59" b="69"/>
-        <EGDC_3D_HIGH_LIGHT a="255" r="54" g="59" b="69"/>
-        <EGDC_3D_LIGHT a="255" r="75" g="82" b="94"/>
+        <EGDC_3D_HIGH_LIGHT a="255" r="82" g="91" b="106"/>
+        <EGDC_3D_LIGHT a="255" r="105" g="115" b="132"/>
 
         <EGDC_ACTIVE_BORDER a="255" r="75" g="82" b="94"/>
         <EGDC_ACTIVE_CAPTION a="255" r="255" g="255" b="255"/>
