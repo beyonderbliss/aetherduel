@@ -1901,7 +1901,8 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event, bool& stopPropagation)
 			}
 			case BUTTON_SHOW_SETTINGS: {
 				auto* settingsWindow = mainGame->gSettings.window;
-				if(event.GUIEvent.Caller == mainGame->btnSettings) {
+				if(event.GUIEvent.Caller == mainGame->btnSettings ||
+				   event.GUIEvent.Caller == mainGame->btnSettingsMenu) {
 					if(settingsWindow->isVisible())
 						mainGame->HideElement(settingsWindow);
 					else
