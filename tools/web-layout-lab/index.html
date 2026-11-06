@@ -13,7 +13,7 @@ header strong{display:block;font-size:14px}header span{font-size:11px;color:#aeb
 .fields{background:#1c1f24}.control{display:flex;align-items:center;gap:5px;color:#cbd0da;font-size:11px}
 input[type=number],button,select{min-height:31px;border:1px solid #555d69;border-radius:5px;background:#2a2f37;color:#f1f3f7;padding:4px 7px;font:inherit;font-size:12px}
 input[type=number]{width:62px}button{cursor:pointer}
-main{padding:12px 8px}.stage{width:100%;max-width:760px;margin:auto;border:1px dashed #596170;border-radius:10px;background:#101216;padding:10px}
+main{padding:12px 0}.stage{width:100%;max-width:none;margin:0;border:0;border-radius:0;background:transparent;padding:0}
 .stage-label{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;color:#aeb4c0;font-size:10px}
 .keyboard{width:100%;padding:var(--pt) var(--pr) var(--pb) var(--pl);border-radius:var(--panel-radius);background:var(--panel-color);border:1px solid var(--panel-stroke)}
 .preview{height:var(--preview-height);margin:var(--preview-top) var(--preview-right) var(--preview-bottom) var(--preview-left);padding:0 var(--preview-pad);display:flex;align-items:center;border-radius:var(--preview-radius);background:var(--preview-color);color:white;font-size:13px}
@@ -24,7 +24,7 @@ main{padding:12px 8px}.stage{width:100%;max-width:760px;margin:auto;border:1px d
 .key.action{font-size:var(--action-size)}.key.space{flex:2}.key.special{background:#414957}
 .status{padding:8px 10px;color:#aeb4c0;font-size:11px;white-space:pre-wrap}
 .group-title{font-size:10px;color:#8993a2;text-transform:uppercase;letter-spacing:.06em}
-@media(max-width:480px){header{padding:9px}.toolbar,.fields{gap:6px;padding:8px}.control{font-size:10px}input[type=number]{width:55px}main{padding:9px 5px}.stage{padding:7px}}
+@media(max-width:480px){header{padding:9px}.toolbar,.fields{gap:6px;padding:8px}.control{font-size:10px}input[type=number]{width:55px}main{padding:9px 0}.stage{padding:0}}
 </style>
 </head>
 <body>
@@ -66,13 +66,13 @@ const fields={
 function css(){
  const p=spec.panel,k=spec.keys,v=spec.preview;
  const vars={
- '--pl':p.padding.left+'dp','--pr':p.padding.right+'dp','--pt':p.padding.top+'dp','--pb':p.padding.bottom+'dp',
- '--panel-radius':p.radius+'dp','--panel-color':p.color,'--panel-stroke':p.stroke,
- '--preview-height':v.height+'dp','--preview-left':v.margin.left+'dp','--preview-right':v.margin.right+'dp',
- '--preview-top':v.margin.top+'dp','--preview-bottom':v.margin.bottom+'dp','--preview-pad':v.paddingX+'dp',
- '--preview-radius':v.radius+'dp','--preview-color':v.color,
- '--row-height':k.rowHeight+'dp','--row-gap':k.rowGap+'dp','--center-gap':k.centerGap+'dp',
- '--key-margin':k.horizontalMargin+'dp','--key-radius':k.radius+'dp','--key-color':k.color,
+ '--pl':p.padding.left+'px','--pr':p.padding.right+'px','--pt':p.padding.top+'px','--pb':p.padding.bottom+'px',
+ '--panel-radius':p.radius+'px','--panel-color':p.color,'--panel-stroke':p.stroke,
+ '--preview-height':v.height+'px','--preview-left':v.margin.left+'px','--preview-right':v.margin.right+'px',
+ '--preview-top':v.margin.top+'px','--preview-bottom':v.margin.bottom+'px','--preview-pad':v.paddingX+'px',
+ '--preview-radius':v.radius+'px','--preview-color':v.color,
+ '--row-height':k.rowHeight+'px','--row-gap':k.rowGap+'px','--center-gap':k.centerGap+'px',
+ '--key-margin':k.horizontalMargin+'px','--key-radius':k.radius+'px','--key-color':k.color,
  '--key-stroke':k.stroke,'--key-text':k.textColor,'--letter-size':k.letterTextSize+'px','--action-size':k.actionTextSize+'px'
  };
  Object.entries(vars).forEach(([a,b])=>keyboard.style.setProperty(a,b));
