@@ -3360,9 +3360,9 @@ void Game::UpdateDeckMenuLayout() {
 	const auto localRect = [this](int left, int top, int rightEdge, int bottom) {
 		return Resize(left, top, rightEdge, bottom);
 	};
-	// Five units of vertical padding above and below the four-row menu.
-	wDeckEdit->setRelativePosition(Resize(panelLeft, kUiEdgeMargin, panelRight, 130));
 	const bool inputMode = deckBuilder.deck_name_input_mode != 0;
+	// Keep the deck-name prompt compact while the shared Android text dialog is active.
+	wDeckEdit->setRelativePosition(Resize(panelLeft, kUiEdgeMargin, panelRight, inputMode ? 65 : 130));
 	stBanlist->setVisible(true);
 	cbDBLFList->setVisible(true);
 	stDeck->setVisible(true);
@@ -3373,19 +3373,10 @@ void Game::UpdateDeckMenuLayout() {
 	btnSortDeck->setVisible(!inputMode);
 	btnClearDeck->setVisible(!inputMode);
 	btnDeleteDeck->setVisible(!inputMode);
-	btnSaveDeckAs->setVisible(true);
-	btnRenameDeck->setVisible(true);
+	btnSaveDeckAs->setVisible(!inputMode);
+	btnRenameDeck->setVisible(!inputMode);
 	if(inputMode) {
 		ebDeckname->setRelativePosition(localRect(62, 35, right, 60));
-		const int contentLeft = 5;
-		const int contentRight = right;
-		const int gap = 2;
-		const int contentWidth = contentRight - contentLeft;
-		const int buttonWidth = std::max(1, (contentWidth - gap) / 2);
-		btnRenameDeck->setRelativePosition(localRect(contentLeft, 65, contentLeft + buttonWidth, 90));
-		btnSaveDeckAs->setRelativePosition(localRect(contentLeft + buttonWidth + gap, 65, contentRight, 90));
-		btnSaveDeckAs->setText(deckBuilder.deck_name_input_mode == 1 ? L"Create" : L"Rename");
-		btnRenameDeck->setText(L"Cancel");
 		return;
 	}
 	stBanlist->setRelativePosition(localRect(5, 8, 60, 28));
