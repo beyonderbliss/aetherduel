@@ -236,6 +236,38 @@ jobs:
           )
           text = text.replace(oncreate_anchor, oncreate_back)
           native.write_text(text)
+
+          # Apply immersive navigation-bar behavior to the keyboard AlertDialog
+          # itself. This is a single, isolated experiment; Activity flags remain unchanged.
+          textentry = Path("src/main/java/io.github.edo9300.edopro/TextEntry.java")
+          text = textentry.read_text()
+          dialog_anchor = "\t\tmTextInputDialog.show();\n"
+          dialog_replacement = """\t\tmTextInputDialog.show();
+
+          \t\t// Experiment: request immersive navigation bars on the dialog window,
+          \t\t// which owns the text-entry IME, rather than only on the Activity window.
+          \t\tandroid.view.Window dialogWindow = mTextInputDialog.getWindow();
+          \t\tif (dialogWindow != null) {
+          \t\t\tif (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+          \t\t\t\tandroid.view.WindowInsetsController controller = dialogWindow.getInsetsController();
+          \t\t\t\tif (controller != null) {
+          \t\t\t\t\tcontroller.setSystemBarsBehavior(
+          \t\t\t\t\t\t\tandroid.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+          \t\t\t\t\tcontroller.hide(android.view.WindowInsets.Type.navigationBars());
+          \t\t\t\t}
+          \t\t\t} else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+          \t\t\t\tdialogWindow.getDecorView().setSystemUiVisibility(
+          \t\t\t\t\t\tandroid.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+          \t\t\t\t\t\t| android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+          \t\t\t\t\t\t| android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+          \t\t\t}
+          \t\t}
+          """
+          assert text.count(dialog_anchor) == 1, "Could not uniquely locate TextEntry dialog show()"
+          text = text.replace(dialog_anchor, dialog_replacement)
+          textentry.write_text(text)
+          print("Applied isolated immersive navigation-bar request to TextEntry AlertDialog.")
+
           print("WindBot-free Android wrapper prepared with native deck-name Back cancellation.")
           PY
           ! grep -R -nE 'libwindbot|WindBot\.(initAndroid|runAndroid|addDatabase)' build.gradle src/main/java
