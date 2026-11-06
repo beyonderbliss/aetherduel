@@ -78,6 +78,7 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import json
           import re
 
           gradle = Path("build.gradle")
@@ -154,44 +155,45 @@ jobs:
           assert text.count(anchor) == 1, "Could not locate native callback declarations"
           assert "putBackKeyEvent" not in text, "Back callback already exists"
           text = text.replace(anchor, anchor + declaration)
-          input_mode_java = """	private int deckNamePreviousSystemUiVisibility = -1;
+          input_mode_java = """
+\tprivate int deckNamePreviousSystemUiVisibility = -1;
           private boolean deckNameInputModeActive = false;
 
-          	public void setDeckNameInputMode(boolean active) {
-          		runOnUiThread(() -> {
-          			android.view.View decor = getWindow().getDecorView();
-          			deckNameInputModeActive = active;
-          			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-          				android.view.WindowInsetsController controller = getWindow().getInsetsController();
-          				if (controller != null) {
-          					controller.setSystemBarsBehavior(
-          							android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-          					controller.hide(android.view.WindowInsets.Type.navigationBars());
-          				}
-          				// Reapply after the IME request so its inset transition cannot leave
-          				// the navigation bar visible beside the split keyboard.
-          				if (active) {
-          					decor.post(() -> {
-          						if (deckNameInputModeActive) {
-          							android.view.WindowInsetsController current = getWindow().getInsetsController();
-          							if (current != null)
-          								current.hide(android.view.WindowInsets.Type.navigationBars());
-          						}
-          					});
-          				}
-          			} else if (active) {
-          				if (deckNamePreviousSystemUiVisibility < 0)
-          					deckNamePreviousSystemUiVisibility = decor.getSystemUiVisibility();
-          				decor.setSystemUiVisibility(
-          						deckNamePreviousSystemUiVisibility
-          								| android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-          								| android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-          			} else if (deckNamePreviousSystemUiVisibility >= 0) {
-          				decor.setSystemUiVisibility(deckNamePreviousSystemUiVisibility);
-          				deckNamePreviousSystemUiVisibility = -1;
-          			}
-          		});
-          	}
+          \tpublic void setDeckNameInputMode(boolean active) {
+          \t\trunOnUiThread(() -> {
+          \t\t\tandroid.view.View decor = getWindow().getDecorView();
+          \t\t\tdeckNameInputModeActive = active;
+          \t\t\tif (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+          \t\t\t\tandroid.view.WindowInsetsController controller = getWindow().getInsetsController();
+          \t\t\t\tif (controller != null) {
+          \t\t\t\t\tcontroller.setSystemBarsBehavior(
+          \t\t\t\t\t\t\tandroid.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+          \t\t\t\t\tcontroller.hide(android.view.WindowInsets.Type.navigationBars());
+          \t\t\t\t}
+          \t\t\t\t// Reapply after the IME request so its inset transition cannot leave
+          \t\t\t\t// the navigation bar visible beside the split keyboard.
+          \t\t\t\tif (active) {
+          \t\t\t\t\tdecor.post(() -> {
+          \t\t\t\t\t\tif (deckNameInputModeActive) {
+          \t\t\t\t\t\t\tandroid.view.WindowInsetsController current = getWindow().getInsetsController();
+          \t\t\t\t\t\t\tif (current != null)
+          \t\t\t\t\t\t\t\tcurrent.hide(android.view.WindowInsets.Type.navigationBars());
+          \t\t\t\t\t\t}
+          \t\t\t\t\t});
+          \t\t\t\t}
+          \t\t\t} else if (active) {
+          \t\t\t\tif (deckNamePreviousSystemUiVisibility < 0)
+          \t\t\t\t\tdeckNamePreviousSystemUiVisibility = decor.getSystemUiVisibility();
+          \t\t\t\tdecor.setSystemUiVisibility(
+          \t\t\t\t\t\tdeckNamePreviousSystemUiVisibility
+          \t\t\t\t\t\t\t| android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+          \t\t\t\t\t\t\t| android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+          \t\t\t} else if (deckNamePreviousSystemUiVisibility >= 0) {
+          \t\t\t\tdecor.setSystemUiVisibility(deckNamePreviousSystemUiVisibility);
+          \t\t\t\tdeckNamePreviousSystemUiVisibility = -1;
+          \t\t\t}
+          \t\t});
+          \t}
           """
 
           old_back = """\t@Override
@@ -232,24 +234,26 @@ jobs:
               + "\t\t}\n"
           )
           text = text.replace(oncreate_anchor, oncreate_back)
-          old_show_dialog = """	public void showDialog(String current) {
-          		var intent = new Intent();
-          		intent.putExtra("current", current);
-          		intent.setAction("INPUT_TEXT");
-          		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-          	}"""
-          new_show_dialog = """	public void showDialog(String current, boolean deckNameInput) {
-          		var intent = new Intent();
-          		intent.putExtra("current", current);
-          		intent.putExtra("deckNameInput", deckNameInput);
-          		intent.setAction("INPUT_TEXT");
-          		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-          	}"""
+          old_show_dialog = """
+\tpublic void showDialog(String current) {
+          \t\tvar intent = new Intent();
+          \t\tintent.putExtra("current", current);
+          \t\tintent.setAction("INPUT_TEXT");
+          \t\tLocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+          \t}"""
+          new_show_dialog = """
+\tpublic void showDialog(String current, boolean deckNameInput) {
+          \t\tvar intent = new Intent();
+          \t\tintent.putExtra("current", current);
+          \t\tintent.putExtra("deckNameInput", deckNameInput);
+          \t\tintent.setAction("INPUT_TEXT");
+          \t\tLocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+          \t}"""
           assert text.count(old_show_dialog) == 1, "Could not locate showDialog method"
           text = text.replace(old_show_dialog, new_show_dialog)
           old_text_entry_receiver = "new TextEntry().Show(EpNativeActivity.this, intent.getStringExtra(\"current\"));"
           new_text_entry_receiver = """new TextEntry().Show(EpNativeActivity.this, intent.getStringExtra("current"),
-          							intent.getBooleanExtra("deckNameInput", false));"""
+          \t\t\t\t\t\t\tintent.getBooleanExtra("deckNameInput", false));"""
           assert text.count(old_text_entry_receiver) == 1, "Could not locate TextEntry receiver"
           text = text.replace(old_text_entry_receiver, new_text_entry_receiver)
           native.write_text(text)
@@ -257,7 +261,7 @@ jobs:
           # Replace the Android IME dialog with AetherDuel's split in-app keyboard.
           textentry = Path("src/main/java/io.github.edo9300.edopro/TextEntry.java")
           java_source = r'''package io.github.edo9300.edopro;
-          
+
           import android.app.AlertDialog;
           import android.content.Context;
           import android.graphics.Color;
@@ -271,7 +275,7 @@ jobs:
           import android.widget.LinearLayout;
           import android.widget.Space;
           import android.widget.TextView;
-          
+
           public class TextEntry {
               private AlertDialog mTextInputDialog;
               private Context context;
@@ -282,7 +286,7 @@ jobs:
               private boolean shifted;
               private boolean symbols;
               private boolean finished;
-          
+
               public void Show(Context context, String current, boolean deckNameInput) {
                   this.context = context;
                   this.deckNameInput = deckNameInput;
@@ -290,7 +294,7 @@ jobs:
                   this.shifted = false;
                   this.symbols = false;
                   this.finished = false;
-          
+
                   LinearLayout root = new LinearLayout(context);
                   root.setOrientation(LinearLayout.VERTICAL);
                   root.setPadding(dp(8), dp(8), dp(8), dp(10));
@@ -298,7 +302,7 @@ jobs:
                   panel.setColor(Color.rgb(24, 27, 34));
                   panel.setCornerRadius(dp(12));
                   root.setBackground(panel);
-          
+
                   preview = new TextView(context);
                   preview.setTextColor(Color.WHITE);
                   preview.setTextSize(16);
@@ -311,19 +315,19 @@ jobs:
                           new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(38));
                   previewParams.setMargins(dp(2), dp(2), dp(2), dp(7));
                   root.addView(preview, previewParams);
-          
+
                   keyboardRows = new LinearLayout(context);
                   keyboardRows.setOrientation(LinearLayout.VERTICAL);
                   root.addView(keyboardRows, new LinearLayout.LayoutParams(
                           LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                   updatePreview();
                   rebuildKeyboard();
-          
+
                   mTextInputDialog = new AlertDialog.Builder(context).setView(root).create();
                   mTextInputDialog.setCanceledOnTouchOutside(false);
                   mTextInputDialog.setOnCancelListener(dialog -> cancelInput());
                   mTextInputDialog.show();
-          
+
                   Window window = mTextInputDialog.getWindow();
                   if (window != null) {
                       window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -334,7 +338,7 @@ jobs:
                       applyImmersiveNavigation(window);
                   }
               }
-          
+
               private void rebuildKeyboard() {
                   keyboardRows.removeAllViews();
                   if (!symbols) {
@@ -349,13 +353,13 @@ jobs:
                               new String[]{"6", "7", "8", "9", "0"});
                       addSplitRow(new String[]{"@", "#", "$", "%", "&"},
                               new String[]{"-", "+", "(", ")", "/"});
-                      addSplitRow(new String[]{"=", "*", "'", "\"", ":"},
+                      addSplitRow(new String[]{"=", "*", "'", "\" ", ":"},
                               new String[]{";", "!", "?", "⌫"});
                   }
                   addSplitRow(new String[]{"?123", ",", "SPACE"},
                           new String[]{".", "CANCEL", "DONE"});
               }
-          
+
               private void addSplitRow(String[] leftKeys, String[] rightKeys) {
                   LinearLayout row = new LinearLayout(context);
                   row.setOrientation(LinearLayout.HORIZONTAL);
@@ -363,22 +367,22 @@ jobs:
                   left.setOrientation(LinearLayout.HORIZONTAL);
                   LinearLayout right = new LinearLayout(context);
                   right.setOrientation(LinearLayout.HORIZONTAL);
-          
+
                   row.addView(left, new LinearLayout.LayoutParams(0, dp(45), 1f));
                   row.addView(new Space(context), new LinearLayout.LayoutParams(dp(62), dp(45)));
                   row.addView(right, new LinearLayout.LayoutParams(0, dp(45), 1f));
-          
+
                   for (String key : leftKeys)
                       addKey(left, key);
                   for (String key : rightKeys)
                       addKey(right, key);
-          
+
                   LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
                           LinearLayout.LayoutParams.MATCH_PARENT, dp(45));
                   rowParams.setMargins(0, dp(2), 0, dp(2));
                   keyboardRows.addView(row, rowParams);
               }
-          
+
               private void addKey(LinearLayout group, String key) {
                   Button button = new Button(context);
                   button.setText(getKeyLabel(key));
@@ -390,14 +394,14 @@ jobs:
                   button.setPadding(dp(2), 0, dp(2), 0);
                   button.setBackground(makeKeyBackground(true));
                   button.setOnClickListener(view -> handleKey(key));
-          
+
                   float weight = "SPACE".equals(key) ? 2f : 1f;
                   LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0,
                           LinearLayout.LayoutParams.MATCH_PARENT, weight);
                   params.setMargins(dp(2), 0, dp(2), 0);
                   group.addView(button, params);
               }
-          
+
               private String getKeyLabel(String key) {
                   if ("SHIFT".equals(key))
                       return "⇧";
@@ -415,7 +419,7 @@ jobs:
                       return shifted ? key.toUpperCase() : key;
                   return key;
               }
-          
+
               private void handleKey(String key) {
                   if (finished)
                       return;
@@ -447,11 +451,11 @@ jobs:
                       updatePreview();
                   }
               }
-          
+
               private void updatePreview() {
                   preview.setText(value.length() == 0 ? " " : value.toString());
               }
-          
+
               private void pushResult(String text, boolean sendEnter) {
                   if (finished)
                       return;
@@ -460,7 +464,7 @@ jobs:
                   if (mTextInputDialog != null)
                       mTextInputDialog.dismiss();
               }
-          
+
               private void cancelInput() {
                   if (finished)
                       return;
@@ -473,7 +477,7 @@ jobs:
                   if (mTextInputDialog != null)
                       mTextInputDialog.dismiss();
               }
-          
+
               private GradientDrawable makeKeyBackground(boolean key) {
                   GradientDrawable drawable = new GradientDrawable();
                   drawable.setColor(key ? Color.rgb(54, 59, 69) : Color.rgb(38, 43, 52));
@@ -481,11 +485,11 @@ jobs:
                   drawable.setStroke(dp(1), Color.rgb(75, 82, 94));
                   return drawable;
               }
-          
+
               private int dp(float value) {
                   return (int) (value * context.getResources().getDisplayMetrics().density + 0.5f);
               }
-          
+
               private void applyImmersiveNavigation(Window window) {
                   if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
                       android.view.WindowInsetsController controller = window.getInsetsController();
@@ -563,7 +567,7 @@ jobs:
           method_start = java_source.index("private void rebuildKeyboard()")
           method_end = java_source.index("private void addSplitRow", method_start)
           java_source = java_source[:method_start] + method + "\n\n              private void addGridRow" + java_source[method_end + len("private void addSplitRow"):]
-
+          
           row_method = """(int rowIndex, String[][] items) {
                   LinearLayout row = new LinearLayout(context);
                   row.setOrientation(LinearLayout.HORIZONTAL);
