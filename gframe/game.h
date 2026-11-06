@@ -30,6 +30,7 @@ namespace irr {
 	class IrrlichtDevice;
 	namespace gui {
 		class IGUIElement;
+		class CImageGUISkin;
 		class CGUIFileSelectListBox;
 		class CGUITTFont;
 		class CGUIImageButton;
@@ -732,6 +733,7 @@ public:
 	irr::core::vector2d<irr::f32> window_scale;
 
 	CGUISkinSystem* skinSystem;
+	irr::gui::CImageGUISkin* verticalButtonImageSkin = nullptr;
 
 	ClientField dField;
 	DeckBuilder deckBuilder;
