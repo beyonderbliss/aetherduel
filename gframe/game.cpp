@@ -3361,24 +3361,24 @@ void Game::UpdateDeckMenuLayout() {
 		return Resize(left, top, rightEdge, bottom);
 	};
 	const bool inputMode = deckBuilder.deck_name_input_mode != 0;
-	// Keep the deck-name prompt compact while the shared Android text dialog is active.
-	wDeckEdit->setRelativePosition(Resize(panelLeft, kUiEdgeMargin, panelRight, inputMode ? 65 : 130));
+	// Keep the full deck menu visible while the shared Android text dialog is active.
+	wDeckEdit->setRelativePosition(Resize(panelLeft, kUiEdgeMargin, panelRight, 130));
 	stBanlist->setVisible(true);
 	cbDBLFList->setVisible(true);
 	stDeck->setVisible(true);
 	cbDBDecks->setVisible(!inputMode);
 	ebDeckname->setVisible(inputMode);
-	btnSaveDeck->setVisible(!inputMode);
-	btnShuffleDeck->setVisible(!inputMode);
-	btnSortDeck->setVisible(!inputMode);
-	btnClearDeck->setVisible(!inputMode);
-	btnDeleteDeck->setVisible(!inputMode);
-	btnSaveDeckAs->setVisible(!inputMode);
-	btnRenameDeck->setVisible(!inputMode);
-	if(inputMode) {
+	btnSaveDeck->setVisible(true);
+	btnShuffleDeck->setVisible(true);
+	btnSortDeck->setVisible(true);
+	btnClearDeck->setVisible(true);
+	btnDeleteDeck->setVisible(true);
+	btnSaveDeckAs->setVisible(true);
+	btnRenameDeck->setVisible(true);
+	if(inputMode)
 		ebDeckname->setRelativePosition(localRect(62, 35, right, 60));
-		return;
-	}
+	else
+		ebDeckname->setRelativePosition(localRect(62, 65, right, 90));
 	stBanlist->setRelativePosition(localRect(5, 8, 60, 28));
 	cbDBLFList->setRelativePosition(localRect(62, 5, right, 30));
 	stDeck->setRelativePosition(localRect(5, 38, 60, 58));
