@@ -320,7 +320,7 @@ void Game::Initialize() {
 	mainMenuLeftX = 510 - mainMenuWidth / 2;
 	mainMenuRightX = 510 + mainMenuWidth / 2;
 	auto* mainMenuRoundedBackground = new CGUIRoundedPanel(env, env->getRootGUIElement(), -1,
-		Scale(mainMenuLeftX, 200, mainMenuRightX, 450), driver, Scale(12), irr::gui::EGDC_WINDOW);
+		Scale(mainMenuLeftX, 200, mainMenuRightX, 450), driver, Scale(8), irr::gui::EGDC_WINDOW);
 	mainMenuRoundedBackground->drop();
 	wMainMenu = env->addWindow(Scale(mainMenuLeftX, 200, mainMenuRightX, 450), false, EDOPRO_VERSION_STRING);
 	mainMenuRoundedBackground->setAnchor(wMainMenu);
@@ -626,9 +626,10 @@ void Game::Initialize() {
 	wDeckEdit = AlignElementWithParent(env->addStaticText(L"", Scale(309, kUiEdgeMargin, 605, 130), true, false, 0, -1, true));
 	auto* deckEditRoundedBackground = new CGUIRoundedPanel(env, wDeckEdit, -1,
 		irr::core::rect<irr::s32>(0, 0, wDeckEdit->getRelativePosition().getWidth(), wDeckEdit->getRelativePosition().getHeight()),
-		driver, Scale(12), irr::gui::EGDC_3D_FACE);
+		driver, Scale(8), irr::gui::EGDC_3D_FACE);
 	deckEditRoundedBackground->drop();
 	wDeckEdit->setDrawBackground(false);
+	wDeckEdit->setDrawBorder(false);
 	wDeckEdit->setVisible(false);
 	stBanlist = env->addStaticText(gDataManager->GetSysString(1300).data(), Scale(10, 9, 100, 29), false, false, wDeckEdit);
 	stBanlist->setTextAlignment(irr::gui::EGUIA_LOWERRIGHT, irr::gui::EGUIA_CENTER);
@@ -745,9 +746,10 @@ void Game::Initialize() {
 	wSort = AlignElementWithParent(env->addStaticText(L"", Scale(930, 132, 1024 - kUiEdgeMargin, 157), true, false, 0, -1, true));
 	auto* sortRoundedBackground = new CGUIRoundedPanel(env, wSort, -1,
 		irr::core::rect<irr::s32>(0, 0, wSort->getRelativePosition().getWidth(), wSort->getRelativePosition().getHeight()),
-		driver, Scale(12), irr::gui::EGDC_3D_FACE);
+		driver, Scale(8), irr::gui::EGDC_3D_FACE);
 	sortRoundedBackground->drop();
 	wSort->setDrawBackground(false);
+	wSort->setDrawBorder(false);
 	cbSortType = AlignElementWithParent(AddComboBox(env, Scale(5, 2, 84, 23), wSort, COMBOBOX_SORTTYPE));
 #if EDOPRO_ANDROID || EDOPRO_IOS
 	static_cast<irr::gui::CGUICustomComboBox*>(cbSortType)->setArrowOnlyClick(true);
@@ -759,9 +761,10 @@ void Game::Initialize() {
 	wFilter = AlignElementWithParent(env->addStaticText(L"", Scale(610, kUiEdgeMargin, 1024 - kUiEdgeMargin, 130), true, false, 0, -1, true));
 	auto* filterRoundedBackground = new CGUIRoundedPanel(env, wFilter, -1,
 		irr::core::rect<irr::s32>(0, 0, wFilter->getRelativePosition().getWidth(), wFilter->getRelativePosition().getHeight()),
-		driver, Scale(12), irr::gui::EGDC_3D_FACE);
+		driver, Scale(8), irr::gui::EGDC_3D_FACE);
 	filterRoundedBackground->drop();
 	wFilter->setDrawBackground(false);
+	wFilter->setDrawBorder(false);
 	wFilter->setVisible(false);
 	stCategory = env->addStaticText(gDataManager->GetSysString(1311).data(), Scale(5, 7, 70, 27), false, false, wFilter);
 	defaultStrings.emplace_back(stCategory, 1311);
@@ -841,7 +844,7 @@ void Game::Initialize() {
 	wCategories->setDrawBackground(false);
 	auto* categoriesRoundedBackground = new CGUIRoundedPanel(env, wCategories, -1,
 		irr::core::rect<irr::s32>(0, 0, wCategories->getRelativePosition().getWidth(), wCategories->getRelativePosition().getHeight()),
-		driver, Scale(12), irr::gui::EGDC_WINDOW);
+		driver, Scale(8), irr::gui::EGDC_WINDOW);
 	categoriesRoundedBackground->drop();
 	wCategories->getCloseButton()->setVisible(false);
 	wCategories->setDrawTitlebar(false);
