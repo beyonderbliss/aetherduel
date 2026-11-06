@@ -47,6 +47,7 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
+          import json
           import re
 
           manifest = Path("src/main/AndroidManifest.xml")
@@ -501,8 +502,32 @@ jobs:
                   }
               }
           }'''
+          # Apply shared browser/Android keyboard geometry; all values are Android dp.
+          layout = json.loads(Path("deps/edopro/tools/web-layout-lab/layout-spec/keyboard.json").read_text())
+          panel, preview_spec, keys = layout["panel"], layout["preview"], layout["keys"]
+          replacements = {
+              "root.setPadding(dp(8), dp(8), dp(8), dp(10));": f"root.setPadding(dp({panel['padding']['left']}), dp({panel['padding']['top']}), dp({panel['padding']['right']}), dp({panel['padding']['bottom']}));",
+              "panel.setColor(Color.rgb(24, 27, 34));": f'panel.setColor(Color.parseColor("{panel["color"]}"));',
+              "panel.setCornerRadius(dp(12));": f"panel.setCornerRadius(dp({panel['radius']}));",
+              "new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(38));": f"new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp({preview_spec['height']}));",
+              "previewParams.setMargins(dp(2), dp(2), dp(2), dp(7));": f"previewParams.setMargins(dp({preview_spec['margin']['left']}), dp({preview_spec['margin']['top']}), dp({preview_spec['margin']['right']}), dp({preview_spec['margin']['bottom']}));",
+              "preview.setPadding(dp(12), 0, dp(12), 0);": f"preview.setPadding(dp({preview_spec['paddingX']}), 0, dp({preview_spec['paddingX']}), 0);",
+              "new LinearLayout.LayoutParams(0, dp(45), 1f)": f"new LinearLayout.LayoutParams(0, dp({keys['rowHeight']}), 1f)",
+              "new LinearLayout.LayoutParams(dp(62), dp(45))": f"new LinearLayout.LayoutParams(dp({keys['centerGap']}), dp({keys['rowHeight']}))",
+              "LinearLayout.LayoutParams.MATCH_PARENT, dp(45));": f"LinearLayout.LayoutParams.MATCH_PARENT, dp({keys['rowHeight']}));",
+              "rowParams.setMargins(0, dp(2), 0, dp(2));": f"rowParams.setMargins(0, dp({keys['rowGap']}), 0, dp({keys['rowGap']}));",
+              "params.setMargins(dp(2), 0, dp(2), 0);": f"params.setMargins(dp({keys['horizontalMargin']}), 0, dp({keys['horizontalMargin']}), 0);",
+              "drawable.setColor(key ? Color.rgb(54, 59, 69) : Color.rgb(38, 43, 52));": f'drawable.setColor(Color.parseColor(key ? "{keys["color"]}" : "{preview_spec["color"]}"));',
+              "drawable.setCornerRadius(dp(key ? 6 : 7));": f"drawable.setCornerRadius(dp(key ? {keys['radius']} : {preview_spec['radius']}));",
+              "drawable.setStroke(dp(1), Color.rgb(75, 82, 94));": f'drawable.setStroke(dp(1), Color.parseColor("{keys["stroke"]}"));',
+              "button.setTextColor(Color.WHITE);": f'button.setTextColor(Color.parseColor("{keys["textColor"]}"));',
+              "button.setTextSize(key.length() > 1 ? 11 : 15);": f"button.setTextSize(key.length() > 1 ? {keys['actionTextSize']} : {keys['letterTextSize']});"
+          }
+          for old_value, new_value in replacements.items():
+              assert java_source.count(old_value) == 1, "Could not uniquely apply keyboard layout value: " + old_value
+              java_source = java_source.replace(old_value, new_value)
           textentry.write_text(java_source)
-          print("Installed AetherDuel split keyboard without invoking the Android IME.")
+          print("Installed split keyboard using the shared keyboard layout specification.")
 
           print("WindBot-free Android wrapper prepared with native deck-name Back cancellation.")
           PY
