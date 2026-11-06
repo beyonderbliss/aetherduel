@@ -17,15 +17,15 @@ Geometry values use Android dp. The browser preview renders the same grid at the
 2. Choose Letters or Symbols.
 3. Drag a key to reposition it. Drag its yellow corner handle to change its width.
 4. Change Snap to 1, 2, or 3 cells to control movement increments.
-5. Adjust Center gap from 4 to 8 to compare thumb reach in landscape. This is a preview-only control; it does not modify the saved keyboard JSON.
+5. Adjust Center gap from 4 to 8 to compare thumb reach in landscape. The selected value is included in the copied JSON as `grid.centerGap`.
 6. Select a key to edit its Column X, Row Y, and Width numerically.
-7. Copy the JSON and update layout-spec/keyboard.json when you want to persist key edits. The center-gap value is not included in the copied JSON until a final value is chosen and implemented in the Android geometry.
+7. Copy the JSON and update layout-spec/keyboard.json when you want to persist key edits. The selected center-gap value is included as `grid.centerGap`.
 
 The current editor intentionally keeps key height to one row; width and position are independently configurable. This maps to the current Android native keyboard row renderer.
 
 ## Android integration
 
-The Android workflow reads layout-spec/keyboard.json while generating TextEntry.java. It creates each native keyboard row from the per-key X coordinate and width, inserting weighted spacer cells for empty grid columns. Changing a key's row or column moves it in the native keyboard too. Geometry and palette values are also applied from the shared specification.
+The Android workflow reads layout-spec/keyboard.json while generating TextEntry.java. It maps the 24-column editor grid to 10 weighted columns on each side plus the selected center-gap weight, preserving keys that span across the center gap and inserting weighted spacers for empty regions. Changing a key's row or column moves it in the native keyboard too. Geometry and palette values are also applied from the shared specification.
 
 The workflow remains manual through workflow_dispatch. Editing the lab does not trigger an APK build.
 
