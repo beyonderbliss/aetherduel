@@ -372,9 +372,9 @@ void showInputDialog(epro::path_stringview current, bool deckNameInput) {
 	jnienv->DeleteLocalRef(jcurrent);
 }
 
-void showComboBox(const std::vector<std::string>& parameters, int selected, bool isCardCategory) {
+void showComboBox(const std::vector<std::string>& parameters, int selected) {
 	(void)selected;
-	jmethodID showbox = jnienv->GetMethodID(nativeActivity, "showComboBox", JPARAMS(JARRAY(JSTRING)JBOOL)JVOID);
+	jmethodID showbox = jnienv->GetMethodID(nativeActivity, "showComboBox", JPARAMS(JARRAY(JSTRING))JVOID);
 
 	jsize len = parameters.size();
 	jobjectArray jlist = jnienv->NewObjectArray(len, jnienv->FindClass("java/lang/String"), 0);
@@ -385,7 +385,7 @@ void showComboBox(const std::vector<std::string>& parameters, int selected, bool
 		jnienv->DeleteLocalRef(jstring);
 	}
 
-	jnienv->CallVoidMethod(app_global->activity->clazz, showbox, jlist, isCardCategory ? JNI_TRUE : JNI_FALSE);
+	jnienv->CallVoidMethod(app_global->activity->clazz, showbox, jlist);
 
 	jnienv->DeleteLocalRef(jlist);
 }
