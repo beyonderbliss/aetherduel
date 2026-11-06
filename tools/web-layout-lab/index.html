@@ -1,395 +1,126 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#17191d">
-  <title>AetherDuel · Card Layout Lab</title>
-  <style>
-    * { box-sizing: border-box; }
-    html, body { width: 100%; min-height: 100%; margin: 0; }
-    body {
-      min-height: 100vh; min-height: 100dvh;
-      display: flex; flex-direction: column; overflow: auto;
-      background: #17191d; color: #e8eaf0;
-      font: 14px/1.4 system-ui, sans-serif;
-    }
-    header {
-      display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px;
-      padding: 8px 12px; padding-top: max(8px, env(safe-area-inset-top));
-      background: #22252b; border-bottom: 1px solid #3b3f48;
-    }
-    header strong { font-size: 13px; }
-    header span { color: #aeb4c0; font-size: 11px; }
-    .toolbar {
-      display: flex; align-items: center; flex-wrap: wrap; gap: 7px;
-      padding: 8px 10px; background: #202329; border-bottom: 1px solid #383d46;
-    }
-    .control { display: flex; align-items: center; gap: 5px; color: #cbd0da; font-size: 11px; }
-    select, input[type="number"], button, .file-label {
-      min-height: 30px; border: 1px solid #555d69; border-radius: 5px;
-      background: #2a2f37; color: #f1f3f7; padding: 4px 7px; font: inherit; font-size: 12px;
-    }
-    input[type="number"] { width: 64px; }
-    input[type="checkbox"] { accent-color: #8da9d8; }
-    button, .file-label { cursor: pointer; white-space: nowrap; }
-    button:active, .file-label:active { background: #3b4350; }
-    input[type="file"] { display: none; }
-    .fields {
-      display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
-      padding: 7px 10px; background: #1c1f24; border-bottom: 1px solid #343942;
-    }
-    .fields[hidden] { display: none; }
-    .fields .group-title { color: #8993a2; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
-    main { position: relative; flex: none; display: block; width: max-content; min-width: 100%; min-height: 0; overflow: visible; }
-    /* One CSS pixel per device-reference pixel: the page scrolls around this fixed sandbox. */
-    canvas { display: block; width: 2712px; height: 1220px; max-width: none; max-height: none; }
-    @media (orientation: portrait) {
-      canvas { width: 1220px; height: 2712px; }
-    }
-    #status {
-      position: absolute; right: 8px; bottom: 8px; max-width: calc(100% - 16px);
-      padding: 5px 7px; border-radius: 4px; background: #17191ddd;
-      color: #c0c7d2; font-size: 10px; line-height: 1.4;
-      white-space: pre-line; pointer-events: none;
-    }
-    @media (max-width: 480px) {
-      header { gap: 5px 8px; padding-inline: 9px; }
-      header span { flex-basis: 100%; order: 3; }
-      .toolbar, .fields { gap: 6px; padding-inline: 8px; }
-      .control { font-size: 10px; }
-      input[type="number"] { width: 57px; }
-      main { min-height: 0; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17191d">
+<title>PrimaNyx · Keyboard Layout Lab</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#17191d;color:#e8eaf0;font:14px/1.4 system-ui,sans-serif}
+body{padding-bottom:16px}header{padding:10px 12px;background:#22252b;border-bottom:1px solid #3b3f48}
+header strong{display:block;font-size:14px}header span{font-size:11px;color:#aeb4c0}
+.toolbar,.fields{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:9px 10px;background:#202329;border-bottom:1px solid #383d46}
+.fields{background:#1c1f24}.control{display:flex;align-items:center;gap:5px;color:#cbd0da;font-size:11px}
+input[type=number],button,select{min-height:31px;border:1px solid #555d69;border-radius:5px;background:#2a2f37;color:#f1f3f7;padding:4px 7px;font:inherit;font-size:12px}
+input[type=number]{width:62px}button{cursor:pointer}
+main{padding:12px 8px}.stage{width:100%;max-width:760px;margin:auto;border:1px dashed #596170;border-radius:10px;background:#101216;padding:10px}
+.stage-label{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;color:#aeb4c0;font-size:10px}
+.keyboard{width:100%;padding:var(--pt) var(--pr) var(--pb) var(--pl);border-radius:var(--panel-radius);background:var(--panel-color);border:1px solid var(--panel-stroke)}
+.preview{height:var(--preview-height);margin:var(--preview-top) var(--preview-right) var(--preview-bottom) var(--preview-left);padding:0 var(--preview-pad);display:flex;align-items:center;border-radius:var(--preview-radius);background:var(--preview-color);color:white;font-size:13px}
+.row{display:flex;gap:0;height:var(--row-height);margin:var(--row-gap) 0}
+.half{display:flex;flex:1;min-width:0}
+.center-gap{flex:0 0 var(--center-gap)}
+.key{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;margin:0 var(--key-margin);border-radius:var(--key-radius);border:1px solid var(--key-stroke);background:var(--key-color);color:var(--key-text);font-size:var(--letter-size);font-weight:500;overflow:hidden}
+.key.action{font-size:var(--action-size)}.key.space{flex:2}.key.special{background:#414957}
+.status{padding:8px 10px;color:#aeb4c0;font-size:11px;white-space:pre-wrap}
+.group-title{font-size:10px;color:#8993a2;text-transform:uppercase;letter-spacing:.06em}
+@media(max-width:480px){header{padding:9px}.toolbar,.fields{gap:6px;padding:8px}.control{font-size:10px}input[type=number]{width:55px}main{padding:9px 5px}.stage{padding:7px}}
+</style>
 </head>
 <body>
-  <header>
-    <strong>AetherDuel · Card Layout Lab</strong>
-    <span>Shared JSON → browser preview → generated native C++ constants</span>
-    <label class="file-label" for="artwork">Load artwork</label>
-    <input id="artwork" type="file" accept="image/*">
-  </header>
-
-  <section class="toolbar" aria-label="Preview controls">
-    <label class="control">Context<select id="scene"><option value="duel">Duel</option><option value="menu">Menu</option></select></label>
-    <label class="control">Mode
-      <select id="mode">
-        <option value="standard">Standard EDOPro</option>
-        <option value="fullscreen">Fullscreen</option>
-      </select>
-    </label>
-    <label class="control" id="ratioToggle">
-      <input id="keepRatio" type="checkbox"> Keep wrapper ratio
-    </label>
-    <button id="reset" type="button">Reset values</button>
-    <button id="copy" type="button">Copy JSON</button>
-  </section>
-
-  <section class="fields" id="standardFields">
-    <span class="group-title">Standard · native logical units</span>
-    <label class="control">Panel X <input id="panelX" type="number" step="1"></label>
-    <label class="control">Panel Y <input id="panelY" type="number" step="1"></label>
-    <label class="control">Padding X <input id="padX" type="number" min="0" step="1"></label>
-    <label class="control">Padding Y <input id="padY" type="number" min="0" step="1"></label>
-    <label class="control">Artwork X <input id="artX" type="number" step="1"></label>
-    <label class="control">Artwork Y <input id="artY" type="number" step="1"></label>
-  </section>
-
-  <section class="fields" id="fullscreenFields" hidden>
-    <span class="group-title">Fullscreen · aspect and origin</span>
-    <label class="control">Ratio W <input id="ratioW" type="number" min="1" step="1"></label>
-    <label class="control">Ratio H <input id="ratioH" type="number" min="1" step="1"></label>
-    <label class="control">Origin X <input id="fullX" type="number" step="1"></label>
-    <label class="control">Origin Y <input id="fullY" type="number" step="1"></label>
-  </section>
-
-  <main>
-    <canvas id="preview" aria-label="Fixed-ratio phone display sandbox"></canvas>
-    <div id="status">Loading shared layout specification…</div>
-  </main>
-
-  <script type="module">
-    const canvas = document.querySelector("#preview");
-    const ctx = canvas.getContext("2d");
-    const status = document.querySelector("#status");
-    const modeSelect = document.querySelector("#mode");
-    const sceneSelect = document.querySelector("#scene");
-    const standardFields = document.querySelector("#standardFields");
-    const fullscreenFields = document.querySelector("#fullscreenFields");
-    const keepRatio = document.querySelector("#keepRatio");
-    const fileInput = document.querySelector("#artwork");
-
-    let spec;
-    let initialSpec;
-    let artwork = null;
-    let artworkUrl = null;
-
-    const numberBindings = {
-      panelX: ["standard", "panel_origin", "x"],
-      panelY: ["standard", "panel_origin", "y"],
-      padX: ["standard", "wrapper_padding", "x"],
-      padY: ["standard", "wrapper_padding", "y"],
-      artX: ["standard", "artwork_origin", "x"],
-      artY: ["standard", "artwork_origin", "y"],
-      ratioW: ["fullscreen", "artwork_aspect_ratio", "width"],
-      ratioH: ["fullscreen", "artwork_aspect_ratio", "height"],
-      fullX: ["fullscreen", "origin", "x"],
-      fullY: ["fullscreen", "origin", "y"]
-    };
-
-    function getPath(path) {
-      return path.reduce((value, key) => value[key], spec);
-    }
-
-    function setPath(path, value) {
-      const target = path.slice(0, -1).reduce((object, key) => object[key], spec);
-      target[path[path.length - 1]] = value;
-    }
-
-    function syncControls() {
-      for (const [id, path] of Object.entries(numberBindings)) {
-        document.querySelector("#" + id).value = getPath(path);
-      }
-      keepRatio.checked = spec.standard.keep_aspect_ratio;
-      standardFields.hidden = modeSelect.value !== "standard";
-      fullscreenFields.hidden = modeSelect.value !== "fullscreen";
-      document.querySelector("#ratioToggle").hidden = modeSelect.value !== "standard";
-      draw();
-    }
-
-    function drawArtwork(x, y, width, height) {
-      if (artwork) {
-        ctx.drawImage(artwork, x, y, width, height);
-      } else {
-        ctx.fillStyle = "#4b5360";
-        ctx.fillRect(x, y, width, height);
-        ctx.strokeStyle = "#8792a3";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x + .5, y + .5, width - 1, height - 1);
-        ctx.fillStyle = "#f0f2f6";
-        ctx.textAlign = "center";
-        ctx.font = "12px system-ui, sans-serif";
-        ctx.fillText("Load card artwork", x + width / 2, y + height / 2);
-      }
-    }
-
-    // Native duel control rectangles copied from gframe/game.cpp (logical 1024x640 units).
-    const nativeControls = [
-      { label: 'Exit', rect: [205, 5, 295, 80] },
-      { label: 'Restart (Single)', rect: [205, 50, 295, 90] },
-      { label: 'Chain: OFF', rect: [205, 100, 295, 135] },
-      { label: 'Always pause', rect: [205, 140, 295, 175] },
-      { label: 'Chain: ON', rect: [205, 180, 295, 215] }
-    ];
-
-    function drawNativeDuelUi(width, height) {
-      const landscape = width >= height;
-      const vw = landscape ? 2712 : 1220;
-      const vh = landscape ? 1220 : 2712;
-      const s = Math.min(width / vw, height / vh);
-      const ox = (width - vw * s) / 2;
-      const oy = (height - vh * s) / 2;
-      for (const item of nativeControls) {
-        const r = item.rect;
-        const x = ox + r[0] * vw / 1024 * s;
-        const y = oy + r[1] * vh / 640 * s;
-        const w = (r[2] - r[0]) * vw / 1024 * s;
-        const h = (r[3] - r[1]) * vh / 640 * s;
-        ctx.fillStyle = '#30213f'; ctx.fillRect(x, y, w, h);
-        ctx.strokeStyle = '#9b7ab7'; ctx.strokeRect(x + .5, y + .5, w - 1, h - 1);
-        ctx.fillStyle = '#f2eaf8'; ctx.font = '12px system-ui, sans-serif';
-        ctx.textAlign = 'center'; ctx.fillText(item.label, x + w / 2, y + h / 2 + 4, Math.max(20, w - 8));
-      }
-      // Do not invent Info/Log/Chat tab widths. Their native layout is handled
-      // by ResizeCardinfoWindow and the tab system; this preview only draws
-      // controls whose rectangles are verified directly in game.cpp.
-    }
-    function drawStandard(width, height) {
-      drawNativeDuelUi(width, height);
-      const layout = spec.standard;
-      const baseW = layout.artwork_size.width + layout.wrapper_padding.x * 2;
-      const baseH = layout.artwork_size.height + layout.wrapper_padding.y * 2;
-
-      // Model the full browser viewport as the native device viewport.
-      // The lab toolbar reduces the canvas area, so fit the virtual device
-      // screen into the canvas with one uniform presentation scale.
-      const viewportWidth = width >= height ? 2712 : 1220;
-      const viewportHeight = width >= height ? 1220 : 2712;
-      const previewScale = Math.min(width / viewportWidth, height / viewportHeight);
-      const offsetX = (width - viewportWidth * previewScale) / 2;
-      const offsetY = (height - viewportHeight * previewScale) / 2;
-
-      // Native window_scale is viewport/1024 and viewport/640; dpi_scale
-      // cancels when the native Scale() helper converts logical coordinates.
-      const scaleX = viewportWidth / layout.resize_reference.width;
-      const scaleY = viewportHeight / layout.resize_reference.height;
-      const panelX = offsetX + layout.panel_origin.x * scaleX * previewScale;
-      const panelY = offsetY + layout.panel_origin.y * scaleY * previewScale;
-      const panelHeight = baseH * scaleY * previewScale;
-      const uncappedWidth = baseW * scaleX * previewScale;
-      const panelWidth = layout.keep_aspect_ratio
-        ? Math.min(uncappedWidth, panelHeight * (baseW / baseH))
-        : uncappedWidth;
-
-      // EGUIA_SCALE scales the artwork child independently with its wrapper.
-      const childScaleX = panelWidth / baseW;
-      const childScaleY = panelHeight / baseH;
-      const artworkX = panelX + layout.artwork_origin.x * childScaleX;
-      const artworkY = panelY + layout.artwork_origin.y * childScaleY;
-      const artworkWidth = layout.artwork_size.width * childScaleX;
-      const artworkHeight = layout.artwork_size.height * childScaleY;
-
-      ctx.fillStyle = "#30343b";
-      ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
-      ctx.strokeStyle = "#778292";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(panelX + .5, panelY + .5, panelWidth - 1, panelHeight - 1);
-      drawArtwork(artworkX, artworkY, artworkWidth, artworkHeight);
-
-
-      const sourceRatio = layout.artwork_size.width / layout.artwork_size.height;
-      const renderedRatio = artworkWidth / artworkHeight;
-      const stretchX = artworkWidth / layout.artwork_size.width;
-      const stretchY = artworkHeight / layout.artwork_size.height;
-      const distortion = stretchX / stretchY;
-      const shapeResult = Math.abs(distortion - 1) < 0.015
-        ? "proportional"
-        : distortion > 1
-          ? `horizontal stretch ×${distortion.toFixed(2)}`
-          : `vertical stretch ×${(1 / distortion).toFixed(2)}`;
-
-      status.textContent = [
-        `STANDARD · native viewport ${Math.round(viewportWidth)}×${Math.round(viewportHeight)}`,
-        `preview canvas ${Math.round(width)}×${Math.round(height)}`,
-        `panel ${panelWidth.toFixed(1)}×${panelHeight.toFixed(1)} · artwork ${artworkWidth.toFixed(1)}×${artworkHeight.toFixed(1)}`,
-        `artwork ratio ${renderedRatio.toFixed(3)} (source ${sourceRatio.toFixed(3)}) · ${shapeResult}`,
-        `keep wrapper ratio: ${layout.keep_aspect_ratio}`
-      ].join("\n");
-    }
-
-    function drawFullscreen(width, height) {
-      ctx.fillStyle = '#18252a'; ctx.fillRect(0, 0, width, height);
-      drawNativeDuelUi(width, height);
-      const layout = spec.fullscreen;
-      const ratioW = layout.artwork_aspect_ratio.width;
-      const ratioH = layout.artwork_aspect_ratio.height;
-
-      // Simulate the complete device viewport, not the smaller canvas left
-      // after the lab controls. Fullscreen is a left-edge overlay; contain
-      // keeps the complete artwork visible in both portrait and landscape.
-      const viewportWidth = width >= height ? 2712 : 1220;
-      const viewportHeight = width >= height ? 1220 : 2712;
-      const previewScale = Math.min(width / viewportWidth, height / viewportHeight);
-      const offsetX = (width - viewportWidth * previewScale) / 2;
-      const offsetY = (height - viewportHeight * previewScale) / 2;
-
-      // Fill viewport height when possible. In portrait, constrain by width
-      // so the complete artwork remains visible, while keeping it left-aligned.
-      const cardScale = Math.min(viewportWidth / ratioW, viewportHeight / ratioH);
-      const cardWidth = ratioW * cardScale;
-      const cardHeight = ratioH * cardScale;
-      const x = offsetX + layout.origin.x * cardScale * previewScale;
-      const y = offsetY
-        + ((viewportHeight - cardHeight) / 2 + layout.origin.y * cardScale) * previewScale;
-      drawArtwork(
-        x,
-        y,
-        cardWidth * previewScale,
-        cardHeight * previewScale
-      );
-
-      const fit = cardHeight >= viewportHeight - 1 ? "height-fit" : "width-fit · full artwork visible";
-      const drawnWidth = cardWidth * previewScale;
-      const drawnHeight = cardHeight * previewScale;
-      status.textContent = [
-        `FIXED DEVICE SANDBOX · ${viewportWidth}×${viewportHeight} reference px`,
-        `canvas ${Math.round(width)}×${Math.round(height)} CSS px · page scroll enabled · scale ${previewScale.toFixed(3)}`,
-        `native logical scale X ${(viewportWidth / 1024).toFixed(3)} · Y ${(viewportHeight / 640).toFixed(3)}`,
-        `card reference ${Math.round(cardWidth)}×${Math.round(cardHeight)} · drawn ${Math.round(drawnWidth)}×${Math.round(drawnHeight)} CSS px`,
-        `origin ${layout.origin.x}, ${layout.origin.y} · ${fit} · DPR ${(window.devicePixelRatio || 1).toFixed(2)}`
-      ].join("\n");
-    }
-
-    function draw() {
-      if (!spec) return;
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-      if (!width || !height) return;
-      // Keep the large fixed-reference canvas within a predictable memory budget.
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-      canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.fillStyle = "#17191d";
-      ctx.fillRect(0, 0, width, height);
-      if (sceneSelect.value === "menu") {
-        status.textContent = "MENU CONTEXT · duel controls and fullscreen card overlay are not rendered";
-        return;
-      }
-      if (modeSelect.value === "standard") drawStandard(width, height);
-      else drawFullscreen(width, height);
-    }
-
-    async function loadSpec() {
-      const response = await fetch("./layout-spec/card-view.json", { cache: "no-store" });
-      if (!response.ok) throw new Error(`Could not load layout spec (${response.status})`);
-      spec = await response.json();
-      if (spec.schema_version !== 1 || !spec.standard || !spec.fullscreen) {
-        throw new Error("Unsupported or incomplete card-view layout schema");
-      }
-      initialSpec = JSON.parse(JSON.stringify(spec));
-      syncControls();
-    }
-
-    for (const [id, path] of Object.entries(numberBindings)) {
-      document.querySelector("#" + id).addEventListener("input", event => {
-        const value = Number(event.target.value);
-        if (!Number.isFinite(value)) return;
-        setPath(path, value);
-        draw();
-      });
-    }
-
-    modeSelect.addEventListener("change", syncControls);
-    sceneSelect.addEventListener("change", draw);
-    keepRatio.addEventListener("change", () => {
-      spec.standard.keep_aspect_ratio = keepRatio.checked;
-      draw();
-    });
-
-    document.querySelector("#reset").addEventListener("click", () => {
-      spec = JSON.parse(JSON.stringify(initialSpec));
-      syncControls();
-    });
-
-    document.querySelector("#copy").addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(JSON.stringify(spec, null, 2));
-        status.textContent = "Updated layout JSON copied. Paste it into layout-spec/card-view.json to make it the shared source.";
-      } catch {
-        status.textContent = "Clipboard unavailable. Use browser site permissions or copy the JSON from the source file.";
-      }
-    });
-
-    fileInput.addEventListener("change", () => {
-      const file = fileInput.files?.[0];
-      if (!file) return;
-      if (artworkUrl) URL.revokeObjectURL(artworkUrl);
-      artworkUrl = URL.createObjectURL(file);
-      const image = new Image();
-      image.onload = () => { artwork = image; draw(); };
-      image.onerror = () => { status.textContent = "Could not read selected image."; };
-      image.src = artworkUrl;
-    });
-
-    new ResizeObserver(draw).observe(canvas.parentElement);
-    window.addEventListener("resize", draw);
-    window.addEventListener("orientationchange", draw);
-    loadSpec().catch(error => {
-      status.textContent = error.message;
-      console.error(error);
-    });
-  </script>
+<header><strong>PrimaNyx · Keyboard Layout Lab</strong><span>Single JSON geometry source · Android dp units · MATCH_PARENT × WRAP_CONTENT</span></header>
+<section class="toolbar">
+<label class="control">Layout <select id="layout"><option value="letters">Letters</option><option value="symbols">Symbols</option></select></label>
+<button id="reset">Reset</button><button id="copy">Copy JSON</button>
+</section>
+<section class="fields" id="geometry">
+<span class="group-title">Geometry · dp</span>
+<label class="control">Panel L/R <input id="panelSide" type="number" min="0"></label>
+<label class="control">Panel top <input id="panelTop" type="number" min="0"></label>
+<label class="control">Panel bottom <input id="panelBottom" type="number" min="0"></label>
+<label class="control">Preview H <input id="previewHeight" type="number" min="1"></label>
+<label class="control">Row H <input id="rowHeight" type="number" min="1"></label>
+<label class="control">Row gap <input id="rowGap" type="number" min="0"></label>
+<label class="control">Center gap <input id="centerGap" type="number" min="0"></label>
+<label class="control">Key margin <input id="keyMargin" type="number" min="0"></label>
+</section>
+<section class="fields">
+<span class="group-title">Palette</span>
+<label class="control">Panel <input id="panelColor" type="color"></label>
+<label class="control">Key <input id="keyColor" type="color"></label>
+<label class="control">Preview <input id="previewColor" type="color"></label>
+<label class="control">Text <input id="textColor" type="color"></label>
+</section>
+<main><div class="stage"><div class="stage-label"><span>ANDROID WINDOW PREVIEW</span><span id="viewport">MATCH_PARENT · WRAP_CONTENT</span></div><div id="keyboard" class="keyboard"></div></div></main>
+<div id="status" class="status">Loading shared keyboard specification…</div>
+<script type="module">
+const $=s=>document.querySelector(s), status=$('#status'), keyboard=$('#keyboard');
+let spec,initial;
+const fields={
+ panelSide:v=>{spec.panel.padding.left=v;spec.panel.padding.right=v},
+ panelTop:v=>spec.panel.padding.top=v,panelBottom:v=>spec.panel.padding.bottom=v,
+ previewHeight:v=>spec.preview.height=v,rowHeight:v=>spec.keys.rowHeight=v,
+ rowGap:v=>spec.keys.rowGap=v,centerGap:v=>spec.keys.centerGap=v,
+ keyMargin:v=>spec.keys.horizontalMargin=v
+};
+function css(){
+ const p=spec.panel,k=spec.keys,v=spec.preview;
+ const vars={
+ '--pl':p.padding.left+'dp','--pr':p.padding.right+'dp','--pt':p.padding.top+'dp','--pb':p.padding.bottom+'dp',
+ '--panel-radius':p.radius+'dp','--panel-color':p.color,'--panel-stroke':p.stroke,
+ '--preview-height':v.height+'dp','--preview-left':v.margin.left+'dp','--preview-right':v.margin.right+'dp',
+ '--preview-top':v.margin.top+'dp','--preview-bottom':v.margin.bottom+'dp','--preview-pad':v.paddingX+'dp',
+ '--preview-radius':v.radius+'dp','--preview-color':v.color,
+ '--row-height':k.rowHeight+'dp','--row-gap':k.rowGap+'dp','--center-gap':k.centerGap+'dp',
+ '--key-margin':k.horizontalMargin+'dp','--key-radius':k.radius+'dp','--key-color':k.color,
+ '--key-stroke':k.stroke,'--key-text':k.textColor,'--letter-size':k.letterTextSize+'px','--action-size':k.actionTextSize+'px'
+ };
+ Object.entries(vars).forEach(([a,b])=>keyboard.style.setProperty(a,b));
+}
+function render(){
+ if(!spec)return;css();keyboard.innerHTML='';
+ const rows=spec.rows[$('#layout').value];
+ rows.forEach((r,i)=>{
+  const row=document.createElement('div');row.className='row';
+  const left=document.createElement('div');left.className='half';
+  const gap=document.createElement('div');gap.className='center-gap';
+  const right=document.createElement('div');right.className='half';
+  [...r.left].forEach(key=>left.append(makeKey(key)));
+  [...r.right].forEach(key=>right.append(makeKey(key)));
+  row.append(left,gap,right);keyboard.append(row);
+ });
+ const total=spec.panel.padding.top+spec.panel.padding.bottom+spec.preview.margin.top+spec.preview.height+spec.preview.margin.bottom+
+  rows.length*(spec.keys.rowHeight+2*spec.keys.rowGap);
+ status.textContent='Viewport width: Android window MATCH_PARENT\nViewport height: content-driven WRAP_CONTENT\nComputed content height: '+total+' dp (excludes window/system insets)\nGeometry source: layout-spec/keyboard.json';
+}
+function makeKey(label){
+ const el=document.createElement('div');el.className='key';
+ if(label.length>1){el.classList.add('action');}
+ if(label==='SPACE'){el.classList.add('space');el.textContent='Space';}
+ else if(label==='SHIFT')el.textContent='⇧';
+ else if(label==='DONE')el.textContent='Enter';
+ else if(label==='CANCEL')el.textContent='Cancel';
+ else if(label==='?123')el.textContent=$('#layout').value==='symbols'?'ABC':'?123';
+ else el.textContent=label;
+ if(['SHIFT','?123','CANCEL','DONE','⌫'].includes(label))el.classList.add('special');
+ return el;
+}
+function sync(){
+ const vals={panelSide:spec.panel.padding.left,panelTop:spec.panel.padding.top,panelBottom:spec.panel.padding.bottom,
+ previewHeight:spec.preview.height,rowHeight:spec.keys.rowHeight,rowGap:spec.keys.rowGap,
+ centerGap:spec.keys.centerGap,keyMargin:spec.keys.horizontalMargin};
+ Object.entries(vals).forEach(([id,v])=>$('#'+id).value=v);
+ $('#panelColor').value=spec.panel.color;$('#keyColor').value=spec.keys.color;
+ $('#previewColor').value=spec.preview.color;$('#textColor').value=spec.keys.textColor;render();
+}
+Object.keys(fields).forEach(id=>$('#'+id).addEventListener('input',e=>{const v=Number(e.target.value);if(Number.isFinite(v)&&v>=0){fields[id](v);render();}}));
+[['panelColor',v=>spec.panel.color=v],['keyColor',v=>spec.keys.color=v],['previewColor',v=>spec.preview.color=v],['textColor',v=>spec.keys.textColor=v]]
+ .forEach(([id,set])=>$('#'+id).addEventListener('input',e=>{set(e.target.value);render();}));
+$('#layout').addEventListener('change',render);
+$('#reset').addEventListener('click',()=>{spec=JSON.parse(JSON.stringify(initial));sync();});
+$('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(JSON.stringify(spec,null,2));status.textContent='Keyboard JSON copied. Apply it to tools/web-layout-lab/layout-spec/keyboard.json.';}catch{status.textContent='Clipboard unavailable; use browser site permissions.';}});
+fetch('./layout-spec/keyboard.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Cannot load keyboard.json ('+r.status+')');return r.json();})
+.then(data=>{spec=data;initial=JSON.parse(JSON.stringify(data));sync();}).catch(e=>status.textContent=e.message);
+</script>
 </body>
 </html>
