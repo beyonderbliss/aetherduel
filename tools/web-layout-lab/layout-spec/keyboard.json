@@ -28,7 +28,8 @@
     },
     "paddingX": 12,
     "radius": 7,
-    "color": "#262b34"
+    "color": "#262b34",
+    "textGravity": "CENTER"
   },
   "keys": {
     "rowHeight": 45,
