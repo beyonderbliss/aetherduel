@@ -2325,6 +2325,7 @@ bool Game::ApplySkin(const epro::path_string& skinname, bool reload, bool firstr
 	auto applyFallbackSkin = [this]() {
 		auto fallbackSkin = env->createSkin(irr::gui::EGST_WINDOWS_METALLIC);
 		auto* wrappedSkin = new irr::gui::CImageGUISkin(driver, fallbackSkin);
+		verticalButtonImageSkin = wrappedSkin;
 		wrappedSkin->loadConfig(irr::gui::SImageGUISkinConfig{});
 		env->setSkin(wrappedSkin);
 		wrappedSkin->drop();
@@ -2336,6 +2337,7 @@ bool Game::ApplySkin(const epro::path_string& skinname, bool reload, bool firstr
 		imageManager.ResetTextures();
 	} else {
 		if(skinSystem->applySkin(prev_skin.data())) {
+			verticalButtonImageSkin = skinSystem->getLoadedSkin();
 #define CLR(val1,val2,val3,val4) irr::video::SColor(val1,val2,val3,val4)
 #define DECLR(what,val) skin::what##_VAL = skinSystem->getCustomColor(skin::what,val);
 #include "custom_skin_enum.inl"
