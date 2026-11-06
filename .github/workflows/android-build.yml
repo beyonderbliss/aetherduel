@@ -256,6 +256,40 @@ jobs:
           \t\t\t\t\t\t\tintent.getBooleanExtra("deckNameInput", false));"""
           assert text.count(old_text_entry_receiver) == 1, "Could not locate TextEntry receiver"
           text = text.replace(old_text_entry_receiver, new_text_entry_receiver)
+          # Apply PrimaNyx gold only to the five card-category choices.
+          choice_pattern = (
+              r'new AlertDialog\\.Builder\\(EpNativeActivity\\.this\\)\\s*'
+              r'\\.setItems\\(parameters,\\s*\\(dialog,\\s*id\\)\\s*->\\s*putComboBoxResult\\(id\\)\\)\\s*'
+              r'\\.show\\(\\);'
+          )
+          choice_replacement = """if (parameters != null && parameters.length == 5
+                  && "All".equalsIgnoreCase(parameters[0])
+                  && "Monster".equalsIgnoreCase(parameters[1])
+                  && "Spell".equalsIgnoreCase(parameters[2])
+                  && "Trap".equalsIgnoreCase(parameters[3])
+                  && "Skill".equalsIgnoreCase(parameters[4])) {
+              android.widget.ArrayAdapter<String> categoryAdapter =
+                      new android.widget.ArrayAdapter<String>(EpNativeActivity.this,
+                              android.R.layout.simple_list_item_1, parameters) {
+                          @Override
+                          public android.view.View getView(int position, android.view.View convertView,
+                                  android.view.ViewGroup parent) {
+                              android.widget.TextView item = (android.widget.TextView)
+                                      super.getView(position, convertView, parent);
+                              item.setTextColor(android.graphics.Color.parseColor("#E8D58A"));
+                              return item;
+                          }
+                      };
+              new AlertDialog.Builder(EpNativeActivity.this)
+                      .setAdapter(categoryAdapter, (dialog, id) -> putComboBoxResult(id))
+                      .show();
+          } else {
+              new AlertDialog.Builder(EpNativeActivity.this)
+                      .setItems(parameters, (dialog, id) -> putComboBoxResult(id))
+                      .show();
+          }"""
+          text, choice_count = re.subn(choice_pattern, choice_replacement, text, count=1, flags=re.S)
+          assert choice_count == 1, "Could not uniquely style the card-category AlertDialog"
           native.write_text(text)
 
           # Replace the Android IME dialog with AetherDuel's split in-app keyboard.
