@@ -24,7 +24,7 @@ void displayKeyboard(bool show);
 void setDeckNameInputMode(bool active);
 void showInputDialog(epro::path_stringview current, bool deckNameInput = false);
 
-void showComboBox(const std::vector<std::string>& parameters, int selected, bool isCardCategory);
+void showComboBox(const std::vector<std::string>& parameters, int selected);
 
 std::vector<epro::Address> getLocalIP();
 
