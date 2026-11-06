@@ -307,12 +307,6 @@ jobs:
 
               android.widget.FrameLayout dialogRoot =
                       new android.widget.FrameLayout(EpNativeActivity.this);
-              android.widget.ScrollView dropdownScroll =
-                      new android.widget.ScrollView(EpNativeActivity.this);
-              dropdownScroll.setFillViewport(false);
-              dropdownScroll.setClipToPadding(false);
-              dropdownScroll.setVerticalScrollBarEnabled(parameters.length * itemHeight > maxDialogHeight);
-
               android.widget.LinearLayout dropdownPanel =
                       new android.widget.LinearLayout(EpNativeActivity.this);
               dropdownPanel.setOrientation(android.widget.LinearLayout.VERTICAL);
@@ -326,6 +320,30 @@ jobs:
                       android.graphics.Color.parseColor("#525B6A"));
               dropdownPanel.setBackground(panelBackground);
               dropdownPanel.setElevation(12 * density);
+
+              final boolean shouldScroll = parameters.length > 5;
+              final int panelHeight = Math.min(contentHeight, maxDialogHeight);
+
+              android.widget.ScrollView dropdownScroll =
+                      new android.widget.ScrollView(EpNativeActivity.this);
+              dropdownScroll.setFillViewport(false);
+              dropdownScroll.setClipToPadding(false);
+              dropdownScroll.setVerticalScrollBarEnabled(shouldScroll);
+
+              android.widget.LinearLayout dropdownContent =
+                      new android.widget.LinearLayout(EpNativeActivity.this);
+              dropdownContent.setOrientation(android.widget.LinearLayout.VERTICAL);
+              dropdownScroll.addView(dropdownContent,
+                      new android.widget.ScrollView.LayoutParams(
+                              android.widget.ScrollView.LayoutParams.MATCH_PARENT,
+                              android.widget.ScrollView.LayoutParams.WRAP_CONTENT));
+
+              android.widget.LinearLayout.LayoutParams scrollParams =
+                      new android.widget.LinearLayout.LayoutParams(
+                              android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                              shouldScroll ? Math.max(0, panelHeight - panelPadding * 2)
+                                      : android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+              dropdownPanel.addView(dropdownScroll, scrollParams);
 
               final AlertDialog dropdownDialog =
                       new AlertDialog.Builder(EpNativeActivity.this)
@@ -355,22 +373,17 @@ jobs:
                                   itemHeight);
                   if (i < parameters.length - 1)
                       itemParams.bottomMargin = itemGap;
-                  dropdownPanel.addView(item, itemParams);
+                  dropdownContent.addView(item, itemParams);
                   item.setOnClickListener(view -> {
                       putComboBoxResult(choiceIndex);
                       dropdownDialog.dismiss();
                   });
               }
 
-              dropdownScroll.addView(dropdownPanel,
-                      new android.widget.ScrollView.LayoutParams(
-                              android.widget.ScrollView.LayoutParams.MATCH_PARENT,
-                              android.widget.ScrollView.LayoutParams.WRAP_CONTENT));
-              android.widget.FrameLayout.LayoutParams scrollParams =
-                      new android.widget.FrameLayout.LayoutParams(panelWidth,
-                              Math.min(contentHeight, maxDialogHeight),
+              android.widget.FrameLayout.LayoutParams panelParams =
+                      new android.widget.FrameLayout.LayoutParams(panelWidth, panelHeight,
                               android.view.Gravity.CENTER);
-              dialogRoot.addView(dropdownScroll, scrollParams);
+              dialogRoot.addView(dropdownPanel, panelParams);
               dropdownDialog.show();
               android.view.Window dropdownWindow = dropdownDialog.getWindow();
               if (dropdownWindow != null) {
