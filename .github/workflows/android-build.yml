@@ -1,10 +1,6 @@
 name: AetherDuel Android APK (Startup-ready)
 
 on:
-  push:
-    branches:
-      - feat/card-view-original-clean
-      - integrate/verified-card-cutout-spacing
   workflow_dispatch:
 
 permissions:
@@ -260,251 +256,251 @@ jobs:
           # Replace the Android IME dialog with AetherDuel's split in-app keyboard.
           textentry = Path("src/main/java/io.github.edo9300.edopro/TextEntry.java")
           java_source = r'''package io.github.edo9300.edopro;
-
-import android.app.AlertDialog;
-import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.GradientDrawable;
-import android.view.Gravity;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.Space;
-import android.widget.TextView;
-
-public class TextEntry {
-    private AlertDialog mTextInputDialog;
-    private Context context;
-    private StringBuilder value;
-    private TextView preview;
-    private LinearLayout keyboardRows;
-    private boolean deckNameInput;
-    private boolean shifted;
-    private boolean symbols;
-    private boolean finished;
-
-    public void Show(Context context, String current, boolean deckNameInput) {
-        this.context = context;
-        this.deckNameInput = deckNameInput;
-        this.value = new StringBuilder(current == null ? "" : current);
-        this.shifted = false;
-        this.symbols = false;
-        this.finished = false;
-
-        LinearLayout root = new LinearLayout(context);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(8), dp(8), dp(8), dp(10));
-        GradientDrawable panel = new GradientDrawable();
-        panel.setColor(Color.rgb(24, 27, 34));
-        panel.setCornerRadius(dp(12));
-        root.setBackground(panel);
-
-        preview = new TextView(context);
-        preview.setTextColor(Color.WHITE);
-        preview.setTextSize(16);
-        preview.setSingleLine(true);
-        preview.setHorizontallyScrolling(true);
-        preview.setGravity(Gravity.CENTER_VERTICAL);
-        preview.setPadding(dp(12), 0, dp(12), 0);
-        preview.setBackground(makeKeyBackground(false));
-        LinearLayout.LayoutParams previewParams =
-                new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(38));
-        previewParams.setMargins(dp(2), dp(2), dp(2), dp(7));
-        root.addView(preview, previewParams);
-
-        keyboardRows = new LinearLayout(context);
-        keyboardRows.setOrientation(LinearLayout.VERTICAL);
-        root.addView(keyboardRows, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        updatePreview();
-        rebuildKeyboard();
-
-        mTextInputDialog = new AlertDialog.Builder(context).setView(root).create();
-        mTextInputDialog.setCanceledOnTouchOutside(false);
-        mTextInputDialog.setOnCancelListener(dialog -> cancelInput());
-        mTextInputDialog.show();
-
-        Window window = mTextInputDialog.getWindow();
-        if (window != null) {
-            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            window.setLayout(WindowManager.LayoutParams.MATCH_PARENT,
-                    WindowManager.LayoutParams.WRAP_CONTENT);
-            window.setGravity(Gravity.BOTTOM);
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            applyImmersiveNavigation(window);
-        }
-    }
-
-    private void rebuildKeyboard() {
-        keyboardRows.removeAllViews();
-        if (!symbols) {
-            addSplitRow(new String[]{"q", "w", "e", "r", "t"},
-                    new String[]{"y", "u", "i", "o", "p"});
-            addSplitRow(new String[]{"a", "s", "d", "f", "g"},
-                    new String[]{"h", "j", "k", "l"});
-            addSplitRow(new String[]{"SHIFT", "z", "x", "c", "v"},
-                    new String[]{"b", "n", "m", "⌫"});
-        } else {
-            addSplitRow(new String[]{"1", "2", "3", "4", "5"},
-                    new String[]{"6", "7", "8", "9", "0"});
-            addSplitRow(new String[]{"@", "#", "$", "%", "&"},
-                    new String[]{"-", "+", "(", ")", "/"});
-            addSplitRow(new String[]{"=", "*", "'", "\"", ":"},
-                    new String[]{";", "!", "?", "⌫"});
-        }
-        addSplitRow(new String[]{"?123", ",", "SPACE"},
-                new String[]{".", "CANCEL", "DONE"});
-    }
-
-    private void addSplitRow(String[] leftKeys, String[] rightKeys) {
-        LinearLayout row = new LinearLayout(context);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        LinearLayout left = new LinearLayout(context);
-        left.setOrientation(LinearLayout.HORIZONTAL);
-        LinearLayout right = new LinearLayout(context);
-        right.setOrientation(LinearLayout.HORIZONTAL);
-
-        row.addView(left, new LinearLayout.LayoutParams(0, dp(45), 1f));
-        row.addView(new Space(context), new LinearLayout.LayoutParams(dp(62), dp(45)));
-        row.addView(right, new LinearLayout.LayoutParams(0, dp(45), 1f));
-
-        for (String key : leftKeys)
-            addKey(left, key);
-        for (String key : rightKeys)
-            addKey(right, key);
-
-        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(45));
-        rowParams.setMargins(0, dp(2), 0, dp(2));
-        keyboardRows.addView(row, rowParams);
-    }
-
-    private void addKey(LinearLayout group, String key) {
-        Button button = new Button(context);
-        button.setText(getKeyLabel(key));
-        button.setTextColor(Color.WHITE);
-        button.setTextSize(key.length() > 1 ? 11 : 15);
-        button.setAllCaps(false);
-        button.setMinWidth(0);
-        button.setMinimumWidth(0);
-        button.setPadding(dp(2), 0, dp(2), 0);
-        button.setBackground(makeKeyBackground(true));
-        button.setOnClickListener(view -> handleKey(key));
-
-        float weight = "SPACE".equals(key) ? 2f : 1f;
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0,
-                LinearLayout.LayoutParams.MATCH_PARENT, weight);
-        params.setMargins(dp(2), 0, dp(2), 0);
-        group.addView(button, params);
-    }
-
-    private String getKeyLabel(String key) {
-        if ("SHIFT".equals(key))
-            return "⇧";
-        if ("SPACE".equals(key))
-            return "Space";
-        if ("?123".equals(key))
-            return symbols ? "ABC" : "?123";
-        if ("CANCEL".equals(key))
-            return "Cancel";
-        if ("DONE".equals(key))
-            return "Enter";
-        if ("⌫".equals(key))
-            return "⌫";
-        if (key.length() == 1 && Character.isLetter(key.charAt(0)))
-            return shifted ? key.toUpperCase() : key;
-        return key;
-    }
-
-    private void handleKey(String key) {
-        if (finished)
-            return;
-        if ("DONE".equals(key)) {
-            pushResult(value.toString(), true);
-        } else if ("CANCEL".equals(key)) {
-            cancelInput();
-        } else if ("SHIFT".equals(key)) {
-            shifted = !shifted;
-            rebuildKeyboard();
-        } else if ("?123".equals(key)) {
-            symbols = !symbols;
-            rebuildKeyboard();
-        } else if ("SPACE".equals(key)) {
-            value.append(' ');
-            updatePreview();
-        } else if ("⌫".equals(key)) {
-            if (value.length() > 0) {
-                int start = Character.offsetByCodePoints(value, value.length(), -1);
-                value.delete(start, value.length());
-                updatePreview();
-            }
-        } else {
-            value.append(shifted ? key.toUpperCase() : key);
-            if (shifted) {
-                shifted = false;
-                rebuildKeyboard();
-            }
-            updatePreview();
-        }
-    }
-
-    private void updatePreview() {
-        preview.setText(value.length() == 0 ? " " : value.toString());
-    }
-
-    private void pushResult(String text, boolean sendEnter) {
-        if (finished)
-            return;
-        finished = true;
-        EpNativeActivity.putMessageBoxResult(text, sendEnter);
-        if (mTextInputDialog != null)
-            mTextInputDialog.dismiss();
-    }
-
-    private void cancelInput() {
-        if (finished)
-            return;
-        finished = true;
-        if (deckNameInput) {
-            EpNativeActivity.putBackKeyEvent();
-        } else {
-            EpNativeActivity.putMessageBoxResult(value.toString(), false);
-        }
-        if (mTextInputDialog != null)
-            mTextInputDialog.dismiss();
-    }
-
-    private GradientDrawable makeKeyBackground(boolean key) {
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(key ? Color.rgb(54, 59, 69) : Color.rgb(38, 43, 52));
-        drawable.setCornerRadius(dp(key ? 6 : 7));
-        drawable.setStroke(dp(1), Color.rgb(75, 82, 94));
-        return drawable;
-    }
-
-    private int dp(float value) {
-        return (int) (value * context.getResources().getDisplayMetrics().density + 0.5f);
-    }
-
-    private void applyImmersiveNavigation(Window window) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            android.view.WindowInsetsController controller = window.getInsetsController();
-            if (controller != null) {
-                controller.setSystemBarsBehavior(
-                        android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-                controller.hide(android.view.WindowInsets.Type.navigationBars());
-            }
-        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-            window.getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        }
-    }
-}'''
+          
+          import android.app.AlertDialog;
+          import android.content.Context;
+          import android.graphics.Color;
+          import android.graphics.drawable.ColorDrawable;
+          import android.graphics.drawable.GradientDrawable;
+          import android.view.Gravity;
+          import android.view.View;
+          import android.view.Window;
+          import android.view.WindowManager;
+          import android.widget.Button;
+          import android.widget.LinearLayout;
+          import android.widget.Space;
+          import android.widget.TextView;
+          
+          public class TextEntry {
+              private AlertDialog mTextInputDialog;
+              private Context context;
+              private StringBuilder value;
+              private TextView preview;
+              private LinearLayout keyboardRows;
+              private boolean deckNameInput;
+              private boolean shifted;
+              private boolean symbols;
+              private boolean finished;
+          
+              public void Show(Context context, String current, boolean deckNameInput) {
+                  this.context = context;
+                  this.deckNameInput = deckNameInput;
+                  this.value = new StringBuilder(current == null ? "" : current);
+                  this.shifted = false;
+                  this.symbols = false;
+                  this.finished = false;
+          
+                  LinearLayout root = new LinearLayout(context);
+                  root.setOrientation(LinearLayout.VERTICAL);
+                  root.setPadding(dp(8), dp(8), dp(8), dp(10));
+                  GradientDrawable panel = new GradientDrawable();
+                  panel.setColor(Color.rgb(24, 27, 34));
+                  panel.setCornerRadius(dp(12));
+                  root.setBackground(panel);
+          
+                  preview = new TextView(context);
+                  preview.setTextColor(Color.WHITE);
+                  preview.setTextSize(16);
+                  preview.setSingleLine(true);
+                  preview.setHorizontallyScrolling(true);
+                  preview.setGravity(Gravity.CENTER_VERTICAL);
+                  preview.setPadding(dp(12), 0, dp(12), 0);
+                  preview.setBackground(makeKeyBackground(false));
+                  LinearLayout.LayoutParams previewParams =
+                          new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(38));
+                  previewParams.setMargins(dp(2), dp(2), dp(2), dp(7));
+                  root.addView(preview, previewParams);
+          
+                  keyboardRows = new LinearLayout(context);
+                  keyboardRows.setOrientation(LinearLayout.VERTICAL);
+                  root.addView(keyboardRows, new LinearLayout.LayoutParams(
+                          LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                  updatePreview();
+                  rebuildKeyboard();
+          
+                  mTextInputDialog = new AlertDialog.Builder(context).setView(root).create();
+                  mTextInputDialog.setCanceledOnTouchOutside(false);
+                  mTextInputDialog.setOnCancelListener(dialog -> cancelInput());
+                  mTextInputDialog.show();
+          
+                  Window window = mTextInputDialog.getWindow();
+                  if (window != null) {
+                      window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                      window.setLayout(WindowManager.LayoutParams.MATCH_PARENT,
+                              WindowManager.LayoutParams.WRAP_CONTENT);
+                      window.setGravity(Gravity.BOTTOM);
+                      window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                      applyImmersiveNavigation(window);
+                  }
+              }
+          
+              private void rebuildKeyboard() {
+                  keyboardRows.removeAllViews();
+                  if (!symbols) {
+                      addSplitRow(new String[]{"q", "w", "e", "r", "t"},
+                              new String[]{"y", "u", "i", "o", "p"});
+                      addSplitRow(new String[]{"a", "s", "d", "f", "g"},
+                              new String[]{"h", "j", "k", "l"});
+                      addSplitRow(new String[]{"SHIFT", "z", "x", "c", "v"},
+                              new String[]{"b", "n", "m", "⌫"});
+                  } else {
+                      addSplitRow(new String[]{"1", "2", "3", "4", "5"},
+                              new String[]{"6", "7", "8", "9", "0"});
+                      addSplitRow(new String[]{"@", "#", "$", "%", "&"},
+                              new String[]{"-", "+", "(", ")", "/"});
+                      addSplitRow(new String[]{"=", "*", "'", "\"", ":"},
+                              new String[]{";", "!", "?", "⌫"});
+                  }
+                  addSplitRow(new String[]{"?123", ",", "SPACE"},
+                          new String[]{".", "CANCEL", "DONE"});
+              }
+          
+              private void addSplitRow(String[] leftKeys, String[] rightKeys) {
+                  LinearLayout row = new LinearLayout(context);
+                  row.setOrientation(LinearLayout.HORIZONTAL);
+                  LinearLayout left = new LinearLayout(context);
+                  left.setOrientation(LinearLayout.HORIZONTAL);
+                  LinearLayout right = new LinearLayout(context);
+                  right.setOrientation(LinearLayout.HORIZONTAL);
+          
+                  row.addView(left, new LinearLayout.LayoutParams(0, dp(45), 1f));
+                  row.addView(new Space(context), new LinearLayout.LayoutParams(dp(62), dp(45)));
+                  row.addView(right, new LinearLayout.LayoutParams(0, dp(45), 1f));
+          
+                  for (String key : leftKeys)
+                      addKey(left, key);
+                  for (String key : rightKeys)
+                      addKey(right, key);
+          
+                  LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                          LinearLayout.LayoutParams.MATCH_PARENT, dp(45));
+                  rowParams.setMargins(0, dp(2), 0, dp(2));
+                  keyboardRows.addView(row, rowParams);
+              }
+          
+              private void addKey(LinearLayout group, String key) {
+                  Button button = new Button(context);
+                  button.setText(getKeyLabel(key));
+                  button.setTextColor(Color.WHITE);
+                  button.setTextSize(key.length() > 1 ? 11 : 15);
+                  button.setAllCaps(false);
+                  button.setMinWidth(0);
+                  button.setMinimumWidth(0);
+                  button.setPadding(dp(2), 0, dp(2), 0);
+                  button.setBackground(makeKeyBackground(true));
+                  button.setOnClickListener(view -> handleKey(key));
+          
+                  float weight = "SPACE".equals(key) ? 2f : 1f;
+                  LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0,
+                          LinearLayout.LayoutParams.MATCH_PARENT, weight);
+                  params.setMargins(dp(2), 0, dp(2), 0);
+                  group.addView(button, params);
+              }
+          
+              private String getKeyLabel(String key) {
+                  if ("SHIFT".equals(key))
+                      return "⇧";
+                  if ("SPACE".equals(key))
+                      return "Space";
+                  if ("?123".equals(key))
+                      return symbols ? "ABC" : "?123";
+                  if ("CANCEL".equals(key))
+                      return "Cancel";
+                  if ("DONE".equals(key))
+                      return "Enter";
+                  if ("⌫".equals(key))
+                      return "⌫";
+                  if (key.length() == 1 && Character.isLetter(key.charAt(0)))
+                      return shifted ? key.toUpperCase() : key;
+                  return key;
+              }
+          
+              private void handleKey(String key) {
+                  if (finished)
+                      return;
+                  if ("DONE".equals(key)) {
+                      pushResult(value.toString(), true);
+                  } else if ("CANCEL".equals(key)) {
+                      cancelInput();
+                  } else if ("SHIFT".equals(key)) {
+                      shifted = !shifted;
+                      rebuildKeyboard();
+                  } else if ("?123".equals(key)) {
+                      symbols = !symbols;
+                      rebuildKeyboard();
+                  } else if ("SPACE".equals(key)) {
+                      value.append(' ');
+                      updatePreview();
+                  } else if ("⌫".equals(key)) {
+                      if (value.length() > 0) {
+                          int start = Character.offsetByCodePoints(value, value.length(), -1);
+                          value.delete(start, value.length());
+                          updatePreview();
+                      }
+                  } else {
+                      value.append(shifted ? key.toUpperCase() : key);
+                      if (shifted) {
+                          shifted = false;
+                          rebuildKeyboard();
+                      }
+                      updatePreview();
+                  }
+              }
+          
+              private void updatePreview() {
+                  preview.setText(value.length() == 0 ? " " : value.toString());
+              }
+          
+              private void pushResult(String text, boolean sendEnter) {
+                  if (finished)
+                      return;
+                  finished = true;
+                  EpNativeActivity.putMessageBoxResult(text, sendEnter);
+                  if (mTextInputDialog != null)
+                      mTextInputDialog.dismiss();
+              }
+          
+              private void cancelInput() {
+                  if (finished)
+                      return;
+                  finished = true;
+                  if (deckNameInput) {
+                      EpNativeActivity.putBackKeyEvent();
+                  } else {
+                      EpNativeActivity.putMessageBoxResult(value.toString(), false);
+                  }
+                  if (mTextInputDialog != null)
+                      mTextInputDialog.dismiss();
+              }
+          
+              private GradientDrawable makeKeyBackground(boolean key) {
+                  GradientDrawable drawable = new GradientDrawable();
+                  drawable.setColor(key ? Color.rgb(54, 59, 69) : Color.rgb(38, 43, 52));
+                  drawable.setCornerRadius(dp(key ? 6 : 7));
+                  drawable.setStroke(dp(1), Color.rgb(75, 82, 94));
+                  return drawable;
+              }
+          
+              private int dp(float value) {
+                  return (int) (value * context.getResources().getDisplayMetrics().density + 0.5f);
+              }
+          
+              private void applyImmersiveNavigation(Window window) {
+                  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                      android.view.WindowInsetsController controller = window.getInsetsController();
+                      if (controller != null) {
+                          controller.setSystemBarsBehavior(
+                                  android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                          controller.hide(android.view.WindowInsets.Type.navigationBars());
+                      }
+                  } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                      window.getDecorView().setSystemUiVisibility(
+                              View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                      | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                      | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                  }
+              }
+          }'''
           textentry.write_text(java_source)
           print("Installed AetherDuel split keyboard without invoking the Android IME.")
 
