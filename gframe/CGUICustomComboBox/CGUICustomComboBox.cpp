@@ -424,7 +424,18 @@ void CGUICustomComboBox::draw() {
 	if(isEnabled()) {
 		SelectedText->setBackgroundColor(skin->getColor(HasFocus ? EGDC_FOCUSED_EDITABLE : EGDC_EDITABLE));
 		SelectedText->setDrawBackground(true);
-		SelectedText->setOverrideColor(skin->getColor(HasFocus ? EGDC_HIGH_LIGHT_TEXT : EGDC_BUTTON_TEXT));
+
+		const bool isCardCategoryCombo =
+			Items.size() == 5 &&
+			Items[0].Name == L"All" &&
+			Items[1].Name == L"Monster" &&
+			Items[2].Name == L"Spell" &&
+			Items[3].Name == L"Trap" &&
+			Items[4].Name == L"Skill";
+		if(isCardCategoryCombo)
+			SelectedText->setOverrideColor(video::SColor(255, 232, 213, 138));
+		else
+			SelectedText->setOverrideColor(skin->getColor(HasFocus ? EGDC_HIGH_LIGHT_TEXT : EGDC_BUTTON_TEXT));
 	} else {
 		SelectedText->setDrawBackground(false);
 		SelectedText->setOverrideColor(skin->getColor(EGDC_GRAY_TEXT));
