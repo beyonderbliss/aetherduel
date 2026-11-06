@@ -97,6 +97,7 @@ void DeckBuilder::CommitDeckNameInput() {
 	const std::wstring deckName = mainGame->ebDeckname->getText();
 	if(deckName.empty()) {
 #if EDOPRO_ANDROID
+		mainGame->env->setFocus(mainGame->ebDeckname);
 		porting::showInputDialog(BufferIO::EncodeUTF8(mainGame->ebDeckname->getText()), true);
 #endif
 		return;
@@ -114,6 +115,7 @@ void DeckBuilder::CommitDeckNameInput() {
 		mainGame->stACMessage->setText(gDataManager->GetSysString(1339).data());
 		mainGame->PopupElement(mainGame->wACMessage, 40);
 #if EDOPRO_ANDROID
+		mainGame->env->setFocus(mainGame->ebDeckname);
 		porting::showInputDialog(BufferIO::EncodeUTF8(mainGame->ebDeckname->getText()), true);
 #endif
 		return;
@@ -128,7 +130,8 @@ void DeckBuilder::CommitDeckNameInput() {
 			mainGame->stACMessage->setText(gDataManager->GetSysString(1364).data());
 			mainGame->PopupElement(mainGame->wACMessage, 30);
 #if EDOPRO_ANDROID
-			porting::showInputDialog(BufferIO::EncodeUTF8(mainGame->ebDeckname->getText()), true);
+			mainGame->env->setFocus(mainGame->ebDeckname);
+		porting::showInputDialog(BufferIO::EncodeUTF8(mainGame->ebDeckname->getText()), true);
 #endif
 		}
 	} else if(current < 0) {
@@ -143,6 +146,7 @@ void DeckBuilder::CommitDeckNameInput() {
 		mainGame->stACMessage->setText(gDataManager->GetSysString(1364).data());
 		mainGame->PopupElement(mainGame->wACMessage, 30);
 #if EDOPRO_ANDROID
+		mainGame->env->setFocus(mainGame->ebDeckname);
 		porting::showInputDialog(BufferIO::EncodeUTF8(mainGame->ebDeckname->getText()), true);
 #endif
 	}
