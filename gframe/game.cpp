@@ -70,6 +70,74 @@ inline T AlignElementWithParent(T elem) {
 	elem->setAlignment(irr::gui::EGUIA_SCALE, irr::gui::EGUIA_SCALE, irr::gui::EGUIA_SCALE, irr::gui::EGUIA_SCALE);
 	return elem;
 }
+
+class CGUIRoundedPanel final : public irr::gui::IGUIElement {
+public:
+	CGUIRoundedPanel(irr::gui::IGUIEnvironment* env, irr::gui::IGUIElement* parent,
+		irr::s32 id, const irr::core::rect<irr::s32>& rectangle,
+		irr::video::IVideoDriver* videoDriver, irr::s32 cornerRadius,
+		irr::gui::EGUI_DEFAULT_COLOR backgroundColor)
+		: irr::gui::IGUIElement(irr::gui::EGUIET_ELEMENT, env, parent, id, rectangle),
+		EnvironmentRef(env), VideoDriver(videoDriver), Radius(cornerRadius), BackgroundColor(backgroundColor) {}
+
+	void setAnchor(irr::gui::IGUIElement* anchor) { Anchor = anchor; }
+
+	void draw() override {
+		if(!IsVisible || !VideoDriver || (Anchor && !Anchor->isVisible()))
+			return;
+
+		const auto& bounds = Anchor ? Anchor->getAbsolutePosition() : AbsoluteRect;
+		const auto& clip = Anchor ? Anchor->getAbsoluteClippingRect() : AbsoluteClippingRect;
+		if(bounds.getWidth() <= 0 || bounds.getHeight() <= 0)
+			return;
+
+		const auto* skin = EnvironmentRef->getSkin();
+		const auto borderColor = skin->getColor(irr::gui::EGDC_ACTIVE_BORDER);
+		drawRoundedRect(bounds, Radius, borderColor, clip);
+
+		auto inner = bounds;
+		inner.UpperLeftCorner.X += 1;
+		inner.UpperLeftCorner.Y += 1;
+		inner.LowerRightCorner.X -= 1;
+		inner.LowerRightCorner.Y -= 1;
+		if(inner.getWidth() > 0 && inner.getHeight() > 0)
+			drawRoundedRect(inner, std::max<irr::s32>(0, Radius - 1), skin->getColor(BackgroundColor), clip);
+
+		irr::gui::IGUIElement::draw();
+	}
+
+private:
+	void drawRoundedRect(const irr::core::rect<irr::s32>& rect, irr::s32 radius,
+		irr::video::SColor color, const irr::core::rect<irr::s32>& clip) {
+		const irr::s32 halfWidth = rect.getWidth() / 2;
+		const irr::s32 halfHeight = rect.getHeight() / 2;
+		radius = std::max<irr::s32>(0, std::min(radius, std::min(halfWidth, halfHeight)));
+		if(radius == 0) {
+			VideoDriver->draw2DRectangle(color, rect, &clip);
+			return;
+		}
+
+		VideoDriver->draw2DRectangle(color,
+			irr::core::rect<irr::s32>(rect.UpperLeftCorner.X + radius, rect.UpperLeftCorner.Y,
+				rect.LowerRightCorner.X - radius, rect.LowerRightCorner.Y), &clip);
+		VideoDriver->draw2DRectangle(color,
+			irr::core::rect<irr::s32>(rect.UpperLeftCorner.X, rect.UpperLeftCorner.Y + radius,
+				rect.LowerRightCorner.X, rect.LowerRightCorner.Y - radius), &clip);
+
+		const irr::s32 right = rect.LowerRightCorner.X - radius;
+		const irr::s32 bottom = rect.LowerRightCorner.Y - radius;
+		VideoDriver->draw2DPolygon({ rect.UpperLeftCorner.X + radius, rect.UpperLeftCorner.Y + radius }, (irr::f32)radius, color, 24);
+		VideoDriver->draw2DPolygon({ right, rect.UpperLeftCorner.Y + radius }, (irr::f32)radius, color, 24);
+		VideoDriver->draw2DPolygon({ rect.UpperLeftCorner.X + radius, bottom }, (irr::f32)radius, color, 24);
+		VideoDriver->draw2DPolygon({ right, bottom }, (irr::f32)radius, color, 24);
+	}
+
+	irr::gui::IGUIEnvironment* EnvironmentRef;
+	irr::video::IVideoDriver* VideoDriver;
+	irr::s32 Radius;
+	irr::gui::EGUI_DEFAULT_COLOR BackgroundColor;
+	irr::gui::IGUIElement* Anchor = nullptr;
+};
 }
 
 namespace ygo {
@@ -248,7 +316,12 @@ void Game::Initialize() {
 	int mainMenuWidth = std::max(280, static_cast<int>(titleWidth / dpi_scale + 15));
 	mainMenuLeftX = 510 - mainMenuWidth / 2;
 	mainMenuRightX = 510 + mainMenuWidth / 2;
+	auto* mainMenuRoundedBackground = new CGUIRoundedPanel(env, env->getRootGUIElement(), -1,
+		Scale(mainMenuLeftX, 200, mainMenuRightX, 450), driver, Scale(12), irr::gui::EGDC_WINDOW);
+	mainMenuRoundedBackground->drop();
 	wMainMenu = env->addWindow(Scale(mainMenuLeftX, 200, mainMenuRightX, 450), false, EDOPRO_VERSION_STRING);
+	mainMenuRoundedBackground->setAnchor(wMainMenu);
+	wMainMenu->setDrawBackground(false);
 	wMainMenu->getCloseButton()->setVisible(false);
 	//wMainMenu->setVisible(!is_from_discord);
 #define OFFSET(x1, y1, x2, y2) Scale(10, 30 + offset, mainMenuWidth - 10, 60 + offset)
@@ -548,6 +621,11 @@ void Game::Initialize() {
 	defaultStrings.emplace_back(btnReset, 1162);
 	//deck edit
 	wDeckEdit = AlignElementWithParent(env->addStaticText(L"", Scale(309, kUiEdgeMargin, 605, 130), true, false, 0, -1, true));
+	auto* deckEditRoundedBackground = new CGUIRoundedPanel(env, wDeckEdit, -1,
+		irr::core::rect<irr::s32>(0, 0, wDeckEdit->getRelativePosition().getWidth(), wDeckEdit->getRelativePosition().getHeight()),
+		driver, Scale(12), irr::gui::EGDC_3D_FACE);
+	deckEditRoundedBackground->drop();
+	wDeckEdit->setDrawBackground(false);
 	wDeckEdit->setVisible(false);
 	stBanlist = env->addStaticText(gDataManager->GetSysString(1300).data(), Scale(10, 9, 100, 29), false, false, wDeckEdit);
 	stBanlist->setTextAlignment(irr::gui::EGUIA_LOWERRIGHT, irr::gui::EGUIA_CENTER);
@@ -662,6 +740,11 @@ void Game::Initialize() {
 	defaultStrings.emplace_back(tmpptr, 1210);
 	//sort type
 	wSort = AlignElementWithParent(env->addStaticText(L"", Scale(930, 132, 1024 - kUiEdgeMargin, 157), true, false, 0, -1, true));
+	auto* sortRoundedBackground = new CGUIRoundedPanel(env, wSort, -1,
+		irr::core::rect<irr::s32>(0, 0, wSort->getRelativePosition().getWidth(), wSort->getRelativePosition().getHeight()),
+		driver, Scale(12), irr::gui::EGDC_3D_FACE);
+	sortRoundedBackground->drop();
+	wSort->setDrawBackground(false);
 	cbSortType = AlignElementWithParent(AddComboBox(env, Scale(5, 2, 84, 23), wSort, COMBOBOX_SORTTYPE));
 #if EDOPRO_ANDROID || EDOPRO_IOS
 	static_cast<irr::gui::CGUICustomComboBox*>(cbSortType)->setArrowOnlyClick(true);
@@ -671,6 +754,11 @@ void Game::Initialize() {
 	wSort->setVisible(false);
 	//filters
 	wFilter = AlignElementWithParent(env->addStaticText(L"", Scale(610, kUiEdgeMargin, 1024 - kUiEdgeMargin, 130), true, false, 0, -1, true));
+	auto* filterRoundedBackground = new CGUIRoundedPanel(env, wFilter, -1,
+		irr::core::rect<irr::s32>(0, 0, wFilter->getRelativePosition().getWidth(), wFilter->getRelativePosition().getHeight()),
+		driver, Scale(12), irr::gui::EGDC_3D_FACE);
+	filterRoundedBackground->drop();
+	wFilter->setDrawBackground(false);
 	wFilter->setVisible(false);
 	stCategory = env->addStaticText(gDataManager->GetSysString(1311).data(), Scale(5, 7, 70, 27), false, false, wFilter);
 	defaultStrings.emplace_back(stCategory, 1311);
@@ -747,6 +835,11 @@ void Game::Initialize() {
 	btnClearFilter = AlignElementWithParent(env->addButton(Scale(260, 98, 322, 120), wFilter, BUTTON_CLEAR_FILTER, gDataManager->GetSysString(1304).data()));
 	defaultStrings.emplace_back(btnClearFilter, 1304);
 	wCategories = env->addWindow(Scale(450, 60, 1000, 270), false, L"");
+	wCategories->setDrawBackground(false);
+	auto* categoriesRoundedBackground = new CGUIRoundedPanel(env, wCategories, -1,
+		irr::core::rect<irr::s32>(0, 0, wCategories->getRelativePosition().getWidth(), wCategories->getRelativePosition().getHeight()),
+		driver, Scale(12), irr::gui::EGDC_WINDOW);
+	categoriesRoundedBackground->drop();
 	wCategories->getCloseButton()->setVisible(false);
 	wCategories->setDrawTitlebar(false);
 	wCategories->setDraggable(false);
