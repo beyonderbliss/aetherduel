@@ -530,15 +530,33 @@ jobs:
           def java_array(items):
               return ", ".join("new String[]{" + ", ".join(json.dumps(str(v)) for v in item) + "}" for item in items)
 
+          center_gap = int(layout["grid"]["centerGap"])
+          logical_gap_start = layout["grid"]["columns"] // 2 - 2
+          logical_gap_end = logical_gap_start + 4
+          assert center_gap >= 1, "Center gap must be at least one weighted unit"
+
+          def native_boundary(position):
+              if position <= logical_gap_start:
+                  return position
+              if position >= logical_gap_end:
+                  return position + center_gap - 4
+              raise ValueError("A key boundary cannot sit inside the center gap: " + str(position))
+
+          native_grid_columns = layout["grid"]["columns"] - 4 + center_gap
           generated = ["    private void rebuildKeyboard() {", "        keyboardRows.removeAllViews();"]
           for index, layout_name in enumerate(("letters", "symbols")):
               generated.append("        " + ("if (!symbols) {" if index == 0 else "else {"))
               placements = layout["buttons"][layout_name]
               for row_index in range(layout["grid"]["rows"]):
-                  row_items = sorted(
-                      [(data.get("key", key), data["x"], data["w"]) for key, data in placements.items() if data["y"] == row_index],
-                      key=lambda item: item[1]
-                  )
+                  row_items = []
+                  for key, data in placements.items():
+                      if data["y"] != row_index:
+                          continue
+                      start = native_boundary(data["x"])
+                      end = native_boundary(data["x"] + data["w"])
+                      assert end > start, "Invalid native key span: " + key
+                      row_items.append((data.get("key", key), start, end - start))
+                  row_items.sort(key=lambda item: item[1])
                   generated.append("            addGridRow(" + str(row_index) + ", new String[][]{" + java_array(row_items) + "});")
               generated.append("        }")
           generated.append("    }")
@@ -573,7 +591,7 @@ jobs:
               }
 
               private void addKey"""
-          row_method = row_method.replace("ROW_HEIGHT", str(keys["rowHeight"])).replace("ROW_GAP", str(layout["grid"]["rowGap"])).replace("GRID_COLUMNS", str(layout["grid"]["columns"]))
+          row_method = row_method.replace("ROW_HEIGHT", str(keys["rowHeight"])).replace("ROW_GAP", str(layout["grid"]["rowGap"])).replace("GRID_COLUMNS", str(native_grid_columns))
           row_start = java_source.index("(String[] leftKeys, String[] rightKeys) {")
           row_end = java_source.index("private void addKey", row_start)
           java_source = java_source[:row_start] + row_method + java_source[row_end + len("private void addKey"):]
