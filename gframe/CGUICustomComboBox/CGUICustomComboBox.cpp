@@ -19,6 +19,7 @@
 #include "../porting.h"
 #include "../bufferio.h"
 #include "../game_config.h"
+#include "../deck_con.h"
 
 namespace irr {
 namespace gui {
@@ -397,6 +398,16 @@ void CGUICustomComboBox::updateListButtonWidth(s32 width) {
 }
 
 //! draws the element and its children
+bool CGUICustomComboBox::isCardCategoryCombo() const {
+	return Items.size() == 5 &&
+		Items[0].Data == ygo::DeckBuilder::CARD_TYPE_FILTER_ALL &&
+		Items[1].Data == ygo::DeckBuilder::CARD_TYPE_FILTER_MONSTER &&
+		Items[2].Data == ygo::DeckBuilder::CARD_TYPE_FILTER_SPELL &&
+		Items[3].Data == ygo::DeckBuilder::CARD_TYPE_FILTER_TRAP &&
+		Items[4].Data == ygo::DeckBuilder::CARD_TYPE_FILTER_SKILL;
+}
+
+//! draws the element and its children
 void CGUICustomComboBox::draw() {
 	if(!IsVisible)
 		return;
@@ -425,14 +436,7 @@ void CGUICustomComboBox::draw() {
 		SelectedText->setBackgroundColor(skin->getColor(HasFocus ? EGDC_FOCUSED_EDITABLE : EGDC_EDITABLE));
 		SelectedText->setDrawBackground(true);
 
-		const bool isCardCategoryCombo =
-			Items.size() == 5 &&
-			Items[0].Name == L"All" &&
-			Items[1].Name == L"Monster" &&
-			Items[2].Name == L"Spell" &&
-			Items[3].Name == L"Trap" &&
-			Items[4].Name == L"Skill";
-		if(isCardCategoryCombo)
+		if(isCardCategoryCombo())
 			SelectedText->setOverrideColor(video::SColor(255, 232, 213, 138));
 		else
 			SelectedText->setOverrideColor(skin->getColor(HasFocus ? EGDC_HIGH_LIGHT_TEXT : EGDC_BUTTON_TEXT));
@@ -465,7 +469,11 @@ void CGUICustomComboBox::openCloseMenu() {
 		for(auto i = 0u; i < Items.size(); i++) {
 			parameters.push_back(BufferIO::EncodeUTF8({ Items[i].Name.data(), Items[i].Name.size() }));
 		}
+		#if EDOPRO_ANDROID
+		porting::showComboBox(parameters, Selected, isCardCategoryCombo());
+		#else
 		porting::showComboBox(parameters, Selected);
+		#endif
 		return;
 	}
 	if(ListBox) {
