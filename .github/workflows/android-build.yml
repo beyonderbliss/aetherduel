@@ -259,6 +259,7 @@ jobs:
           # Apply PrimaNyx gold only to the five card-category choices.
           choice_pattern = (
               r'new AlertDialog\.Builder\(EpNativeActivity\.this\)\s*'
+              r'(?://\.setCancelable\(false\)\s*)?'
               r'\.setItems\(parameters,\s*\(dialog,\s*id\)\s*->\s*putComboBoxResult\(id\)\)\s*'
               r'\.show\(\);'
           )
