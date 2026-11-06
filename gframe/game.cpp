@@ -3796,14 +3796,16 @@ void Game::UpdateVerticalButtonLayout() {
 	if(buttonHeight <= 0)
 		return;
 
-	const irr::s32 buttonWidth = Resize(211, 0, 301, 0).getWidth();
-	const irr::s32 right = panelRect.LowerRightCorner.X;
-	const irr::s32 left = right - buttonWidth;
+	const auto stackRect = Resize(211, 0, 301, 0);
+	const irr::s32 switchRight = panelRect.LowerRightCorner.X;
+	const irr::s32 switchLeft = switchRight - stackRect.getWidth();
 	const float slotStep = static_cast<float>(available - buttonHeight) / (slotCount - 1);
-	auto setSlot = [&](irr::gui::IGUIButton* button, irr::s32 slot) {
+	auto setSlot = [&](irr::gui::IGUIButton* button, irr::s32 slot, bool alignToPanel = false) {
 		if(!button)
 			return;
 		const irr::s32 y = top + static_cast<irr::s32>(std::lround(slotStep * slot));
+		const irr::s32 left = alignToPanel ? switchLeft : stackRect.UpperLeftCorner.X;
+		const irr::s32 right = alignToPanel ? switchRight : stackRect.LowerRightCorner.X;
 		button->setRelativePosition(irr::core::recti(left, y, right, y + buttonHeight));
 	};
 
@@ -3813,7 +3815,7 @@ void Game::UpdateVerticalButtonLayout() {
 		setSlot(btnHandTestSettings, 2);
 		setSlot(btnYdkeManage, 3);
 		setSlot(btnSettingsMenu, 4);
-		setSlot(btnPanelCycle, 5);
+		setSlot(btnPanelCycle, 5, true);
 	} else {
 		setSlot(btnLeaveGame, 0);
 		setSlot(btnRestartSingle, 1);
@@ -3823,7 +3825,7 @@ void Game::UpdateVerticalButtonLayout() {
 		setSlot(btnChainWhenAvail, 4);
 		setSlot(btnSettingsMenu, 5);
 		setSlot(btnCancelOrFinish, 6);
-		setSlot(btnPanelCycle, 7);
+		setSlot(btnPanelCycle, 7, true);
 	}
 }
 
