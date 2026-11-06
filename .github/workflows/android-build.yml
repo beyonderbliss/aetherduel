@@ -536,7 +536,7 @@ jobs:
               placements = layout["buttons"][layout_name]
               for row_index in range(layout["grid"]["rows"]):
                   row_items = sorted(
-                      [(key, data["x"], data["w"]) for key, data in placements.items() if data["y"] == row_index],
+                      [(data.get("key", key), data["x"], data["w"]) for key, data in placements.items() if data["y"] == row_index],
                       key=lambda item: item[1]
                   )
                   generated.append("            addGridRow(" + str(row_index) + ", new String[][]{" + java_array(row_items) + "});")
