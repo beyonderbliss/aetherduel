@@ -185,6 +185,8 @@ void DeckBuilder::Initialize(bool refresh) {
 		const float maxScroll = std::max(0.0f, static_cast<float>(results.size()) * kDeckSearchResultRowHeight - kDeckSearchResultViewportHeight);
 		search_result_scroll_offset = std::clamp(oldScroll, 0.0f, maxScroll);
 	}
+	// Enter the Deck Editor with Search idle; ClearSearch focuses it for the clear-button action.
+	mainGame->env->setFocus(nullptr);
 	mouse_pos.set(0, 0);
 	hovered_code = 0;
 	hovered_pos = 0;
