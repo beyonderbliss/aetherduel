@@ -513,7 +513,6 @@ jobs:
               "previewParams.setMargins(dp(2), dp(2), dp(2), dp(7));": f"previewParams.setMargins(dp({preview_spec['margin']['left']}), dp({preview_spec['margin']['top']}), dp({preview_spec['margin']['right']}), dp({preview_spec['margin']['bottom']}));",
               "preview.setPadding(dp(12), 0, dp(12), 0);": f"preview.setPadding(dp({preview_spec['paddingX']}), 0, dp({preview_spec['paddingX']}), 0);",
               "new LinearLayout.LayoutParams(0, dp(45), 1f)": f"new LinearLayout.LayoutParams(0, dp({keys['rowHeight']}), 1f)",
-              "new LinearLayout.LayoutParams(dp(62), dp(45))": f"new LinearLayout.LayoutParams(dp({keys['centerGap']}), dp({keys['rowHeight']}))",
               "LinearLayout.LayoutParams.MATCH_PARENT, dp(45));": f"LinearLayout.LayoutParams.MATCH_PARENT, dp({keys['rowHeight']}));",
               "rowParams.setMargins(0, dp(2), 0, dp(2));": f"rowParams.setMargins(0, dp({keys['rowGap']}), 0, dp({keys['rowGap']}));",
               "params.setMargins(dp(2), 0, dp(2), 0);": f"params.setMargins(dp({keys['horizontalMargin']}), 0, dp({keys['horizontalMargin']}), 0);",
