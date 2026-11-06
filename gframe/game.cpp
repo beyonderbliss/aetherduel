@@ -3786,9 +3786,14 @@ void Game::UpdateVerticalButtonLayout() {
 	const auto panelRect = wInfos->getRelativePosition();
 	const auto marginRect = Resize(211, 0, 301, kUiEdgeMargin);
 	const irr::s32 top = marginRect.LowerRightCorner.Y;
-	const irr::s32 panelGap = Scale(kUiEdgeMargin);
-	const irr::s32 bottom = panelRect.UpperLeftCorner.Y - panelGap;
-	const irr::s32 available = bottom - top;
+
+	// Keep the shared eight-slot grid unchanged. The Switch uses the actual
+	// tab-page viewport top, which remains below the hidden tab header.
+	const auto* infoTabs = static_cast<irr::gui::CGUICustomTabControl*>(wInfos);
+	const irr::s32 gridBottom = panelRect.UpperLeftCorner.Y - Scale(kUiEdgeMargin);
+	const irr::s32 contentTop = panelRect.UpperLeftCorner.Y + infoTabs->getTabHeight() + 2;
+	const irr::s32 switchBottom = contentTop - Scale(kUiEdgeMargin);
+	const irr::s32 available = gridBottom - top;
 	if(available <= 0)
 		return;
 
@@ -3814,7 +3819,7 @@ void Game::UpdateVerticalButtonLayout() {
 		// Anchor Switch directly to the information panel, independent of
 		// the number of slots used by the current mode.
 		const irr::s32 y = alignToPanel
-			? bottom - buttonHeight
+			? switchBottom - buttonHeight
 			: top + static_cast<irr::s32>(std::lround(slotStep * slot));
 		const irr::s32 left = alignToPanel ? switchLeft : stackRect.UpperLeftCorner.X;
 		const irr::s32 right = alignToPanel ? switchRight : stackRect.LowerRightCorner.X;
@@ -3826,7 +3831,7 @@ void Game::UpdateVerticalButtonLayout() {
 		setSlot(btnHandTest, 1);
 		setSlot(btnHandTestSettings, 2);
 		setSlot(btnYdkeManage, 3);
-		setSlot(btnSettingsMenu, 5);
+		setSlot(btnSettingsMenu, 4);
 		setSlot(btnPanelCycle, 7, true);
 	} else {
 		setSlot(btnLeaveGame, 0);
