@@ -793,6 +793,7 @@ jobs:
           java_source = java_source[:row_start] + row_method + java_source[row_end + len("private void addKey"):]
           java_source = java_source.replace("private void addKey(LinearLayout group, String key)", "private void addKey(LinearLayout group, String key, float span, boolean bridgesGap)")
           java_source = java_source.replace('float weight = "SPACE".equals(key) ? 2f : 1f;', "float weight = span;")
+          java_source = java_source.replace("dp(CENTER_GAP)", "dp(" + str(center_gap) + ")")
           textentry.write_text(java_source)
           print("Installed grid-positioned keyboard from the shared layout specification.")
 
