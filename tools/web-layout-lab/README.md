@@ -1,36 +1,36 @@
 # PrimaNyx Keyboard Layout Lab
 
-The lab edits the split Android text-entry keyboard using a 24-column × 4-row logical editing grid. Each key has an editable X/Y position and width. The preview keeps the two key groups separated by a center spacer, supports pointer/touch dragging, horizontal resizing, adjustable snap increments, and numeric position/width controls.
+The lab edits the split Android text-entry keyboard using a measured logical grid. It preserves the conventional staggered QWERTY arrangement while allowing the two halves and their center gap to be measured independently.
 
-## Viewport and units
+## Workspace and measurement
 
-Android keyboard window:
-- width: MATCH_PARENT
-- height: WRAP_CONTENT
-- gravity: BOTTOM
-
-Geometry values use Android dp. The browser preview renders the shared layout specification at the available page width. The split pitch is calculated from the available width after subtracting the fixed center spacer. Row height, row gap, key margin, and panel spacing remain dp values.
+- Fine square grid: five minor subdivisions per logical cell, with a stronger major-cell line.
+- Top and left rulers provide cell and row references.
+- The center gap is adjustable from **4 to 8 logical cells**. The two key groups remain separate; SPACE remains the intentional bridge.
+- A center-gap band and center axis make the split geometry visible.
+- The current grid width is calculated as 20 key-area cells plus the selected center-gap cells.
+- All keyboard geometry values remain Android dp where the native layout specification expects dp. The gap control is a logical-cell design control for the browser Lab.
 
 ## Editing
 
 1. Open the Cloudflare Pages deployment built from this branch.
 2. Choose Letters or Symbols.
-3. Drag a key to reposition it. Drag its yellow corner handle to change its width.
-4. Change Snap to 1, 2, or 3 cells to control movement increments.
-5. Adjust Center gap to compare thumb reach in landscape. The selected value is stored as `keys.centerGap` in the shared JSON.
-6. Select a key to edit its Column X, Row Y, and Width numerically.
-7. Copy the JSON and update `layout-spec/keyboard.json` when you want to persist key edits.
+3. Select a snap increment, then drag a key to reposition it. Drag its yellow corner handle to change its width.
+4. Keys snap to the selected grid increment. Magnetic alignment attracts a dragged key edge to nearby key edges; yellow guides and a live coordinate readout show the alignment.
+5. Adjust Center gap from 4 to 8 cells to compare the split spacing.
+6. Select a key to edit Column X, Row Y, and Width numerically.
+7. Copy the JSON to inspect or preserve the layout edits.
 
-The keyboard uses a conventional staggered QWERTY arrangement rather than an ortholinear grid. The top letter row uses a modestly wider 2.0-unit keycap; the home and lower letter rows use 1.8-unit keycaps. The home row keeps its staggered offsets while the inner columns remain aligned vertically (T/G/V on the left and Y/G/V on the right). The two halves are balanced visually, not forced into a strict coordinate mirror. DONE is exactly two standard 1.8-unit keycap widths. SPACE is an intentional bridge: it fills the remaining bottom-row span and includes the center region.
+The editor upgrade changes only Lab measurement and interaction tooling; it does not rewrite the existing key positions, widths, or stagger.
 
 ## Android integration
 
-The Android workflow reads `layout-spec/keyboard.json` while generating `TextEntry.java`. The first three rows are rendered as two independent weighted groups with a fixed center spacer in dp; group key widths and pitches are derived independently from the shared split pitch. The bottom row uses left and right groups plus a flexible SPACE key that bridges the center region. The center gap is no longer represented as a large weighted column count.
+The Android workflow reads `layout-spec/keyboard.json` while generating `TextEntry.java`. Native keyboard rendering remains unchanged by this Lab-only editor update. The center-gap cell control is a design-space control; do not interpret it as a native dp value until the final measured geometry is explicitly translated for Android.
 
-Row gap and horizontal key margin each have one source of truth under `keys`. The workflow remains manual through `workflow_dispatch`; editing the lab does not trigger an APK build.
+The workflow remains manual through `workflow_dispatch`; editing the Lab does not trigger an APK build.
 
 ## Scope
 
-- Keyboard editor and native keyboard renderer only; the completed card-view module is untouched.
+- Keyboard Lab editor only; native keyboard renderer and completed card-view module are untouched.
 - No APK build or deployment is triggered by editor changes.
 - The browser preview does not emulate Android system-bar insets or device-specific window behavior.
