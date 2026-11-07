@@ -614,10 +614,10 @@ jobs:
               "        return button;",
               "    }"
           ])
-          methods = "\\n".join(generated)
+          methods = "\n".join(generated)
           method_start = java_source.index("private void rebuildKeyboard()")
           method_end = java_source.index("private String getKeyLabel", method_start)
-          java_source = java_source[:method_start] + methods + "\\n\\n              private String getKeyLabel" + java_source[method_end + len("private String getKeyLabel"):]
+          java_source = java_source[:method_start] + methods + "\n\n              private String getKeyLabel" + java_source[method_end + len("private String getKeyLabel"):]
           textentry.write_text(java_source)
           print("Installed grid-positioned keyboard from the shared layout specification.")
 
