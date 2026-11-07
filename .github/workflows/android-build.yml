@@ -537,8 +537,13 @@ jobs:
           key_margin = int(keys["horizontalMargin"])
           row_height = int(keys["rowHeight"])
           row_gap = int(keys["rowGap"])
-          space_weight = float(keys["spaceWeight"])
-          assert center_gap > 0 and space_weight > 0, "Invalid split keyboard geometry"
+          space = layout["buttons"]["letters"]["SPACE"]
+          space_left = float(space["x"])
+          space_right_start = float(space["x"]) + float(space["w"]) - 14
+          left_bottom_units = space_left
+          right_bottom_units = 10 - space_right_start
+          space_weight = (10 - left_bottom_units) + space_right_start
+          assert center_gap > 0 and 0 < left_bottom_units <= 10 and 0 <= space_right_start < 10 and right_bottom_units > 0, "Invalid split keyboard bridge geometry"
 
           def java_array(items):
               return ", ".join("new String[]{" + ", ".join(json.dumps(str(v)) for v in item) + "}" for item in items)
@@ -579,6 +584,13 @@ jobs:
               generated.append("            addBottomRow();")
               generated.append("        }")
           generated.append("    }")
+          bottom_placements = layout["buttons"]["letters"]
+          left_bottom = side_items(bottom_placements, 3, "left")
+          right_bottom = side_items(bottom_placements, 3, "right")
+          for item in right_bottom:
+              item[1] = float(item[1]) - space_right_start
+          left_bottom_units = left_bottom_units
+          right_bottom_units = right_bottom_units
           generated.extend([
               "",
               "    private void addSplitRow(int rowIndex, String[][] leftItems, String[][] rightItems) {",
@@ -603,18 +615,11 @@ jobs:
               "        left.setOrientation(LinearLayout.HORIZONTAL);",
               "        LinearLayout right = new LinearLayout(context);",
               "        right.setOrientation(LinearLayout.HORIZONTAL);",
-              "        addSplitGroup(left, new String[][]{",
-              "            new String[]{\"CANCEL\", \"0\", \"1.8\", \"" + str(key_margin) + "\", \"" + str(key_margin) + "\"},",
-              "            new String[]{\"?123\", \"2\", \"1.8\", \"" + str(key_margin) + "\", \"" + str(key_margin) + "\"},",
-              "            new String[]{\",\", \"4\", \"1.8\", \"" + str(key_margin) + "\", \"" + str(key_margin) + "\"}",
-              "        }, 6f);",
-              "        addSplitGroup(right, new String[][]{",
-              "            new String[]{\".\", \"0\", \"1.8\", \"" + str(key_margin) + "\", \"" + str(key_margin) + "\"},",
-              "            new String[]{\"DONE\", \"2\", \"3.6\", \"" + str(key_margin) + "\", \"" + str(key_margin * 3) + "\"}",
-              "        }, 6f);",
-              "        row.addView(left, new LinearLayout.LayoutParams(0, dp(" + str(row_height) + "), 6f));",
+              "        addSplitGroup(left, new String[][]{" + java_array(left_bottom) + "}, " + str(left_bottom_units) + "f);",
+              "        addSplitGroup(right, new String[][]{" + java_array(right_bottom) + "}, " + str(right_bottom_units) + "f);",
+              "        row.addView(left, new LinearLayout.LayoutParams(0, dp(" + str(row_height) + "), " + str(left_bottom_units) + "f));",
               "        addBridgeKey(row, \"SPACE\", " + str(space_weight) + "f, " + str(center_gap) + ", " + str(key_margin) + ");",
-              "        row.addView(right, new LinearLayout.LayoutParams(0, dp(" + str(row_height) + "), 6f));",
+              "        row.addView(right, new LinearLayout.LayoutParams(0, dp(" + str(row_height) + "), " + str(right_bottom_units) + "f));",
               "        addKeyboardRow(row, 3);",
               "    }",
               "",
