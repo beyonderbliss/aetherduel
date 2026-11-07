@@ -40,7 +40,6 @@
     "textColor": "#ffffff",
     "letterTextSize": 15,
     "actionTextSize": 11,
-    "spaceWeight": 8,
     "centerGap": 62
   },
   "rows": {
