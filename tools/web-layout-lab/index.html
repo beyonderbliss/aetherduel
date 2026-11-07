@@ -9,7 +9,7 @@ main{padding:12px 0}.stage{width:100%;padding:0}.stage-label{display:flex;justif
 .keyboard{position:relative;display:block;width:100%;height:calc(var(--pt) + var(--pb) + 4 * var(--row-height) + 3 * var(--row-gap));padding:var(--pt) var(--pr) var(--pb) var(--pl);border-radius:var(--panel-radius);background-color:var(--panel-color);background-image:linear-gradient(to bottom,rgba(255,255,255,.07) 1px,transparent 1px);background-size:100% calc(var(--row-height) + var(--row-gap));background-position:var(--pl) var(--pt)}
 .key{position:absolute;display:flex;align-items:center;justify-content:center;min-width:0;margin:0;border:1px solid var(--key-stroke);border-radius:var(--key-radius);background:var(--key-color);color:var(--key-text);font-size:var(--letter-size);font-weight:500;overflow:visible;touch-action:none;user-select:none;cursor:grab}
 .key.action{font-size:var(--action-size)}.key.special{background:#414957}.key.selected{outline:2px solid #f1c75b;outline-offset:1px;z-index:3}.resize-handle{position:absolute;width:12px;height:12px;right:-3px;bottom:-3px;border:1px solid #17191d;border-radius:3px;background:#f1c75b;touch-action:none;cursor:nwse-resize}
-.status{padding:8px 10px;color:#aeb4c0;font-size:11px;white-space:pre-wrap}.editor{display:flex;flex-wrap:wrap;gap:8px;align-items:end;padding:10px;background:#242830;border-top:1px solid #3b414b}.editor .control{display:flex;flex-direction:column;align-items:flex-start}.editor input{width:68px}.editor .selected-name{min-width:110px;color:#f1c75b;font-weight:600}
+.metrics{padding:6px 10px;color:#aeb4c0;font-size:11px;line-height:1.5;background:#1b1e23;border-top:1px solid #343a44}.status{padding:8px 10px;color:#aeb4c0;font-size:11px;white-space:pre-wrap}.editor{display:flex;flex-wrap:wrap;gap:8px;align-items:end;padding:10px;background:#242830;border-top:1px solid #3b414b}.editor .control{display:flex;flex-direction:column;align-items:flex-start}.editor input{width:68px}.editor .selected-name{min-width:110px;color:#f1c75b;font-weight:600}
 @media(max-width:480px){header{padding:9px}.toolbar,.fields{gap:6px;padding:8px}.control{font-size:10px}main{padding:9px 0}.editor{gap:6px;padding:8px}.editor input{width:58px}}
 </style></head>
 <body>
@@ -30,6 +30,7 @@ main{padding:12px 0}.stage{width:100%;padding:0}.stage-label{display:flex;justif
 <label class="control">Panel <input id="panelColor" type="color"></label><label class="control">Key <input id="keyColor" type="color"></label><label class="control">Text <input id="textColor" type="color"></label>
 </section>
 <main><div class="stage"><div class="stage-label"><span>ANDROID KEYBOARD · DRAG TO MOVE · CORNER HANDLE TO RESIZE</span><span id="viewport">24 × 4 GRID</span></div><div id="keyboard" class="keyboard"></div></div></main>
+<div id="geometryMetrics" class="metrics">Measuring keyboard geometry…</div>
 <section class="editor">
 <div class="selected-name" id="selectedName">Select a key</div>
 <label class="control">Column X <input id="keyX" type="number" min="0" max="23"></label><label class="control">Row Y <input id="keyY" type="number" min="0" max="3"></label><label class="control">Width <input id="keyW" type="number" min="1" max="24"></label>
@@ -45,7 +46,22 @@ function selectKey(key){selected=key;syncEditor();render()}
 function syncEditor(){const b=selected&&getButtons()[selected];$('#selectedName').textContent=b?selected:'Select a key';['X','Y','W'].forEach((v,i)=>$('#key'+v).value=b?[b.x,b.y,b.w][i]: '');}
 function geometry(){const p=spec.panel,gap=Number(spec.keys.centerGap??62),available=keyboard.clientWidth-p.padding.left-p.padding.right,unit=Math.max(1,(available-gap)/20);return {p,gap,unit,toPx:x=>x<=10?x*unit:x<=14?10*unit+(x-10)*gap/4:10*unit+gap+(x-14)*unit,fromPx:px=>px<=10*unit?px/unit:px<=10*unit+gap?10+(px-10*unit)*4/gap:14+(px-10*unit-gap)/unit};}
 function positionKey(el,b){const {p,toPx}=geometry(),margin=spec.grid.keyMargin,left=toPx(b.x),right=toPx(b.x+b.w);el.style.left=(p.padding.left+left+margin)+'px';el.style.top=(p.padding.top+b.y*(spec.keys.rowHeight+spec.grid.rowGap))+'px';el.style.width=Math.max(1,right-left-2*margin)+'px';el.style.height=spec.keys.rowHeight+'px';}
-function render(){if(!spec)return;css();keyboard.innerHTML='';const buttons=getButtons();Object.entries(buttons).forEach(([key,b])=>{const el=document.createElement('div');el.className='key'+((b.key||key).length>1?' action':'')+(['SHIFT','?123','CANCEL','DONE','⌫'].includes(b.key||key)?' special':'')+(selected===key?' selected':'');el.textContent=labelFor(key,b);positionKey(el,b);el.dataset.key=key;el.addEventListener('pointerdown',onPointerDown);const handle=document.createElement('span');handle.className='resize-handle';handle.addEventListener('pointerdown',e=>onResizeDown(e,key));el.append(handle);keyboard.append(el);});}
+function updateMetrics(){
+ const nodes=[...keyboard.querySelectorAll('.key')];
+ if(!nodes.length)return;
+ const standard=nodes.filter(el=>!['SPACE','DONE'].includes(el.dataset.key));
+ const widths=standard.map(el=>el.getBoundingClientRect().width);
+ const spread=widths.length?Math.max(...widths)-Math.min(...widths):0;
+ const rows=new Map();
+ nodes.forEach(el=>{const r=el.getBoundingClientRect(),y=Math.round(r.top*10)/10;if(!rows.has(y))rows.set(y,[]);rows.get(y).push(r)});
+ let minGap=Infinity,overlaps=0;
+ rows.forEach(items=>{items.sort((a,b)=>a.left-b.left);for(let i=1;i<items.length;i++){const gap=items[i].left-items[i-1].right;minGap=Math.min(minGap,gap);if(gap<-.5)overlaps++}});
+ const g=geometry(),standardWidth=widths.length?widths.reduce((a,b)=>a+b,0)/widths.length:0;
+ const done=nodes.find(el=>el.dataset.key==='DONE'),doneWidth=done?done.getBoundingClientRect().width:0;
+ const fmt=n=>Number(n).toFixed(1);
+ $('#geometryMetrics').textContent='Viewport '+fmt(keyboard.clientWidth)+' dp · grid unit '+fmt(g.unit)+' dp · standard keycap '+fmt(standardWidth)+' × '+spec.keys.rowHeight+' dp · DONE '+fmt(doneWidth)+' dp · minimum horizontal clearance '+fmt(Number.isFinite(minGap)?minGap:0)+' dp · width variance '+fmt(spread)+' dp · overlaps '+overlaps;
+}
+function render(){if(!spec)return;css();keyboard.innerHTML='';const buttons=getButtons();Object.entries(buttons).forEach(([key,b])=>{const el=document.createElement('div');el.className='key'+((b.key||key).length>1?' action':'')+(['SHIFT','?123','CANCEL','DONE','⌫'].includes(b.key||key)?' special':'')+(selected===key?' selected':'');el.textContent=labelFor(key,b);positionKey(el,b);el.dataset.key=key;el.addEventListener('pointerdown',onPointerDown);const handle=document.createElement('span');handle.className='resize-handle';handle.addEventListener('pointerdown',e=>onResizeDown(e,key));el.append(handle);keyboard.append(el);});updateMetrics();}
 function snap(v){const n=Number($('#snap').value);return Math.round(v/n)*n}
 function validGapPlacement(b){const end=b.x+b.w;return (b.x<10&&end<=10)||(b.x<10&&end>=14)||b.x>=14;}
 function collisionFree(key,candidate){return validGapPlacement(candidate)&&Object.entries(getButtons()).every(([other,b])=>other===key||candidate.x>=b.x+b.w||candidate.x+candidate.w<=b.x||candidate.y>=b.y+b.h||candidate.y+candidate.h<=b.y)}
@@ -60,5 +76,5 @@ function sync(){const p=spec.panel,k=spec.keys;centerGap=Number(spec.keys.center
 [['panelColor',v=>spec.panel.color=v],['keyColor',v=>spec.keys.color=v],['textColor',v=>spec.keys.textColor=v]].forEach(([id,set])=>$('#'+id).addEventListener('input',e=>{set(e.target.value);render()}));
 $('#layout').addEventListener('change',()=>{selected=null;render();syncEditor()});$('#centerGap').addEventListener('input',e=>{centerGap=Number(e.target.value);spec.keys.centerGap=centerGap;css();render()});$('#reset').addEventListener('click',()=>{spec=JSON.parse(JSON.stringify(initial));centerGap=Number(spec.keys.centerGap??62);$('#centerGap').value=centerGap;selected=null;sync()});
 $('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(JSON.stringify(spec,null,2));status.textContent='JSON copied. Commit layout-spec/keyboard.json to apply the new key positions and widths to Android.'}catch{status.textContent='Clipboard unavailable in this browser.'}});
-fetch('./layout-spec/keyboard.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Cannot load keyboard.json ('+r.status+')');return r.json()}).then(d=>{spec=d;initial=JSON.parse(JSON.stringify(d));sync();new ResizeObserver(()=>{if(spec)css()}).observe(keyboard)}).catch(e=>status.textContent=e.message);
+fetch('./layout-spec/keyboard.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Cannot load keyboard.json ('+r.status+')');return r.json()}).then(d=>{spec=d;initial=JSON.parse(JSON.stringify(d));sync();new ResizeObserver(()=>{if(spec){css();updateMetrics()}}).observe(keyboard)}).catch(e=>status.textContent=e.message);
 </script></body></html>
