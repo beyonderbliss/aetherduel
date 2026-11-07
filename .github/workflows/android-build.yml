@@ -328,246 +328,48 @@ jobs:
           assert choice_count == 1, "Could not uniquely style the native combo AlertDialog"
           native.write_text(text)
 
-          # Replace the Android IME dialog with AetherDuel's split in-app keyboard.
+          # Roll back the custom in-app keyboard to the wrapper platform IME.
+          # Keep the deck-name cancellation callback expected by the native client.
           textentry = Path("src/main/java/io.github.edo9300.edopro/TextEntry.java")
           java_source = r'''package io.github.edo9300.edopro;
 
           import android.app.AlertDialog;
           import android.content.Context;
-          import android.graphics.Color;
-          import android.graphics.drawable.ColorDrawable;
-          import android.graphics.drawable.GradientDrawable;
-          import android.view.Gravity;
-          import android.view.View;
-          import android.view.Window;
-          import android.view.WindowManager;
-          import android.widget.Button;
-          import android.widget.LinearLayout;
-          import android.widget.Space;
-          import android.widget.TextView;
+          import android.text.InputType;
+          import android.view.KeyEvent;
+          import android.widget.EditText;
 
           public class TextEntry {
               private AlertDialog mTextInputDialog;
-              private Context context;
-              private StringBuilder value;
-              private TextView preview;
-              private LinearLayout keyboardRows;
+              private EditText mTextInputWidget;
               private boolean deckNameInput;
-              private boolean shifted;
-              private boolean symbols;
               private boolean finished;
 
               public void Show(Context context, String current, boolean deckNameInput) {
-                  try {
-                      showCustomKeyboard(context, current, deckNameInput);
-                  } catch (RuntimeException error) {
-                      android.util.Log.e("AetherDuelTextEntry",
-                              "Custom keyboard failed; falling back to Android text input", error);
-                      if (mTextInputDialog != null && mTextInputDialog.isShowing())
-                          mTextInputDialog.dismiss();
-                      showSystemInputFallback(context, current, deckNameInput);
-                  }
-              }
-
-              private void showSystemInputFallback(Context context, String current, boolean deckNameInput) {
-                  this.context = context;
                   this.deckNameInput = deckNameInput;
-                  this.value = new StringBuilder(current == null ? "" : current);
                   this.finished = false;
+                  mTextInputWidget = new EditText(context);
+                  mTextInputWidget.setMinWidth(300);
+                  mTextInputWidget.setInputType(InputType.TYPE_CLASS_TEXT);
+                  mTextInputWidget.setSingleLine(true);
+                  mTextInputWidget.setText(current == null ? "" : current);
+                  mTextInputWidget.setSelection(mTextInputWidget.length());
 
-                  android.widget.EditText input = new android.widget.EditText(context);
-                  input.setSingleLine(true);
-                  input.setText(current == null ? "" : current);
-                  input.setSelection(input.length());
+                  mTextInputWidget.setOnKeyListener((view, keyCode, event) -> {
+                      if (keyCode == KeyEvent.KEYCODE_ENTER
+                              && event.getAction() == KeyEvent.ACTION_UP) {
+                          pushResult(mTextInputWidget.getText().toString(), true);
+                          return true;
+                      }
+                      return false;
+                  });
 
                   mTextInputDialog = new AlertDialog.Builder(context)
-                          .setTitle(deckNameInput ? "Deck name" : "Text input")
-                          .setView(input)
-                          .setPositiveButton("Done", (dialog, which) ->
-                                  pushResult(input.getText().toString(), true))
-                          .setNegativeButton("Cancel", (dialog, which) -> cancelInput())
+                          .setView(mTextInputWidget)
+                          .setOnCancelListener(dialog -> cancelInput())
                           .create();
-                  mTextInputDialog.setCanceledOnTouchOutside(false);
-                  mTextInputDialog.setOnCancelListener(dialog -> cancelInput());
                   mTextInputDialog.show();
-                  input.requestFocus();
-                  input.post(() -> {
-                      android.view.inputmethod.InputMethodManager imm =
-                              (android.view.inputmethod.InputMethodManager)
-                                      context.getSystemService(Context.INPUT_METHOD_SERVICE);
-                      if (imm != null)
-                          imm.showSoftInput(input,
-                                  android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
-                  });
-              }
-
-              private void showCustomKeyboard(Context context, String current, boolean deckNameInput) {
-                  this.context = context;
-                  this.deckNameInput = deckNameInput;
-                  this.value = new StringBuilder(current == null ? "" : current);
-                  this.shifted = false;
-                  this.symbols = false;
-                  this.finished = false;
-
-                  LinearLayout root = new LinearLayout(context);
-                  root.setOrientation(LinearLayout.VERTICAL);
-                  root.setPadding(dp(8), dp(8), dp(8), dp(10));
-                  GradientDrawable panel = new GradientDrawable();
-                  panel.setColor(Color.rgb(24, 27, 34));
-                  panel.setCornerRadius(dp(12));
-                  root.setBackground(panel);
-
-                  preview = new TextView(context);
-                  preview.setTextColor(Color.WHITE);
-                  preview.setTextSize(16);
-                  preview.setSingleLine(true);
-                  preview.setHorizontallyScrolling(true);
-                  preview.setGravity(Gravity.CENTER);
-                  preview.setPadding(dp(12), 0, dp(12), 0);
-                  preview.setBackground(makeKeyBackground(false));
-                  LinearLayout.LayoutParams previewParams =
-                          new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(38));
-                  previewParams.setMargins(dp(2), dp(2), dp(2), dp(7));
-                  root.addView(preview, previewParams);
-
-                  keyboardRows = new LinearLayout(context);
-                  keyboardRows.setOrientation(LinearLayout.VERTICAL);
-                  root.addView(keyboardRows, new LinearLayout.LayoutParams(
-                          LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                  updatePreview();
-                  rebuildKeyboard();
-
-                  mTextInputDialog = new AlertDialog.Builder(context).setView(root).create();
-                  mTextInputDialog.setCanceledOnTouchOutside(false);
-                  mTextInputDialog.setOnCancelListener(dialog -> cancelInput());
-                  mTextInputDialog.show();
-
-                  Window window = mTextInputDialog.getWindow();
-                  if (window != null) {
-                      window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                      window.setLayout(WindowManager.LayoutParams.MATCH_PARENT,
-                              WindowManager.LayoutParams.WRAP_CONTENT);
-                      window.setGravity(Gravity.BOTTOM);
-                      window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                      applyImmersiveNavigation(window);
-                  }
-              }
-
-              private void rebuildKeyboard() {
-                  keyboardRows.removeAllViews();
-                  if (!symbols) {
-                      addSplitRow(new String[]{"q", "w", "e", "r", "t"},
-                              new String[]{"y", "u", "i", "o", "p"});
-                      addSplitRow(new String[]{"a", "s", "d", "f", "g"},
-                              new String[]{"h", "j", "k", "l"});
-                      addSplitRow(new String[]{"SHIFT", "z", "x", "c", "v"},
-                              new String[]{"b", "n", "m", "⌫"});
-                  } else {
-                      addSplitRow(new String[]{"1", "2", "3", "4", "5"},
-                              new String[]{"6", "7", "8", "9", "0"});
-                      addSplitRow(new String[]{"@", "#", "$", "%", "&"},
-                              new String[]{"-", "+", "(", ")", "/"});
-                      addSplitRow(new String[]{"=", "*", "'", "\"", ":"},
-                              new String[]{";", "!", "?", "⌫"});
-                  }
-                  addSplitRow(new String[]{"?123", ",", "SPACE"},
-                          new String[]{".", "CANCEL", "DONE"});
-              }
-
-              private void addSplitRow(String[] leftKeys, String[] rightKeys) {
-                  LinearLayout row = new LinearLayout(context);
-                  row.setOrientation(LinearLayout.HORIZONTAL);
-                  LinearLayout left = new LinearLayout(context);
-                  left.setOrientation(LinearLayout.HORIZONTAL);
-                  LinearLayout right = new LinearLayout(context);
-                  right.setOrientation(LinearLayout.HORIZONTAL);
-
-                  row.addView(left, new LinearLayout.LayoutParams(0, dp(45), 1f));
-                  row.addView(new Space(context), new LinearLayout.LayoutParams(dp(62), dp(45)));
-                  row.addView(right, new LinearLayout.LayoutParams(0, dp(45), 1f));
-
-                  for (String key : leftKeys)
-                      addKey(left, key);
-                  for (String key : rightKeys)
-                      addKey(right, key);
-
-                  LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
-                          LinearLayout.LayoutParams.MATCH_PARENT, dp(45));
-                  rowParams.setMargins(0, dp(2), 0, dp(2));
-                  keyboardRows.addView(row, rowParams);
-              }
-
-              private void addKey(LinearLayout group, String key) {
-                  Button button = new Button(context);
-                  button.setText(getKeyLabel(key));
-                  button.setTextColor(Color.WHITE);
-                  button.setTextSize(key.length() > 1 ? 11 : 15);
-                  button.setAllCaps(false);
-                  button.setMinWidth(0);
-                  button.setMinimumWidth(0);
-                  button.setPadding(dp(2), 0, dp(2), 0);
-                  button.setBackground(makeKeyBackground(true));
-                  button.setOnClickListener(view -> handleKey(key));
-
-                  float weight = "SPACE".equals(key) ? 2f : 1f;
-                  LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0,
-                          LinearLayout.LayoutParams.MATCH_PARENT, weight);
-                  params.setMargins(dp(2), 0, dp(2), 0);
-                  group.addView(button, params);
-              }
-
-              private String getKeyLabel(String key) {
-                  if ("SHIFT".equals(key))
-                      return "⇧";
-                  if ("SPACE".equals(key))
-                      return "Space";
-                  if ("?123".equals(key))
-                      return symbols ? "ABC" : "?123";
-                  if ("CANCEL".equals(key))
-                      return "Cancel";
-                  if ("DONE".equals(key))
-                      return "Enter";
-                  if ("⌫".equals(key))
-                      return "⌫";
-                  if (key.length() == 1 && Character.isLetter(key.charAt(0)))
-                      return shifted ? key.toUpperCase() : key;
-                  return key;
-              }
-
-              private void handleKey(String key) {
-                  if (finished)
-                      return;
-                  if ("DONE".equals(key)) {
-                      pushResult(value.toString(), true);
-                  } else if ("CANCEL".equals(key)) {
-                      cancelInput();
-                  } else if ("SHIFT".equals(key)) {
-                      shifted = !shifted;
-                      rebuildKeyboard();
-                  } else if ("?123".equals(key)) {
-                      symbols = !symbols;
-                      rebuildKeyboard();
-                  } else if ("SPACE".equals(key)) {
-                      value.append(' ');
-                      updatePreview();
-                  } else if ("⌫".equals(key)) {
-                      if (value.length() > 0) {
-                          int start = Character.offsetByCodePoints(value, value.length(), -1);
-                          value.delete(start, value.length());
-                          updatePreview();
-                      }
-                  } else {
-                      value.append(shifted ? key.toUpperCase() : key);
-                      if (shifted) {
-                          shifted = false;
-                          rebuildKeyboard();
-                      }
-                      updatePreview();
-                  }
-              }
-
-              private void updatePreview() {
-                  preview.setText(value.length() == 0 ? " " : value.toString());
+                  mTextInputWidget.requestFocus();
               }
 
               private void pushResult(String text, boolean sendEnter) {
@@ -586,138 +388,15 @@ jobs:
                   if (deckNameInput) {
                       EpNativeActivity.putBackKeyEvent();
                   } else {
-                      EpNativeActivity.putMessageBoxResult(value.toString(), false);
-                  }
-                  if (mTextInputDialog != null)
-                      mTextInputDialog.dismiss();
-              }
-
-              private GradientDrawable makeKeyBackground(boolean key) {
-                  GradientDrawable drawable = new GradientDrawable();
-                  drawable.setColor(key ? Color.rgb(54, 59, 69) : Color.rgb(38, 43, 52));
-                  drawable.setCornerRadius(dp(key ? 6 : 7));
-                  drawable.setStroke(dp(1), Color.rgb(75, 82, 94));
-                  return drawable;
-              }
-
-              private int dp(float value) {
-                  return (int) (value * context.getResources().getDisplayMetrics().density + 0.5f);
-              }
-
-              private void applyImmersiveNavigation(Window window) {
-                  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                      android.view.WindowInsetsController controller = window.getInsetsController();
-                      if (controller != null) {
-                          controller.setSystemBarsBehavior(
-                                  android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-                          controller.hide(android.view.WindowInsets.Type.navigationBars());
-                      }
-                  } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                      window.getDecorView().setSystemUiVisibility(
-                              View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                                      | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                                      | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                      EpNativeActivity.putMessageBoxResult(
+                              mTextInputWidget.getText().toString(), false);
                   }
               }
-          }'''
-          # Apply shared browser/Android keyboard geometry; all values are Android dp.
-          layout = json.loads(Path("deps/edopro/tools/web-layout-lab/layout-spec/keyboard.json").read_text())
-          panel, preview_spec, keys = layout["panel"], layout["preview"], layout["keys"]
-          letter_text_color = keys.get("letterTextColor", keys["textColor"])
-          replacements = {
-              "root.setPadding(dp(8), dp(8), dp(8), dp(10));": f"root.setPadding(dp({panel['padding']['left']}), dp({panel['padding']['top']}), dp({panel['padding']['right']}), dp({panel['padding']['bottom']}));",
-              "panel.setColor(Color.rgb(24, 27, 34));": f'panel.setColor(Color.parseColor("{panel["color"]}"));',
-              "panel.setCornerRadius(dp(12));": f"panel.setCornerRadius(dp({panel['radius']}));",
-              "new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(38));": f"new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp({preview_spec['height']}));",
-              "previewParams.setMargins(dp(2), dp(2), dp(2), dp(7));": f"previewParams.setMargins(dp({preview_spec['margin']['left']}), dp({preview_spec['margin']['top']}), dp({preview_spec['margin']['right']}), dp({preview_spec['margin']['bottom']}));",
-              "preview.setPadding(dp(12), 0, dp(12), 0);": f"preview.setPadding(dp({preview_spec['paddingX']}), 0, dp({preview_spec['paddingX']}), 0);",
-              "new LinearLayout.LayoutParams(0, dp(45), 1f)": f"new LinearLayout.LayoutParams(0, dp({keys['rowHeight']}), 1f)",
-              "LinearLayout.LayoutParams.MATCH_PARENT, dp(45));": f"LinearLayout.LayoutParams.MATCH_PARENT, dp({keys['rowHeight']}));",
-              "rowParams.setMargins(0, dp(2), 0, dp(2));": f"rowParams.setMargins(0, dp({keys['rowGap']}), 0, dp({keys['rowGap']}));",
-              "params.setMargins(dp(2), 0, dp(2), 0);": f"params.setMargins(dp({keys['horizontalMargin']}), 0, dp({keys['horizontalMargin']}), 0);",
-              "drawable.setColor(key ? Color.rgb(54, 59, 69) : Color.rgb(38, 43, 52));": f'drawable.setColor(Color.parseColor(key ? "{keys["color"]}" : "{preview_spec["color"]}"));',
-              "drawable.setCornerRadius(dp(key ? 6 : 7));": f"drawable.setCornerRadius(dp(key ? {keys['radius']} : {preview_spec['radius']}));",
-              "drawable.setStroke(dp(1), Color.rgb(75, 82, 94));": f'drawable.setStroke(dp(1), Color.parseColor("{keys["stroke"]}"));',
-              "button.setTextColor(Color.WHITE);": f'button.setTextColor(key.length() == 1 && Character.isLetter(key.charAt(0)) ? Color.parseColor("{letter_text_color}") : Color.parseColor("{keys["textColor"]}"));',
-              "button.setTextSize(key.length() > 1 ? 11 : 15);": f"button.setTextSize(key.length() > 1 ? {keys['actionTextSize']} : {keys['letterTextSize']});"
           }
-          for old_value, new_value in replacements.items():
-              assert java_source.count(old_value) >= 1, "Could not apply keyboard layout value: " + old_value
-              java_source = java_source.replace(old_value, new_value)
-          # Replace hard-coded split rows with per-key grid coordinates from the lab JSON.
-          def java_array(items):
-              return ", ".join("new String[]{" + ", ".join(json.dumps(str(v)) for v in item) + "}" for item in items)
-
-          center_gap = int(layout["grid"]["centerGap"])
-          logical_gap_start = layout["grid"]["columns"] // 2 - 2
-          logical_gap_end = logical_gap_start + 4
-          assert center_gap >= 1, "Center gap must be at least one weighted unit"
-
-          def native_boundary(position):
-              if position <= logical_gap_start:
-                  return position
-              if position >= logical_gap_end:
-                  return position + center_gap - 4
-              raise ValueError("A key boundary cannot sit inside the center gap: " + str(position))
-
-          native_grid_columns = layout["grid"]["columns"] - 4 + center_gap
-          generated = ["    private void rebuildKeyboard() {", "        keyboardRows.removeAllViews();"]
-          for index, layout_name in enumerate(("letters", "symbols")):
-              generated.append("        " + ("if (!symbols) {" if index == 0 else "else {"))
-              placements = layout["buttons"][layout_name]
-              for row_index in range(layout["grid"]["rows"]):
-                  row_items = []
-                  for key, data in placements.items():
-                      if data["y"] != row_index:
-                          continue
-                      start = native_boundary(data["x"])
-                      end = native_boundary(data["x"] + data["w"])
-                      assert end > start, "Invalid native key span: " + key
-                      row_items.append((data.get("key", key), start, end - start))
-                  row_items.sort(key=lambda item: item[1])
-                  generated.append("            addGridRow(" + str(row_index) + ", new String[][]{" + java_array(row_items) + "});")
-              generated.append("        }")
-          generated.append("    }")
-          method = "\n".join(generated)
-          method_start = java_source.index("private void rebuildKeyboard()")
-          method_end = java_source.index("private void addSplitRow", method_start)
-          java_source = java_source[:method_start] + method + "\n\n              private void addGridRow" + java_source[method_end + len("private void addSplitRow"):]
-          
-          row_method = """(int rowIndex, String[][] items) {
-                  LinearLayout row = new LinearLayout(context);
-                  row.setOrientation(LinearLayout.HORIZONTAL);
-                  float cursor = 0f;
-                  for (String[] item : items) {
-                      String key = item[0];
-                      float column = Float.parseFloat(item[1]);
-                      float span = Float.parseFloat(item[2]);
-                      if (column > cursor) {
-                          Space gap = new Space(context);
-                          row.addView(gap, new LinearLayout.LayoutParams(0, dp(ROW_HEIGHT), column - cursor));
-                      }
-                      addKey(row, key, span);
-                      cursor = column + span;
-                  }
-                  if (cursor < GRID_COLUMNS) {
-                      Space gap = new Space(context);
-                      row.addView(gap, new LinearLayout.LayoutParams(0, dp(ROW_HEIGHT), GRID_COLUMNS - cursor));
-                  }
-                  LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
-                          LinearLayout.LayoutParams.MATCH_PARENT, dp(ROW_HEIGHT));
-                  rowParams.setMargins(0, dp(ROW_GAP), 0, dp(ROW_GAP));
-                  keyboardRows.addView(row, rowParams);
-              }
-
-              private void addKey"""
-          row_method = row_method.replace("ROW_HEIGHT", str(keys["rowHeight"])).replace("ROW_GAP", str(layout["grid"]["rowGap"])).replace("GRID_COLUMNS", str(native_grid_columns))
-          row_start = java_source.index("(String[] leftKeys, String[] rightKeys) {")
-          row_end = java_source.index("private void addKey", row_start)
-          java_source = java_source[:row_start] + row_method + java_source[row_end + len("private void addKey"):]
-          java_source = java_source.replace("private void addKey(LinearLayout group, String key)", "private void addKey(LinearLayout group, String key, int span)")
-          java_source = java_source.replace('float weight = "SPACE".equals(key) ? 2f : 1f;', "float weight = span;")
+'''
           textentry.write_text(java_source)
-          print("Installed grid-positioned keyboard from the shared layout specification.")
 
+          print("Restored native Android IME text entry; retained deck-name Back cancellation.")
           print("WindBot-free Android wrapper prepared with native deck-name Back cancellation.")
           PY
           ! grep -R -nE 'libwindbot|WindBot\.(initAndroid|runAndroid|addDatabase)' build.gradle src/main/java
