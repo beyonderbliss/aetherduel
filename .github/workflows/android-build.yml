@@ -560,7 +560,7 @@ jobs:
 
               private String getKeyLabel(String key) {
                   if ("SHIFT".equals(key))
-                      return "⇧";
+                      return "Shift";
                   if ("SPACE".equals(key))
                       return "Space";
                   if ("?123".equals(key))
@@ -728,7 +728,7 @@ jobs:
           logical_gap_start = layout["grid"]["columns"] // 2 - 2
           logical_gap_end = logical_gap_start + 4
           assert center_gap > 0, "Center gap must be a positive dp value"
-          assert int(layout["grid"].get("centerGapCells", 8)) == 8, "Unexpected V2 center-gap grid"
+          assert int(layout["grid"].get("centerGapCells", 8)) == 10, "Unexpected V2 center-gap grid"
 
           def native_boundary(position):
               if position <= logical_gap_start:
