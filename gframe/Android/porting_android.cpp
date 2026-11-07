@@ -29,6 +29,8 @@
 
 namespace {
 
+irr::gui::IGUIEditBox* activeInputEditBox = nullptr;
+
 std::string JstringtoCA(JNIEnv* env, const jstring& jnistring) {
 	if(!jnistring)
 		return "";
@@ -84,12 +86,10 @@ extern "C" {
 			events->emplace_back([send_enter, text = JstringtoCW(env, textString)](){
 				auto device = static_cast<irr::IrrlichtDevice*>(porting::app_global->userData);
 				auto irrenv = device->getGUIEnvironment();
-				auto element = irrenv->getFocus();
-				if(element && element->getType() == irr::gui::EGUIET_EDIT_BOX) {
-					auto editbox = static_cast<irr::gui::IGUIEditBox*>(element);
+				auto editbox = activeInputEditBox;
+				activeInputEditBox = nullptr;
+				if(editbox) {
 					editbox->setText(text.data());
-					irrenv->removeFocus(editbox);
-					irrenv->setFocus(editbox->getParent());
 					irr::SEvent changeEvent;
 					changeEvent.EventType = irr::EET_GUI_EVENT;
 					changeEvent.GUIEvent.Caller = editbox;
@@ -398,8 +398,12 @@ bool transformEvent(const irr::SEvent& event, bool& stopPropagation) {
 				if(hovered && hovered->isEnabled()) {
 					if(hovered->getType() == irr::gui::EGUIET_EDIT_BOX) {
 						bool retval = hovered->OnEvent(event);
-						if(retval)
-							ygo::mainGame->env->setFocus(hovered);
+						if(retval) {
+							auto editbox = static_cast<irr::gui::IGUIEditBox*>(hovered);
+							activeInputEditBox = editbox;
+							ygo::mainGame->env->removeFocus(editbox);
+							ygo::mainGame->env->setFocus(editbox->getParent());
+						}
 						const bool deckNameInput = hovered == ygo::mainGame->ebDeckname &&
 							ygo::mainGame->deckBuilder.deck_name_input_mode != 0;
 						porting::showInputDialog(
