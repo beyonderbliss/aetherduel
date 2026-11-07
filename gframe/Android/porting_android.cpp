@@ -398,12 +398,10 @@ bool transformEvent(const irr::SEvent& event, bool& stopPropagation) {
 				if(hovered && hovered->isEnabled()) {
 					if(hovered->getType() == irr::gui::EGUIET_EDIT_BOX) {
 						bool retval = hovered->OnEvent(event);
-						if(retval) {
-							auto editbox = static_cast<irr::gui::IGUIEditBox*>(hovered);
-							activeInputEditBox = editbox;
-							ygo::mainGame->env->removeFocus(editbox);
-							ygo::mainGame->env->setFocus(editbox->getParent());
-						}
+						auto editbox = static_cast<irr::gui::IGUIEditBox*>(hovered);
+						activeInputEditBox = editbox;
+						ygo::mainGame->env->removeFocus(editbox);
+						ygo::mainGame->env->setFocus(editbox->getParent());
 						const bool deckNameInput = hovered == ygo::mainGame->ebDeckname &&
 							ygo::mainGame->deckBuilder.deck_name_input_mode != 0;
 						porting::showInputDialog(
