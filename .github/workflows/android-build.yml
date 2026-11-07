@@ -676,7 +676,7 @@ jobs:
               "    }"
           ])
           methods = "\n".join(generated)
-          java_source = java_source.replace("import android.widget.Button;", "import android.widget.Button;\\n          import android.widget.FrameLayout;")
+          java_source = java_source.replace("import android.widget.Button;", "import android.widget.Button;\n          import android.widget.FrameLayout;")
           method_start = java_source.index("private void rebuildKeyboard()")
           method_end = java_source.index("private String getKeyLabel", method_start)
           java_source = java_source[:method_start] + methods + "\n\n              private String getKeyLabel" + java_source[method_end + len("private String getKeyLabel"):]
