@@ -1,6 +1,6 @@
 # PrimaNyx Keyboard Layout Lab
 
-The lab edits the custom Android text-entry keyboard using a 24-column × 4-row logical grid. Every key has its own grid X/Y position and width in cells. The editor supports pointer/touch dragging, horizontal resizing from the lower-right handle, adjustable snap increments, and numeric position/width controls. It prevents keys from overlapping. The preview has a Center gap slider (4–8). Its selected value is saved as `grid.centerGap` in the shared JSON and drives the same weighted gap in the Android keyboard.
+The lab edits the split Android text-entry keyboard using a 24-column × 4-row logical editing grid. Each key has an editable X/Y position and width. The preview keeps the two key groups separated by a center spacer, supports pointer/touch dragging, horizontal resizing, adjustable snap increments, and numeric position/width controls.
 
 ## Viewport and units
 
@@ -9,7 +9,7 @@ Android keyboard window:
 - height: WRAP_CONTENT
 - gravity: BOTTOM
 
-Geometry values use Android dp. The browser preview renders the same grid at the available page width; the grid proportions and key placements are shared with the Android build workflow. Row height and panel spacing remain dp values.
+Geometry values use Android dp. The browser preview renders the shared layout specification at the available page width. The split pitch is calculated from the available width after subtracting the fixed center spacer. Row height, row gap, key margin, and panel spacing remain dp values.
 
 ## Editing
 
@@ -17,20 +17,20 @@ Geometry values use Android dp. The browser preview renders the same grid at the
 2. Choose Letters or Symbols.
 3. Drag a key to reposition it. Drag its yellow corner handle to change its width.
 4. Change Snap to 1, 2, or 3 cells to control movement increments.
-5. Adjust Center gap from 4 to 8 to compare thumb reach in landscape. The selected value is included in the copied JSON as `grid.centerGap`.
+5. Adjust Center gap to compare thumb reach in landscape. The selected value is stored as `keys.centerGap` in the shared JSON.
 6. Select a key to edit its Column X, Row Y, and Width numerically.
-7. Copy the JSON and update layout-spec/keyboard.json when you want to persist key edits. The selected center-gap value is included as `grid.centerGap`.
+7. Copy the JSON and update `layout-spec/keyboard.json` when you want to persist key edits.
 
-The current editor intentionally keeps key height to one row; width and position are independently configurable. This maps to the current Android native keyboard row renderer.
+The ordinary keycaps use a shared 1.8-unit width on a 2-unit pitch. The inner columns are aligned vertically (T/G/V on the left and Y/G/V on the right). DONE is exactly two standard keycap widths. SPACE is an intentional bridge: it fills the remaining bottom-row span and includes the center region.
 
 ## Android integration
 
-The Android workflow reads layout-spec/keyboard.json while generating TextEntry.java. It maps the 24-column editor grid to 10 weighted columns on each side plus the selected center-gap weight, preserving keys that span across the center gap and inserting weighted spacers for empty regions. Changing a key's row or column moves it in the native keyboard too. Geometry and palette values are also applied from the shared specification.
+The Android workflow reads `layout-spec/keyboard.json` while generating `TextEntry.java`. The first three rows are rendered as two independent weighted groups with a fixed center spacer in dp; group key widths and pitches are derived independently from the shared split pitch. The bottom row uses left and right groups plus a flexible SPACE key that bridges the center region. The center gap is no longer represented as a large weighted column count.
 
-The workflow remains manual through workflow_dispatch. Editing the lab does not trigger an APK build.
+Row gap and horizontal key margin each have one source of truth under `keys`. The workflow remains manual through `workflow_dispatch`; editing the lab does not trigger an APK build.
 
 ## Scope
 
-- Keyboard editor only; the completed card-view module is untouched.
+- Keyboard editor and native keyboard renderer only; the completed card-view module is untouched.
 - No APK build or deployment is triggered by editor changes.
 - The browser preview does not emulate Android system-bar insets or device-specific window behavior.
