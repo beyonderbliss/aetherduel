@@ -433,6 +433,50 @@ jobs:
               private boolean finished;
 
               public void Show(Context context, String current, boolean deckNameInput) {
+                  try {
+                      showCustomKeyboard(context, current, deckNameInput);
+                  } catch (RuntimeException error) {
+                      android.util.Log.e("AetherDuelTextEntry",
+                              "Custom keyboard failed; falling back to Android text input", error);
+                      if (mTextInputDialog != null && mTextInputDialog.isShowing())
+                          mTextInputDialog.dismiss();
+                      showSystemInputFallback(context, current, deckNameInput);
+                  }
+              }
+
+              private void showSystemInputFallback(Context context, String current, boolean deckNameInput) {
+                  this.context = context;
+                  this.deckNameInput = deckNameInput;
+                  this.value = new StringBuilder(current == null ? "" : current);
+                  this.finished = false;
+
+                  android.widget.EditText input = new android.widget.EditText(context);
+                  input.setSingleLine(true);
+                  input.setText(current == null ? "" : current);
+                  input.setSelection(input.length());
+
+                  mTextInputDialog = new AlertDialog.Builder(context)
+                          .setTitle(deckNameInput ? "Deck name" : "Text input")
+                          .setView(input)
+                          .setPositiveButton("Done", (dialog, which) ->
+                                  pushResult(input.getText().toString(), true))
+                          .setNegativeButton("Cancel", (dialog, which) -> cancelInput())
+                          .create();
+                  mTextInputDialog.setCanceledOnTouchOutside(false);
+                  mTextInputDialog.setOnCancelListener(dialog -> cancelInput());
+                  mTextInputDialog.show();
+                  input.requestFocus();
+                  input.post(() -> {
+                      android.view.inputmethod.InputMethodManager imm =
+                              (android.view.inputmethod.InputMethodManager)
+                                      context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                      if (imm != null)
+                          imm.showSoftInput(input,
+                                  android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+                  });
+              }
+
+              private void showCustomKeyboard(Context context, String current, boolean deckNameInput) {
                   this.context = context;
                   this.deckNameInput = deckNameInput;
                   this.value = new StringBuilder(current == null ? "" : current);
