@@ -155,85 +155,10 @@ jobs:
           assert text.count(anchor) == 1, "Could not locate native callback declarations"
           assert "putBackKeyEvent" not in text, "Back callback already exists"
           text = text.replace(anchor, anchor + declaration)
-          input_mode_java = """
-          \tprivate int deckNamePreviousSystemUiVisibility = -1;
-          private boolean deckNameInputModeActive = false;
+          # Keep the wrapper original Android Back handling. The custom keyboard
+          # no longer owns Activity-wide system-bar or Back state.
+          assert text.count(old_back) == 1, "Could not locate Android Back handler"
 
-          \tpublic void setDeckNameInputMode(boolean active) {
-          \t\trunOnUiThread(() -> {
-          \t\t\tandroid.view.View decor = getWindow().getDecorView();
-          \t\t\tdeckNameInputModeActive = active;
-          \t\t\tif (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-          \t\t\t\tandroid.view.WindowInsetsController controller = getWindow().getInsetsController();
-          \t\t\t\tif (controller != null) {
-          \t\t\t\t\tcontroller.setSystemBarsBehavior(
-          \t\t\t\t\t\t\tandroid.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-          \t\t\t\t\tcontroller.hide(android.view.WindowInsets.Type.navigationBars());
-          \t\t\t\t}
-          \t\t\t\t// Reapply after the IME request so its inset transition cannot leave
-          \t\t\t\t// the navigation bar visible beside the split keyboard.
-          \t\t\t\tif (active) {
-          \t\t\t\t\tdecor.post(() -> {
-          \t\t\t\t\t\tif (deckNameInputModeActive) {
-          \t\t\t\t\t\t\tandroid.view.WindowInsetsController current = getWindow().getInsetsController();
-          \t\t\t\t\t\t\tif (current != null)
-          \t\t\t\t\t\t\t\tcurrent.hide(android.view.WindowInsets.Type.navigationBars());
-          \t\t\t\t\t\t}
-          \t\t\t\t\t});
-          \t\t\t\t}
-          \t\t\t} else if (active) {
-          \t\t\t\tif (deckNamePreviousSystemUiVisibility < 0)
-          \t\t\t\t\tdeckNamePreviousSystemUiVisibility = decor.getSystemUiVisibility();
-          \t\t\t\tdecor.setSystemUiVisibility(
-          \t\t\t\t\t\tdeckNamePreviousSystemUiVisibility
-          \t\t\t\t\t\t\t| android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-          \t\t\t\t\t\t\t| android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-          \t\t\t} else if (deckNamePreviousSystemUiVisibility >= 0) {
-          \t\t\t\tdecor.setSystemUiVisibility(deckNamePreviousSystemUiVisibility);
-          \t\t\t\tdeckNamePreviousSystemUiVisibility = -1;
-          \t\t\t}
-          \t\t});
-          \t}
-          """
-
-          old_back = """\t@Override
-          \tpublic boolean onKeyDown(int keyCode, KeyEvent event) {
-          \t\tif (keyCode == KeyEvent.KEYCODE_BACK) {
-          \t\t\tif ((event.getSource() & InputDevice.SOURCE_MOUSE) != InputDevice.SOURCE_MOUSE)
-          \t\t\t\treturn true;
-          \t\t}
-          \t\treturn super.onKeyDown(keyCode, event);
-          \t}
-          """
-          new_back = """\t@Override
-          \tpublic boolean onKeyDown(int keyCode, KeyEvent event) {
-          \t\tif (keyCode == KeyEvent.KEYCODE_BACK &&
-          \t\t\t\t(event.getSource() & InputDevice.SOURCE_MOUSE) != InputDevice.SOURCE_MOUSE) {
-          \t\t\tputBackKeyEvent();
-          \t\t\treturn true;
-          \t\t}
-          \t\treturn super.onKeyDown(keyCode, event);
-          \t}
-
-          \t@Override
-          \tpublic void onBackPressed() {
-          \t\tputBackKeyEvent();
-          \t}
-          """
-          assert text.count(old_back) == 1, "Could not uniquely locate Android Back handler"
-          text = text.replace(old_back, input_mode_java + "\n" + new_back)
-
-          oncreate_anchor = "\t\tsuper.onCreate(savedInstanceState);\n"
-          assert text.count(oncreate_anchor) == 1, "Could not locate Activity onCreate"
-          oncreate_back = (
-              oncreate_anchor
-              + "\t\tif (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {\n"
-              + "\t\t\tgetOnBackInvokedDispatcher().registerOnBackInvokedCallback(\n"
-              + "\t\t\t\t\tandroid.window.OnBackInvokedDispatcher.PRIORITY_OVERLAY,\n"
-              + "\t\t\t\t\t() -> putBackKeyEvent());\n"
-              + "\t\t}\n"
-          )
-          text = text.replace(oncreate_anchor, oncreate_back)
           old_show_combo = """
           	@SuppressWarnings({"unused", "deprecation"})
           	public void showComboBox(String[] parameters) {
