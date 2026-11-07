@@ -720,86 +720,97 @@ jobs:
           for old_value, new_value in replacements.items():
               assert java_source.count(old_value) >= 1, "Could not apply keyboard layout value: " + old_value
               java_source = java_source.replace(old_value, new_value)
-          # Replace hard-coded split rows with per-key grid coordinates from the lab JSON.
+          # Generate Android keys from the exact V2 lab coordinates.
+          # Use the same 20-cell + center-gap coordinate transform as the browser lab.
+          layout = json.loads(Path("deps/edopro/tools/web-layout-lab/layout-spec/keyboard.json").read_text())
+          keys = layout["keys"]
+          center_gap_cells = float(layout["grid"]["centerGapCells"])
+          key_margin = float(keys["horizontalMargin"])
+          row_height = int(keys["rowHeight"])
+          row_gap = int(keys["rowGap"])
+
           def java_array(items):
-              return ", ".join("new String[]{" + ", ".join(json.dumps(str(v)) for v in item) + "}" for item in items)
+              return "new String[][]{" + ", ".join(
+                  "new String[]{" + ", ".join(json.dumps(str(value)) for value in item) + "}"
+                  for item in items
+              ) + "}"
 
-          center_gap = int(keys["centerGap"])
-          logical_gap_start = layout["grid"]["columns"] // 2 - 2
-          logical_gap_end = logical_gap_start + 4
-          assert center_gap > 0, "Center gap must be a positive dp value"
-          assert int(layout["grid"].get("centerGapCells", 8)) == 10, "Unexpected V2 center-gap grid"
-
-          def native_boundary(position):
-              if position <= logical_gap_start:
-                  return position
-              if position >= logical_gap_end:
-                  return position - 4
-              raise ValueError("A key boundary cannot sit inside the center gap: " + str(position))
-
-          native_grid_columns = layout["grid"]["columns"] - 4
-          generated = ["    private void rebuildKeyboard() {", "        keyboardRows.removeAllViews();"]
-          for index, layout_name in enumerate(("letters", "symbols")):
-              generated.append("        " + ("if (!symbols) {" if index == 0 else "else {"))
+          generated = [
+              "    private void rebuildKeyboard() {",
+              "        keyboardRows.removeAllViews();",
+          ]
+          for layout_name, condition in (("letters", "if (!symbols) {"), ("symbols", "else {")):
+              generated.append("        " + condition)
               placements = layout["buttons"][layout_name]
-              for row_index in range(layout["grid"]["rows"]):
-                  row_items = []
+              for row_index in range(4):
+                  items = []
                   for key, data in placements.items():
-                      if data["y"] != row_index:
+                      if int(data["y"]) != row_index:
                           continue
-                      start = native_boundary(data["x"])
-                      end = native_boundary(data["x"] + data["w"])
-                      assert end > start, "Invalid native key span: " + key
-                      bridges_gap = data["x"] < logical_gap_start and data["x"] + data["w"] > logical_gap_end
-                      row_items.append((data.get("key", key), start, end - start, "true" if bridges_gap else "false"))
-                  row_items.sort(key=lambda item: item[1])
-                  generated.append("            addGridRow(" + str(row_index) + ", new String[][]{" + java_array(row_items) + "});")
+                      items.append([
+                          data.get("key", key),
+                          data["x"],
+                          data["w"],
+                      ])
+                  items.sort(key=lambda item: float(item[1]))
+                  generated.append(
+                      "            addGridRow(" + str(row_index) + ", " + java_array(items) + ");"
+                  )
               generated.append("        }")
-          generated.append("    }")
-          method = "\n".join(generated)
+          generated.extend([
+              "    }",
+              "",
+              "    private void addGridRow(int rowIndex, String[][] items) {",
+              "        FrameLayout row = new FrameLayout(context);",
+              "        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(",
+              "                LinearLayout.LayoutParams.MATCH_PARENT, dp(" + str(row_height) + "));",
+              "        rowParams.setMargins(0, rowIndex == 0 ? 0 : dp(" + str(row_gap) + "), 0, 0);",
+              "        keyboardRows.addView(row, rowParams);",
+              "        row.post(() -> {",
+              "            float unit = row.getWidth() / (20f + " + str(center_gap_cells) + "f);",
+              "            float gap = " + str(center_gap_cells) + "f * unit;",
+              "            float marginPx = dp(" + str(key_margin) + "f);",
+              "            for (String[] item : items) {",
+              "                String key = item[0];",
+              "                float x = Float.parseFloat(item[1]);",
+              "                float width = Float.parseFloat(item[2]);",
+              "                float left = toKeyboardPx(x, unit, gap);",
+              "                float right = toKeyboardPx(x + width, unit, gap);",
+              "                float keyWidth = Math.max(1f, right - left - 2f * marginPx);",
+              "                Button button = createKeyButton(key);",
+              "                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(",
+              "                        Math.max(1, Math.round(keyWidth)), FrameLayout.LayoutParams.MATCH_PARENT);",
+              "                params.leftMargin = Math.round(left + marginPx);",
+              "                row.addView(button, params);",
+              "            }",
+              "        });",
+              "    }",
+              "",
+              "    private float toKeyboardPx(float x, float unit, float gap) {",
+              "        if (x <= 10f) return x * unit;",
+              "        if (x <= 14f) return 10f * unit + (x - 10f) * gap / 4f;",
+              "        return 10f * unit + gap + (x - 14f) * unit;",
+              "    }",
+              "",
+              "    private Button createKeyButton(String key) {",
+              "        Button button = new Button(context);",
+              "        button.setText(getKeyLabel(key));",
+              "        button.setTextColor(Color.parseColor(key.length() == 1 && Character.isLetter(key.charAt(0)) ? \"" + keys["letterTextColor"] + "\" : \"" + keys["textColor"] + "\"));",
+              "        button.setTextSize(key.length() > 1 ? " + str(keys["actionTextSize"]) + " : " + str(keys["letterTextSize"]) + ");",
+              "        button.setAllCaps(false);",
+              "        button.setMinWidth(0);",
+              "        button.setMinimumWidth(0);",
+              "        button.setPadding(dp(2), 0, dp(2), 0);",
+              "        button.setBackground(makeKeyBackground(true));",
+              "        button.setOnClickListener(view -> handleKey(key));",
+              "        return button;",
+              "    }"
+          ])
+          methods = "\n".join(generated)
+          java_source = java_source.replace("import android.widget.Button;", "import android.widget.Button;\n          import android.widget.FrameLayout;")
           method_start = java_source.index("private void rebuildKeyboard()")
-          method_end = java_source.index("private void addSplitRow", method_start)
-          java_source = java_source[:method_start] + method + "\n\n              private void addGridRow" + java_source[method_end + len("private void addSplitRow"):]
-          
-          row_method = """(int rowIndex, String[][] items) {
-                  LinearLayout row = new LinearLayout(context);
-                  row.setOrientation(LinearLayout.HORIZONTAL);
-                  float cursor = 0f;
-                  boolean gapInserted = false;
-                  for (String[] item : items) {
-                      String key = item[0];
-                      float column = Float.parseFloat(item[1]);
-                      float span = Float.parseFloat(item[2]);
-                      boolean bridgesGap = Boolean.parseBoolean(item[3]);
-                      if (!bridgesGap && !gapInserted && column >= 10f && cursor <= 10f) {
-                          Space gap = new Space(context);
-                          row.addView(gap, new LinearLayout.LayoutParams(
-                                  dp(CENTER_GAP), dp(ROW_HEIGHT)));
-                          gapInserted = true;
-                          cursor = 10f;
-                      }
-                      if (column > cursor) {
-                          Space offset = new Space(context);
-                          row.addView(offset, new LinearLayout.LayoutParams(
-                                  0, dp(ROW_HEIGHT), column - cursor));
-                      }
-                      addKey(row, key, span, bridgesGap);
-                      cursor = column + span;
-                  }
-                  LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
-                          LinearLayout.LayoutParams.MATCH_PARENT, dp(ROW_HEIGHT));
-                  rowParams.setMargins(0, dp(ROW_GAP / 2f), 0, dp(ROW_GAP / 2f));
-                  keyboardRows.addView(row, rowParams);
-              }
-
-              private void addKey"""
-          row_method = row_method.replace("ROW_HEIGHT", str(keys["rowHeight"])).replace("ROW_GAP", str(keys["rowGap"])).replace("CENTER_GAP", str(center_gap))
-          row_start = java_source.index("(String[] leftKeys, String[] rightKeys) {")
-          row_end = java_source.index("private void addKey", row_start)
-          java_source = java_source[:row_start] + row_method + java_source[row_end + len("private void addKey"):]
-          java_source = java_source.replace("private void addKey(LinearLayout group, String key)", "private void addKey(LinearLayout group, String key, float span, boolean bridgesGap)")
-          java_source = java_source.replace('float weight = "SPACE".equals(key) ? 2f : 1f;', "float weight = span;")
-          java_source = java_source.replace("dp(CENTER_GAP)", "dp(" + str(center_gap) + ")")
+          method_end = java_source.index("private String getKeyLabel", method_start)
+          java_source = java_source[:method_start] + methods + "\n\n              private String getKeyLabel" + java_source[method_end + len("private String getKeyLabel"):]
           textentry.write_text(java_source)
           print("Installed grid-positioned keyboard from the shared layout specification.")
 
