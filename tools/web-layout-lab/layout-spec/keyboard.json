@@ -172,9 +172,10 @@
     ]
   },
   "grid": {
-    "columns": 24,
+    "columns": 26,
     "rows": 4,
-    "snap": 0.2
+    "snap": 0.2,
+    "centerGapCells": 6
   },
   "buttons": {
     "letters": {
