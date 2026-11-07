@@ -172,7 +172,7 @@
     ]
   },
   "grid": {
-    "columns": 26,
+    "columns": 24,
     "rows": 4,
     "snap": 0.2,
     "centerGapCells": 6
