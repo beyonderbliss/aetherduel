@@ -751,7 +751,7 @@ jobs:
                       end = native_boundary(data["x"] + data["w"])
                       assert end > start, "Invalid native key span: " + key
                       bridges_gap = data["x"] < logical_gap_start and data["x"] + data["w"] > logical_gap_end
-                  row_items.append((data.get("key", key), start, end - start, "true" if bridges_gap else "false"))
+                      row_items.append((data.get("key", key), start, end - start, "true" if bridges_gap else "false"))
                   row_items.sort(key=lambda item: item[1])
                   generated.append("            addGridRow(" + str(row_index) + ", new String[][]{" + java_array(row_items) + "});")
               generated.append("        }")
