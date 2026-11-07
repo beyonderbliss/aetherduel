@@ -787,7 +787,7 @@ jobs:
               }
 
               private void addKey"""
-          row_method = row_method.replace("ROW_HEIGHT", str(keys["rowHeight"])).replace("ROW_GAP", str(layout["grid"]["rowGap"])).replace("CENTER_GAP", str(center_gap))
+          row_method = row_method.replace("ROW_HEIGHT", str(keys["rowHeight"])).replace("ROW_GAP", str(keys["rowGap"])).replace("CENTER_GAP", str(center_gap))
           row_start = java_source.index("(String[] leftKeys, String[] rightKeys) {")
           row_end = java_source.index("private void addKey", row_start)
           java_source = java_source[:row_start] + row_method + java_source[row_end + len("private void addKey"):]
