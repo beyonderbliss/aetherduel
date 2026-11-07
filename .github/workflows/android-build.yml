@@ -529,146 +529,81 @@ jobs:
           for old_value, new_value in replacements.items():
               assert java_source.count(old_value) >= 1, "Could not apply keyboard layout value: " + old_value
               java_source = java_source.replace(old_value, new_value)
-          # Generate native rows as independent left/right groups. The bottom SPACE key
-          # is the only intentional bridge across the center spacer.
+          # Generate Android keys from the exact V2 lab coordinates.
+          # The browser lab and Android use the same 20-cell + center-gap mapping.
           layout = json.loads(Path("deps/edopro/tools/web-layout-lab/layout-spec/keyboard.json").read_text())
           keys = layout["keys"]
-          letter_text_color = keys.get("letterTextColor", keys["textColor"])
-          center_gap = int(keys["centerGap"])
-          key_margin = int(keys["horizontalMargin"])
+          center_gap_cells = float(layout["grid"]["centerGapCells"])
+          key_margin = float(keys["horizontalMargin"])
           row_height = int(keys["rowHeight"])
           row_gap = int(keys["rowGap"])
-          space = layout["buttons"]["letters"]["SPACE"]
-          space_left = float(space["x"])
-          space_right_start = float(space["x"]) + float(space["w"]) - 14
-          left_bottom_units = space_left
-          right_bottom_units = 10 - space_right_start
-          space_weight = (10 - left_bottom_units) + space_right_start
-          assert center_gap > 0 and 0 < left_bottom_units <= 10 and 0 <= space_right_start < 10 and right_bottom_units > 0, "Invalid split keyboard bridge geometry"
 
           def java_array(items):
-              return ", ".join("new String[]{" + ", ".join(json.dumps(str(v)) for v in item) + "}" for item in items)
-
-          def side_items(placements, row_index, side):
-              items = []
-              for key, data in placements.items():
-                  if data["y"] != row_index or key == "SPACE":
-                      continue
-                  x, width = float(data["x"]), float(data["w"])
-                  if side == "left" and x < 10 and x + width <= 10:
-                      local_x = x
-                  elif side == "right" and x >= 14 and x + width <= 24:
-                      local_x = x - 14
-                  else:
-                      continue
-                  display_key = data.get("key", key)
-                  left_margin = key_margin
-                  right_margin = key_margin
-                  items.append([display_key, local_x, width, left_margin, right_margin])
-              items.sort(key=lambda item: float(item[1]))
-              return items
+              return "new String[][]{" + ", ".join(
+                  "new String[]{" + ", ".join(json.dumps(str(value)) for value in item) + "}"
+                  for item in items
+              ) + "}"
 
           generated = [
               "    private void rebuildKeyboard() {",
-              "        keyboardRows.removeAllViews();"
+              "        keyboardRows.removeAllViews();",
           ]
           for layout_name, condition in (("letters", "if (!symbols) {"), ("symbols", "else {")):
               generated.append("        " + condition)
               placements = layout["buttons"][layout_name]
-              for row_index in range(3):
-                  left = side_items(placements, row_index, "left")
-                  right = side_items(placements, row_index, "right")
+              for row_index in range(4):
+                  items = []
+                  for key, data in placements.items():
+                      if int(data["y"]) != row_index:
+                          continue
+                      items.append([
+                          data.get("key", key),
+                          data["x"],
+                          data["w"],
+                      ])
+                  items.sort(key=lambda item: float(item[1]))
                   generated.append(
-                      "            addSplitRow(" + str(row_index) + ", new String[][]{" +
-                      java_array(left) + "}, new String[][]{" + java_array(right) + "});"
+                      "            addGridRow(" + str(row_index) + ", " + java_array(items) + ");"
                   )
-              generated.append("            addBottomRow();")
               generated.append("        }")
-          generated.append("    }")
-          bottom_placements = layout["buttons"]["letters"]
-          left_bottom = side_items(bottom_placements, 3, "left")
-          right_bottom = side_items(bottom_placements, 3, "right")
-          for item in right_bottom:
-              item[1] = float(item[1]) - space_right_start
           generated.extend([
-              "",
-              "    private void addSplitRow(int rowIndex, String[][] leftItems, String[][] rightItems) {",
-              "        LinearLayout row = new LinearLayout(context);",
-              "        row.setOrientation(LinearLayout.HORIZONTAL);",
-              "        LinearLayout left = new LinearLayout(context);",
-              "        left.setOrientation(LinearLayout.HORIZONTAL);",
-              "        LinearLayout right = new LinearLayout(context);",
-              "        right.setOrientation(LinearLayout.HORIZONTAL);",
-              "        addSplitGroup(left, leftItems, 10f);",
-              "        addSplitGroup(right, rightItems, 10f);",
-              "        row.addView(left, new LinearLayout.LayoutParams(0, dp(" + str(row_height) + "), 10f));",
-              "        row.addView(new Space(context), new LinearLayout.LayoutParams(dp(" + str(center_gap) + "), dp(" + str(row_height) + ")));",
-              "        row.addView(right, new LinearLayout.LayoutParams(0, dp(" + str(row_height) + "), 10f));",
-              "        addKeyboardRow(row, rowIndex);",
               "    }",
               "",
-              "    private void addBottomRow() {",
-              "        LinearLayout row = new LinearLayout(context);",
-              "        row.setOrientation(LinearLayout.HORIZONTAL);",
-              "        LinearLayout left = new LinearLayout(context);",
-              "        left.setOrientation(LinearLayout.HORIZONTAL);",
-              "        LinearLayout right = new LinearLayout(context);",
-              "        right.setOrientation(LinearLayout.HORIZONTAL);",
-              "        addSplitGroup(left, new String[][]{" + java_array(left_bottom) + "}, " + str(left_bottom_units) + "f);",
-              "        addSplitGroup(right, new String[][]{" + java_array(right_bottom) + "}, " + str(right_bottom_units) + "f);",
-              "        row.addView(left, new LinearLayout.LayoutParams(0, dp(" + str(row_height) + "), " + str(left_bottom_units) + "f));",
-              "        addBridgeKey(row, \"SPACE\", " + str(space_weight) + "f, " + str(center_gap) + ", " + str(key_margin) + ");",
-              "        row.addView(right, new LinearLayout.LayoutParams(0, dp(" + str(row_height) + "), " + str(right_bottom_units) + "f));",
-              "        addKeyboardRow(row, 3);",
-              "    }",
-              "",
-              "    private void addSplitGroup(LinearLayout group, String[][] items, float totalUnits) {",
-              "        float cursor = 0f;",
-              "        for (String[] item : items) {",
-              "            String key = item[0];",
-              "            float column = Float.parseFloat(item[1]);",
-              "            float span = Float.parseFloat(item[2]);",
-              "            int marginLeft = Integer.parseInt(item[3]);",
-              "            int marginRight = Integer.parseInt(item[4]);",
-              "            if (column > cursor + 0.001f) {",
-              "                group.addView(new Space(context), new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, column - cursor));",
-              "            }",
-              "            addKey(group, key, span, marginLeft, marginRight);",
-              "            cursor = column + span;",
-              "        }",
-              "        if (cursor < totalUnits) {",
-              "            group.addView(new Space(context), new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, totalUnits - cursor));",
-              "        }",
-              "    }",
-              "",
-              "    private void addKeyboardRow(LinearLayout row, int rowIndex) {",
-              "        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(" + str(row_height) + "));",
+              "    private void addGridRow(int rowIndex, String[][] items) {",
+              "        FrameLayout row = new FrameLayout(context);",
+              "        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(",
+              "                LinearLayout.LayoutParams.MATCH_PARENT, dp(" + str(row_height) + "));",
               "        rowParams.setMargins(0, rowIndex == 0 ? 0 : dp(" + str(row_gap) + "), 0, 0);",
               "        keyboardRows.addView(row, rowParams);",
+              "        row.post(() -> {",
+              "            float unit = row.getWidth() / (20f + " + str(center_gap_cells) + "f);",
+              "            float gap = " + str(center_gap_cells) + "f * unit;",
+              "            for (String[] item : items) {",
+              "                String key = item[0];",
+              "                float x = Float.parseFloat(item[1]);",
+              "                float width = Float.parseFloat(item[2]);",
+              "                float left = toKeyboardPx(x, unit, gap);",
+              "                float right = toKeyboardPx(x + width, unit, gap);",
+              "                float keyWidth = Math.max(1f, right - left - 2f * " + str(key_margin) + "f);",
+              "                Button button = createKeyButton(key);",
+              "                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(",
+              "                        Math.max(1, dp(keyWidth)), FrameLayout.LayoutParams.MATCH_PARENT);",
+              "                params.leftMargin = dp(left + " + str(key_margin) + "f);",
+              "                row.addView(button, params);",
+              "            }",
+              "        });",
               "    }",
               "",
-              "    private void addKey(LinearLayout group, String key, float weight, int marginLeft, int marginRight) {",
-              "        FrameLayout slot = new FrameLayout(context);",
-              "        Button button = createKeyButton(key);",
-              "        FrameLayout.LayoutParams buttonParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);",
-              "        buttonParams.setMargins(dp(marginLeft), 0, dp(marginRight), 0);",
-              "        slot.addView(button, buttonParams);",
-              "        group.addView(slot, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, weight));",
-              "    }",
-              "",
-              "    private void addBridgeKey(LinearLayout row, String key, float weight, int totalFixedWidth, int margin) {",
-              "        FrameLayout slot = new FrameLayout(context);",
-              "        Button button = createKeyButton(key);",
-              "        FrameLayout.LayoutParams buttonParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);",
-              "        buttonParams.setMargins(dp(margin), 0, dp(margin), 0);",
-              "        slot.addView(button, buttonParams);",
-              "        row.addView(slot, new LinearLayout.LayoutParams(dp(totalFixedWidth), LinearLayout.LayoutParams.MATCH_PARENT, weight));",
+              "    private float toKeyboardPx(float x, float unit, float gap) {",
+              "        if (x <= 10f) return x * unit;",
+              "        if (x <= 14f) return 10f * unit + (x - 10f) * gap / 4f;",
+              "        return 10f * unit + gap + (x - 14f) * unit;",
               "    }",
               "",
               "    private Button createKeyButton(String key) {",
               "        Button button = new Button(context);",
               "        button.setText(getKeyLabel(key));",
-              "        button.setTextColor(Color.parseColor(key.length() == 1 && Character.isLetter(key.charAt(0)) ? \"" + letter_text_color + "\" : \"" + keys["textColor"] + "\"));",
+              "        button.setTextColor(Color.parseColor(key.length() == 1 && Character.isLetter(key.charAt(0)) ? \"" + keys["letterTextColor"] + "\" : \"" + keys["textColor"] + "\"));",
               "        button.setTextSize(key.length() > 1 ? " + str(keys["actionTextSize"]) + " : " + str(keys["letterTextSize"]) + ");",
               "        button.setAllCaps(false);",
               "        button.setMinWidth(0);",
@@ -679,11 +614,10 @@ jobs:
               "        return button;",
               "    }"
           ])
-          methods = "\n".join(generated)
-          java_source = java_source.replace("import android.widget.Button;", "import android.widget.Button;\n          import android.widget.FrameLayout;")
+          methods = "\\n".join(generated)
           method_start = java_source.index("private void rebuildKeyboard()")
           method_end = java_source.index("private String getKeyLabel", method_start)
-          java_source = java_source[:method_start] + methods + "\n\n              private String getKeyLabel" + java_source[method_end + len("private String getKeyLabel"):]
+          java_source = java_source[:method_start] + methods + "\\n\\n              private String getKeyLabel" + java_source[method_end + len("private String getKeyLabel"):]
           textentry.write_text(java_source)
           print("Installed grid-positioned keyboard from the shared layout specification.")
 
