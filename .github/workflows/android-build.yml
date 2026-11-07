@@ -776,6 +776,12 @@ jobs:
                           row.addView(gap, new LinearLayout.LayoutParams(
                                   dp(CENTER_GAP), dp(ROW_HEIGHT)));
                           gapInserted = true;
+                          cursor = 10f;
+                      }
+                      if (column > cursor) {
+                          Space offset = new Space(context);
+                          row.addView(offset, new LinearLayout.LayoutParams(
+                                  0, dp(ROW_HEIGHT), column - cursor));
                       }
                       addKey(row, key, span, bridgesGap);
                       cursor = column + span;
