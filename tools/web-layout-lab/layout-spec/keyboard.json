@@ -171,7 +171,7 @@
   "grid": {
     "columns": 24,
     "rows": 4,
-    "snap": 1,
+    "snap": 0.2,
     "rowGap": 4,
     "keyMargin": 2
   },
