@@ -462,6 +462,11 @@ jobs:
                           | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
                   preview.setShowSoftInputOnFocus(false);
                   preview.setCursorVisible(true);
+                  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                      android.graphics.drawable.Drawable cursor = preview.getTextCursorDrawable();
+                      if (cursor != null)
+                          cursor.setTint(Color.rgb(241, 199, 91));
+                  }
                   preview.setFocusable(true);
                   preview.setFocusableInTouchMode(true);
                   LinearLayout.LayoutParams previewParams =
