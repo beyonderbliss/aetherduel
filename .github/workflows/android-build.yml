@@ -761,25 +761,27 @@ jobs:
           row_method = """(int rowIndex, String[][] items) {
                   LinearLayout row = new LinearLayout(context);
                   row.setOrientation(LinearLayout.HORIZONTAL);
-                  int cursor = 0;
+                  float cursor = 0f;
                   for (String[] item : items) {
                       String key = item[0];
-                      int column = Integer.parseInt(item[1]);
-                      int span = Integer.parseInt(item[2]);
+                      float column = Float.parseFloat(item[1]);
+                      float span = Float.parseFloat(item[2]);
                       if (column > cursor) {
                           Space gap = new Space(context);
-                          row.addView(gap, new LinearLayout.LayoutParams(0, dp(ROW_HEIGHT), column - cursor));
+                          row.addView(gap, new LinearLayout.LayoutParams(
+                                  0, dp(ROW_HEIGHT), column - cursor));
                       }
                       addKey(row, key, span);
                       cursor = column + span;
                   }
                   if (cursor < GRID_COLUMNS) {
                       Space gap = new Space(context);
-                      row.addView(gap, new LinearLayout.LayoutParams(0, dp(ROW_HEIGHT), GRID_COLUMNS - cursor));
+                      row.addView(gap, new LinearLayout.LayoutParams(
+                              0, dp(ROW_HEIGHT), GRID_COLUMNS - cursor));
                   }
                   LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
                           LinearLayout.LayoutParams.MATCH_PARENT, dp(ROW_HEIGHT));
-                  rowParams.setMargins(0, dp(ROW_GAP), 0, dp(ROW_GAP));
+                  rowParams.setMargins(0, dp(ROW_GAP / 2f), 0, dp(ROW_GAP / 2f));
                   keyboardRows.addView(row, rowParams);
               }
 
@@ -788,7 +790,7 @@ jobs:
           row_start = java_source.index("(String[] leftKeys, String[] rightKeys) {")
           row_end = java_source.index("private void addKey", row_start)
           java_source = java_source[:row_start] + row_method + java_source[row_end + len("private void addKey"):]
-          java_source = java_source.replace("private void addKey(LinearLayout group, String key)", "private void addKey(LinearLayout group, String key, int span)")
+          java_source = java_source.replace("private void addKey(LinearLayout group, String key)", "private void addKey(LinearLayout group, String key, float span)")
           java_source = java_source.replace('float weight = "SPACE".equals(key) ? 2f : 1f;', "float weight = span;")
           textentry.write_text(java_source)
           print("Installed grid-positioned keyboard from the shared layout specification.")
