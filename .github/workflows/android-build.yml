@@ -533,6 +533,7 @@ jobs:
           # is the only intentional bridge across the center spacer.
           layout = json.loads(Path("deps/edopro/tools/web-layout-lab/layout-spec/keyboard.json").read_text())
           keys = layout["keys"]
+          letter_text_color = keys.get("letterTextColor", keys["textColor"])
           center_gap = int(keys["centerGap"])
           key_margin = int(keys["horizontalMargin"])
           row_height = int(keys["rowHeight"])
@@ -667,7 +668,7 @@ jobs:
               "    private Button createKeyButton(String key) {",
               "        Button button = new Button(context);",
               "        button.setText(getKeyLabel(key));",
-              "        button.setTextColor(Color.parseColor(\"" + keys["textColor"] + "\"));",
+              "        button.setTextColor(Color.parseColor(key.length() == 1 && Character.isLetter(key.charAt(0)) ? \"" + letter_text_color + "\" : \"" + keys["textColor"] + "\"));",
               "        button.setTextSize(key.length() > 1 ? " + str(keys["actionTextSize"]) + " : " + str(keys["letterTextSize"]) + ");",
               "        button.setAllCaps(false);",
               "        button.setMinWidth(0);",
