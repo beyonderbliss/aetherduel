@@ -21,7 +21,7 @@ Geometry values use Android dp. The browser preview renders the shared layout sp
 6. Select a key to edit its Column X, Row Y, and Width numerically.
 7. Copy the JSON and update `layout-spec/keyboard.json` when you want to persist key edits.
 
-The ordinary keycaps use a shared 1.8-unit width on a 2-unit pitch. The inner columns are aligned vertically (T/G/V on the left and Y/G/V on the right). DONE is exactly two standard keycap widths. SPACE is an intentional bridge: it fills the remaining bottom-row span and includes the center region.
+The keyboard uses a conventional staggered QWERTY arrangement rather than an ortholinear grid. The top letter row uses a modestly wider 2.0-unit keycap; the home and lower letter rows use 1.8-unit keycaps. The home row keeps its staggered offsets while the inner columns remain aligned vertically (T/G/V on the left and Y/G/V on the right). The two halves are balanced visually, not forced into a strict coordinate mirror. DONE is exactly two standard 1.8-unit keycap widths. SPACE is an intentional bridge: it fills the remaining bottom-row span and includes the center region.
 
 ## Android integration
 
