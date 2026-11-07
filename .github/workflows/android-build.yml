@@ -644,17 +644,21 @@ jobs:
               "    }",
               "",
               "    private void addKey(LinearLayout group, String key, float weight, int marginLeft, int marginRight) {",
+              "        FrameLayout slot = new FrameLayout(context);",
               "        Button button = createKeyButton(key);",
-              "        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, weight);",
-              "        params.setMargins(dp(marginLeft), 0, dp(marginRight), 0);",
-              "        group.addView(button, params);",
+              "        FrameLayout.LayoutParams buttonParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);",
+              "        buttonParams.setMargins(dp(marginLeft), 0, dp(marginRight), 0);",
+              "        slot.addView(button, buttonParams);",
+              "        group.addView(slot, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, weight));",
               "    }",
               "",
               "    private void addBridgeKey(LinearLayout row, String key, float weight, int totalFixedWidth, int margin) {",
+              "        FrameLayout slot = new FrameLayout(context);",
               "        Button button = createKeyButton(key);",
-              "        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(Math.max(0, totalFixedWidth - 2 * margin)), LinearLayout.LayoutParams.MATCH_PARENT, weight);",
-              "        params.setMargins(dp(margin), 0, dp(margin), 0);",
-              "        row.addView(button, params);",
+              "        FrameLayout.LayoutParams buttonParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);",
+              "        buttonParams.setMargins(dp(margin), 0, dp(margin), 0);",
+              "        slot.addView(button, buttonParams);",
+              "        row.addView(slot, new LinearLayout.LayoutParams(dp(totalFixedWidth), LinearLayout.LayoutParams.MATCH_PARENT, weight));",
               "    }",
               "",
               "    private Button createKeyButton(String key) {",
@@ -672,6 +676,7 @@ jobs:
               "    }"
           ])
           methods = "\n".join(generated)
+          java_source = java_source.replace("import android.widget.Button;", "import android.widget.Button;\\n          import android.widget.FrameLayout;")
           method_start = java_source.index("private void rebuildKeyboard()")
           method_end = java_source.index("private String getKeyLabel", method_start)
           java_source = java_source[:method_start] + methods + "\n\n              private String getKeyLabel" + java_source[method_end + len("private String getKeyLabel"):]
