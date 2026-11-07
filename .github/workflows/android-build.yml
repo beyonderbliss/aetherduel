@@ -761,11 +761,11 @@ jobs:
           row_method = """(int rowIndex, String[][] items) {
                   LinearLayout row = new LinearLayout(context);
                   row.setOrientation(LinearLayout.HORIZONTAL);
-                  int cursor = 0;
+                  float cursor = 0f;
                   for (String[] item : items) {
                       String key = item[0];
-                      int column = Integer.parseInt(item[1]);
-                      int span = Integer.parseInt(item[2]);
+                      float column = Float.parseFloat(item[1]);
+                      float span = Float.parseFloat(item[2]);
                       if (column > cursor) {
                           Space gap = new Space(context);
                           row.addView(gap, new LinearLayout.LayoutParams(0, dp(ROW_HEIGHT), column - cursor));
