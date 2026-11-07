@@ -551,7 +551,8 @@ jobs:
                   button.setOnClickListener(view -> handleKey(key));
 
                   float weight = "SPACE".equals(key) ? 2f : 1f;
-                  LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0,
+                  LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                          bridgesGap ? dp(CENTER_GAP) : 0,
                           LinearLayout.LayoutParams.MATCH_PARENT, weight);
                   params.setMargins(dp(2), 0, dp(2), 0);
                   group.addView(button, params);
@@ -723,19 +724,20 @@ jobs:
           def java_array(items):
               return ", ".join("new String[]{" + ", ".join(json.dumps(str(v)) for v in item) + "}" for item in items)
 
-          center_gap = int(layout["grid"]["centerGap"])
+          center_gap = int(keys["centerGap"])
           logical_gap_start = layout["grid"]["columns"] // 2 - 2
           logical_gap_end = logical_gap_start + 4
-          assert center_gap >= 1, "Center gap must be at least one weighted unit"
+          assert center_gap > 0, "Center gap must be a positive dp value"
+          assert int(layout["grid"].get("centerGapCells", 8)) == 8, "Unexpected V2 center-gap grid"
 
           def native_boundary(position):
               if position <= logical_gap_start:
                   return position
               if position >= logical_gap_end:
-                  return position + center_gap - 4
+                  return position - 4
               raise ValueError("A key boundary cannot sit inside the center gap: " + str(position))
 
-          native_grid_columns = layout["grid"]["columns"] - 4 + center_gap
+          native_grid_columns = layout["grid"]["columns"] - 4
           generated = ["    private void rebuildKeyboard() {", "        keyboardRows.removeAllViews();"]
           for index, layout_name in enumerate(("letters", "symbols")):
               generated.append("        " + ("if (!symbols) {" if index == 0 else "else {"))
@@ -748,7 +750,8 @@ jobs:
                       start = native_boundary(data["x"])
                       end = native_boundary(data["x"] + data["w"])
                       assert end > start, "Invalid native key span: " + key
-                      row_items.append((data.get("key", key), start, end - start))
+                      bridges_gap = data["x"] < logical_gap_start and data["x"] + data["w"] > logical_gap_end
+                  row_items.append((data.get("key", key), start, end - start, "true" if bridges_gap else "false"))
                   row_items.sort(key=lambda item: item[1])
                   generated.append("            addGridRow(" + str(row_index) + ", new String[][]{" + java_array(row_items) + "});")
               generated.append("        }")
@@ -762,22 +765,20 @@ jobs:
                   LinearLayout row = new LinearLayout(context);
                   row.setOrientation(LinearLayout.HORIZONTAL);
                   float cursor = 0f;
+                  boolean gapInserted = false;
                   for (String[] item : items) {
                       String key = item[0];
                       float column = Float.parseFloat(item[1]);
                       float span = Float.parseFloat(item[2]);
-                      if (column > cursor) {
+                      boolean bridgesGap = Boolean.parseBoolean(item[3]);
+                      if (!bridgesGap && !gapInserted && column >= 10f && cursor <= 10f) {
                           Space gap = new Space(context);
                           row.addView(gap, new LinearLayout.LayoutParams(
-                                  0, dp(ROW_HEIGHT), column - cursor));
+                                  dp(CENTER_GAP), dp(ROW_HEIGHT)));
+                          gapInserted = true;
                       }
-                      addKey(row, key, span);
+                      addKey(row, key, span, bridgesGap);
                       cursor = column + span;
-                  }
-                  if (cursor < GRID_COLUMNS) {
-                      Space gap = new Space(context);
-                      row.addView(gap, new LinearLayout.LayoutParams(
-                              0, dp(ROW_HEIGHT), GRID_COLUMNS - cursor));
                   }
                   LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
                           LinearLayout.LayoutParams.MATCH_PARENT, dp(ROW_HEIGHT));
@@ -786,11 +787,11 @@ jobs:
               }
 
               private void addKey"""
-          row_method = row_method.replace("ROW_HEIGHT", str(keys["rowHeight"])).replace("ROW_GAP", str(layout["grid"]["rowGap"])).replace("GRID_COLUMNS", str(native_grid_columns))
+          row_method = row_method.replace("ROW_HEIGHT", str(keys["rowHeight"])).replace("ROW_GAP", str(layout["grid"]["rowGap"])).replace("CENTER_GAP", str(center_gap))
           row_start = java_source.index("(String[] leftKeys, String[] rightKeys) {")
           row_end = java_source.index("private void addKey", row_start)
           java_source = java_source[:row_start] + row_method + java_source[row_end + len("private void addKey"):]
-          java_source = java_source.replace("private void addKey(LinearLayout group, String key)", "private void addKey(LinearLayout group, String key, float span)")
+          java_source = java_source.replace("private void addKey(LinearLayout group, String key)", "private void addKey(LinearLayout group, String key, float span, boolean bridgesGap)")
           java_source = java_source.replace('float weight = "SPACE".equals(key) ? 2f : 1f;', "float weight = span;")
           textentry.write_text(java_source)
           print("Installed grid-positioned keyboard from the shared layout specification.")
