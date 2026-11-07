@@ -319,10 +319,11 @@ void Game::Initialize() {
 	int mainMenuWidth = std::max(280, static_cast<int>(titleWidth / dpi_scale + 15));
 	mainMenuLeftX = 510 - mainMenuWidth / 2;
 	mainMenuRightX = 510 + mainMenuWidth / 2;
-	auto* mainMenuRoundedBackground = new CGUIRoundedPanel(env, env->getRootGUIElement(), -1,
-		Scale(mainMenuLeftX, 200, mainMenuRightX, 450), driver, Scale(8), irr::gui::EGDC_WINDOW);
-	mainMenuRoundedBackground->drop();
 	wMainMenu = env->addWindow(Scale(mainMenuLeftX, 200, mainMenuRightX, 450), false, EDOPRO_VERSION_STRING);
+	auto* mainMenuRoundedBackground = new CGUIRoundedPanel(env, wMainMenu, -1,
+		irr::core::rect<irr::s32>(0, 0, wMainMenu->getRelativePosition().getWidth(), wMainMenu->getRelativePosition().getHeight()),
+		driver, Scale(8), irr::gui::EGDC_WINDOW);
+	mainMenuRoundedBackground->drop();
 	mainMenuRoundedBackground->setAnchor(wMainMenu);
 	wMainMenu->setDrawBackground(false);
 	wMainMenu->getCloseButton()->setVisible(false);
