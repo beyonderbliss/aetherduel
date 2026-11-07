@@ -589,8 +589,6 @@ jobs:
           right_bottom = side_items(bottom_placements, 3, "right")
           for item in right_bottom:
               item[1] = float(item[1]) - space_right_start
-          left_bottom_units = left_bottom_units
-          right_bottom_units = right_bottom_units
           generated.extend([
               "",
               "    private void addSplitRow(int rowIndex, String[][] leftItems, String[][] rightItems) {",
