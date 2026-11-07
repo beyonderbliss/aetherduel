@@ -417,15 +417,17 @@ jobs:
           import android.view.Window;
           import android.view.WindowManager;
           import android.widget.Button;
+          import android.widget.EditText;
           import android.widget.LinearLayout;
           import android.widget.Space;
-          import android.widget.TextView;
+          import android.text.Editable;
+          import android.text.InputType;
 
           public class TextEntry {
               private AlertDialog mTextInputDialog;
               private Context context;
               private StringBuilder value;
-              private TextView preview;
+              private EditText preview;
               private LinearLayout keyboardRows;
               private boolean deckNameInput;
               private boolean shifted;
@@ -448,7 +450,7 @@ jobs:
                   panel.setCornerRadius(dp(12));
                   root.setBackground(panel);
 
-                  preview = new TextView(context);
+                  preview = new EditText(context);
                   preview.setTextColor(Color.WHITE);
                   preview.setTextSize(16);
                   preview.setSingleLine(true);
@@ -456,6 +458,12 @@ jobs:
                   preview.setGravity(Gravity.CENTER);
                   preview.setPadding(dp(12), 0, dp(12), 0);
                   preview.setBackground(makeKeyBackground(false));
+                  preview.setInputType(InputType.TYPE_CLASS_TEXT
+                          | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+                  preview.setShowSoftInputOnFocus(false);
+                  preview.setCursorVisible(true);
+                  preview.setFocusable(true);
+                  preview.setFocusableInTouchMode(true);
                   LinearLayout.LayoutParams previewParams =
                           new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(38));
                   previewParams.setMargins(dp(2), dp(2), dp(2), dp(7));
@@ -472,6 +480,8 @@ jobs:
                   mTextInputDialog.setCanceledOnTouchOutside(false);
                   mTextInputDialog.setOnCancelListener(dialog -> cancelInput());
                   mTextInputDialog.show();
+                  preview.requestFocus();
+                  preview.setSelection(preview.length());
 
                   Window window = mTextInputDialog.getWindow();
                   if (window != null) {
@@ -579,26 +589,61 @@ jobs:
                       symbols = !symbols;
                       rebuildKeyboard();
                   } else if ("SPACE".equals(key)) {
-                      value.append(' ');
-                      updatePreview();
+                      insertText(" ");
                   } else if ("⌫".equals(key)) {
-                      if (value.length() > 0) {
-                          int start = Character.offsetByCodePoints(value, value.length(), -1);
-                          value.delete(start, value.length());
-                          updatePreview();
-                      }
+                      deleteBackward();
                   } else {
-                      value.append(shifted ? key.toUpperCase() : key);
+                      insertText(shifted ? key.toUpperCase() : key);
                       if (shifted) {
                           shifted = false;
                           rebuildKeyboard();
                       }
-                      updatePreview();
                   }
               }
 
+              private void insertText(String text) {
+                  Editable editable = preview.getText();
+                  int start = preview.getSelectionStart();
+                  int end = preview.getSelectionEnd();
+                  if (start < 0 || end < 0)
+                      start = end = editable.length();
+                  if (start > end) {
+                      int swap = start;
+                      start = end;
+                      end = swap;
+                  }
+                  editable.replace(start, end, text);
+                  preview.setSelection(start + text.length());
+                  value.setLength(0);
+                  value.append(editable);
+              }
+
+              private void deleteBackward() {
+                  Editable editable = preview.getText();
+                  int start = preview.getSelectionStart();
+                  int end = preview.getSelectionEnd();
+                  if (start < 0 || end < 0)
+                      start = end = editable.length();
+                  if (start > end) {
+                      int swap = start;
+                      start = end;
+                      end = swap;
+                  }
+                  if (start != end) {
+                      editable.delete(start, end);
+                  } else if (start > 0) {
+                      int previous = Character.offsetByCodePoints(editable, start, -1);
+                      editable.delete(previous, start);
+                      start = previous;
+                  }
+                  preview.setSelection(start);
+                  value.setLength(0);
+                  value.append(editable);
+              }
+
               private void updatePreview() {
-                  preview.setText(value.length() == 0 ? " " : value.toString());
+                  preview.setText(value.toString());
+                  preview.setSelection(preview.length());
               }
 
               private void pushResult(String text, boolean sendEnter) {
