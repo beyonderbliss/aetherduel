@@ -654,6 +654,7 @@ jobs:
           # Apply shared browser/Android keyboard geometry; all values are Android dp.
           layout = json.loads(Path("deps/edopro/tools/web-layout-lab/layout-spec/keyboard.json").read_text())
           panel, preview_spec, keys = layout["panel"], layout["preview"], layout["keys"]
+          letter_text_color = keys.get("letterTextColor", keys["textColor"])
           replacements = {
               "root.setPadding(dp(8), dp(8), dp(8), dp(10));": f"root.setPadding(dp({panel['padding']['left']}), dp({panel['padding']['top']}), dp({panel['padding']['right']}), dp({panel['padding']['bottom']}));",
               "panel.setColor(Color.rgb(24, 27, 34));": f'panel.setColor(Color.parseColor("{panel["color"]}"));',
@@ -668,7 +669,7 @@ jobs:
               "drawable.setColor(key ? Color.rgb(54, 59, 69) : Color.rgb(38, 43, 52));": f'drawable.setColor(Color.parseColor(key ? "{keys["color"]}" : "{preview_spec["color"]}"));',
               "drawable.setCornerRadius(dp(key ? 6 : 7));": f"drawable.setCornerRadius(dp(key ? {keys['radius']} : {preview_spec['radius']}));",
               "drawable.setStroke(dp(1), Color.rgb(75, 82, 94));": f'drawable.setStroke(dp(1), Color.parseColor("{keys["stroke"]}"));',
-              "button.setTextColor(Color.WHITE);": f'button.setTextColor(Color.parseColor("{keys["textColor"]}"));',
+              "button.setTextColor(Color.WHITE);": f'button.setTextColor(key.length() == 1 && Character.isLetter(key.charAt(0)) ? Color.parseColor("{letter_text_color}") : Color.parseColor("{keys["textColor"]}"));',
               "button.setTextSize(key.length() > 1 ? 11 : 15);": f"button.setTextSize(key.length() > 1 ? {keys['actionTextSize']} : {keys['letterTextSize']});"
           }
           for old_value, new_value in replacements.items():
