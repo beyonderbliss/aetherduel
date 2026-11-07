@@ -300,7 +300,8 @@ bool CGUICustomComboBox::OnEvent(const SEvent& event) {
 				if(ListBox && ListBox->isPointInside(p) && ListBox->OnEvent(event))
 					return true;
 
-				return true;
+				// Do not consume presses that begin outside this combo box.
+				return MousePressedInside;
 			}
 			case EMIE_LMOUSE_LEFT_UP:
 			{
@@ -308,11 +309,11 @@ bool CGUICustomComboBox::OnEvent(const SEvent& event) {
 				const bool pressedInside = MousePressedInside;
 				MousePressedInside = false;
 
-				// A release from a drag that began elsewhere must not activate this combo.
+				// A release from a drag that began elsewhere must pass through this combo.
 				if(!pressedInside) {
 					if(ListBox && ListBox->getAbsolutePosition().isPointInside(p))
-						ListBox->OnEvent(event);
-					return true;
+						return ListBox->OnEvent(event);
+					return false;
 				}
 				if(ArrowOnlyClick && !ListBox)
 					return true;
