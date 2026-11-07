@@ -563,7 +563,7 @@ jobs:
                       continue
                   display_key = data.get("key", key)
                   left_margin = key_margin
-                  right_margin = key_margin * 3 if display_key == "DONE" else key_margin
+                  right_margin = key_margin
                   items.append([display_key, local_x, width, left_margin, right_margin])
               items.sort(key=lambda item: float(item[1]))
               return items
