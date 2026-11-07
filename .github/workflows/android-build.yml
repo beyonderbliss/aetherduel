@@ -404,7 +404,7 @@ jobs:
 
               private String getKeyLabel(String key) {
                   if ("SHIFT".equals(key))
-                      return "⇧";
+                      return "Shift";
                   if ("SPACE".equals(key))
                       return "Space";
                   if ("?123".equals(key))
