@@ -307,24 +307,22 @@ void CGUICustomTabControl::scrollRight() {
 	recalculateScrollBar();
 }
 
-s32 CGUICustomTabControl::calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* text, bool withScrollControl) const {
-	if(!font)
+s32 CGUICustomTabControl::calcTabWidth(s32 pos, IGUIFont* font, const wchar_t*, bool withScrollControl) const {
+	if(!font || Tabs.empty())
 		return 0;
 
-	s32 len = font->getDimension(text).Width + TabExtraWidth;
+	// Divide the full tab strip evenly so captions never determine header width.
+	const s32 tabCount = static_cast<s32>(Tabs.size());
+	const s32 availableWidth = AbsoluteRect.getWidth() - 4;
+	s32 len = availableWidth / tabCount;
+	if(len < 1)
+		len = 1;
 	if(TabMaxWidth > 0 && len > TabMaxWidth)
 		len = TabMaxWidth;
 
-	// check if we miss the place to draw the tab-button
-	if(withScrollControl && ScrollControl && pos + len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2) {
-		s32 tabMinWidth = font->getDimension(L"A").Width;
-		if(TabExtraWidth > 0 && TabExtraWidth > tabMinWidth)
-			tabMinWidth = TabExtraWidth;
-
-		if(ScrollControl && pos + tabMinWidth <= UpButton->getAbsolutePosition().UpperLeftCorner.X - 2) {
-			len = UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 - pos;
-		}
-	}
+	// Keep the existing scroll-button clipping behavior for constrained layouts.
+	if(withScrollControl && ScrollControl && pos + len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2)
+		len = UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 - pos;
 	return len;
 }
 
