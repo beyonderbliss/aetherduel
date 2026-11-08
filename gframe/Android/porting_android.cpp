@@ -108,7 +108,7 @@ extern "C" {
 						ygo::mainGame->deckBuilder.deck_name_input_mode != 0;
 					if(isDeckNameInput) {
 						// The deck editor is a separate event receiver; dispatch directly
-							// so Rename and Save As do not depend on the active device receiver.
+						// so Rename and Save As do not depend on the active device receiver.
 						ygo::mainGame->deckBuilder.OnEvent(changeEvent);
 					} else {
 						device->postEventFromUser(changeEvent);
