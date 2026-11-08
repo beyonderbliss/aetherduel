@@ -1220,18 +1220,6 @@ void Game::Initialize() {
 	if(selectedLocale != 0)
 		ApplyLocale(selectedLocale, true);
 
-	// Enforce centered text for every edit box in the completed GUI tree.
-	const auto centerEditBoxes = [](auto&& self, irr::gui::IGUIElement* element) -> void {
-		if(!element)
-			return;
-		if(element->getType() == irr::gui::EGUIET_EDIT_BOX)
-			static_cast<irr::gui::IGUIEditBox*>(element)->setTextAlignment(
-				irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
-		for(auto* child : element->getChildren())
-			self(self, child);
-	};
-	centerEditBoxes(centerEditBoxes, env->getRootGUIElement());
-
 	env->getRootGUIElement()->bringToFront(wBtnSettings);
 	env->getRootGUIElement()->bringToFront(mTopMenu);
 	env->setFocus(wMainMenu);
@@ -2044,6 +2032,18 @@ bool Game::MainLoop() {
 	bool last_resize = false;
 	irr::core::dimension2d<irr::u32> prev_window_size;
 #endif
+	// Reapply centered alignment to every edit box, including controls created
+	// later by server, LAN/AI, replay, puzzle, and settings dialogs.
+	const auto centerEditBoxes = [](auto&& self, irr::gui::IGUIElement* element) -> void {
+		if(!element)
+			return;
+		if(element->getType() == irr::gui::EGUIET_EDIT_BOX)
+			static_cast<irr::gui::IGUIEditBox*>(element)->setTextAlignment(
+				irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
+		for(auto* child : element->getChildren())
+			self(self, child);
+	};
+
 	const irr::ITimer* timer = device->getTimer();
 	uint32_t cur_time = 0;
 	uint32_t prev_time = timer->getRealTime();
@@ -2141,6 +2141,7 @@ bool Game::MainLoop() {
 		}
 		atkframe += 0.1f * (float)delta_time * 60.0f / 1000.0f;
 		atkdy = (float)sin(atkframe);
+		centerEditBoxes(centerEditBoxes, env->getRootGUIElement());
 		driver->beginScene(true, true, irr::video::SColor(0, 0, 0, 0));
 		gMutex.lock();
 		if(dInfo.isInDuel) {
