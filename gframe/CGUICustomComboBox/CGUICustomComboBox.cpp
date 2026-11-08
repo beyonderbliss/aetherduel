@@ -55,6 +55,7 @@ CGUICustomComboBox::CGUICustomComboBox(IGUIEnvironment* environment, IGUIElement
 	ListButton->setAlignment(EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT);
 	ListButton->setSubElement(true);
 	ListButton->setTabStop(false);
+	ListButton->setVisible(!TouchWholeArea);
 
 	SelectedText = Environment->addStaticText(L"", core::recti(0, 0, 1, 1), false, false, this, -1, false);
 	SelectedText->setSubElement(true);
