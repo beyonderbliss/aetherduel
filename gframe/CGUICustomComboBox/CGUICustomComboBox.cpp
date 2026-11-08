@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <IGUIEnvironment.h>
+#include <IGUIScrollBar.h>
 #include <IVideoDriver.h>
 #include <IGUISkin.h>
 #include <IGUIEnvironment.h>
