@@ -2040,9 +2040,11 @@ bool Game::MainLoop() {
 		if(element->getType() == irr::gui::EGUIET_EDIT_BOX) {
 			auto* editBox = static_cast<irr::gui::IGUIEditBox*>(element);
 			editBox->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
-			if(skinSystem)
+			if(skinSystem) {
 				editBox->setOverrideColor(skinSystem->getCustomColor(
 					ygo::skin::INPUT_TEXT_COLOR, env->getSkin()->getColor(irr::gui::EGDC_BUTTON_TEXT)));
+				editBox->enableOverrideColor(true);
+			}
 		}
 #if EDOPRO_ANDROID || EDOPRO_IOS
 		else if(element->getType() == irr::gui::EGUIET_COMBO_BOX)
