@@ -267,7 +267,8 @@ jobs:
           new_show_dialog = """
           	public void showDialog(String current, boolean deckNameInput, int panelColor,
           								int previewColor, int keyColor, int borderColor,
-          								int textColor, int caretColor) {
+          								int textColor, int caretColor, int inputTextColor,
+           				int letterTextColor) {
           		var intent = new Intent();
           		intent.putExtra("current", current);
           		intent.putExtra("deckNameInput", deckNameInput);
@@ -277,6 +278,8 @@ jobs:
           		intent.putExtra("borderColor", borderColor);
           		intent.putExtra("textColor", textColor);
           		intent.putExtra("caretColor", caretColor);
+           		intent.putExtra("inputTextColor", inputTextColor);
+           		intent.putExtra("letterTextColor", letterTextColor);
           		intent.setAction("INPUT_TEXT");
           		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
           	}"""
@@ -290,7 +293,9 @@ jobs:
           							intent.getIntExtra("keyColor", android.graphics.Color.rgb(54, 59, 69)),
           							intent.getIntExtra("borderColor", android.graphics.Color.rgb(75, 82, 94)),
           							intent.getIntExtra("textColor", android.graphics.Color.WHITE),
-          							intent.getIntExtra("caretColor", android.graphics.Color.WHITE));"""
+          							intent.getIntExtra("caretColor", android.graphics.Color.WHITE),
+           							intent.getIntExtra("inputTextColor", android.graphics.Color.WHITE),
+           							intent.getIntExtra("letterTextColor", android.graphics.Color.WHITE));"""
           assert text.count(old_text_entry_receiver) == 1, "Could not locate TextEntry receiver"
           text = text.replace(old_text_entry_receiver, new_text_entry_receiver)
           # Carry the explicit native category marker into the MAKE_CHOICE receiver.
@@ -462,10 +467,13 @@ jobs:
               private int borderColor;
               private int textColor;
               private int caretColor;
+              private int inputTextColor;
+              private int letterTextColor;
 
               public void Show(Context context, String current, boolean deckNameInput,
                                int panelColor, int previewColor, int keyColor,
-                               int borderColor, int textColor, int caretColor) {
+                               int borderColor, int textColor, int caretColor,
+                               int inputTextColor, int letterTextColor) {
                   this.context = context;
                   this.deckNameInput = deckNameInput;
                   this.panelColor = panelColor;
@@ -474,6 +482,8 @@ jobs:
                   this.borderColor = borderColor;
                   this.textColor = textColor;
                   this.caretColor = caretColor;
+                  this.inputTextColor = inputTextColor;
+                  this.letterTextColor = letterTextColor;
                   this.value = new StringBuilder(current == null ? "" : current);
                   this.shifted = false;
                   this.symbols = false;
@@ -488,7 +498,7 @@ jobs:
                   root.setBackground(panel);
 
                   preview = new EditText(context);
-                  preview.setTextColor(textColor);
+                  preview.setTextColor(inputTextColor);
                   preview.setTextSize(16);
                   preview.setSingleLine(true);
                   preview.setHorizontallyScrolling(true);
@@ -849,6 +859,10 @@ jobs:
           ])
           methods = "\n".join(generated)
           java_source = java_source.replace("import android.widget.Button;", "import android.widget.Button;\n          import android.widget.FrameLayout;")
+          java_source = java_source.replace(
+              "button.setTextColor(textColor);",
+              'button.setTextColor(("SHIFT".equals(key) || "CANCEL".equals(key) || "?123".equals(key) || "SPACE".equals(key) || "DONE".equals(key) || "⌫".equals(key)) ? textColor : letterTextColor);'
+          )
           method_start = java_source.index("private void rebuildKeyboard()")
           method_end = java_source.index("private String getKeyLabel", method_start)
           java_source = java_source[:method_start] + methods + "\n\n              private String getKeyLabel" + java_source[method_end + len("private String getKeyLabel"):]
