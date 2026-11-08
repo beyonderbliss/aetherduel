@@ -388,7 +388,8 @@ void CImageGUISkin::draw3DMenuPane(IGUIElement* element,
 								   const core::rect<s32>& rect,
 								   const core::rect<s32>* clip) {
 	if(!Config.MenuPane.Texture) {
-		FallbackSkin->draw3DToolBar(element, rect, clip);
+		const s32 radius = std::max<s32>(1, std::min<s32>(8, std::min(rect.getWidth(), rect.getHeight()) / 4));
+		drawRoundedSunkenPane(element, getColor(EGDC_3D_FACE), false, true, rect, clip, radius);
 		return;
 	}
 
@@ -399,7 +400,8 @@ void CImageGUISkin::draw3DToolBar(IGUIElement* element,
 								  const core::rect<s32>& rect,
 								  const core::rect<s32>* clip) {
 	if(!Config.MenuBar.Texture) {
-		FallbackSkin->draw3DToolBar(element, rect, clip);
+		const s32 radius = std::max<s32>(1, std::min<s32>(8, std::min(rect.getWidth(), rect.getHeight()) / 4));
+		drawRoundedSunkenPane(element, getColor(EGDC_3D_FACE), false, true, rect, clip, radius);
 		return;
 	}
 
