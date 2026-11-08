@@ -142,6 +142,7 @@ private:
 	u8 getElementAlpha(const IGUIElement* element) const;
 	void drawRoundedButtonPane(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip, u8 state);
 	void drawRoundedSunkenPane(IGUIElement* element, video::SColor bgcolor, bool flat, bool fillBackGround, const core::rect<s32>& rect, const core::rect<s32>* clip, s32 radius);
+	void drawRoundedPanelPane(IGUIElement* element, video::SColor bgcolor, bool fillBackGround, const core::rect<s32>& rect, const core::rect<s32>* clip, s32 radius);
 
 	video::IVideoDriver* VideoDriver;
 	IGUISkin* FallbackSkin;
