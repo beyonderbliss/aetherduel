@@ -138,7 +138,7 @@ public:
 	video::SColor getCustomColor(ygo::skin::CustomSkinElements key, video::SColor fallback);
 
 private:
-	void drawElementStyle(const SImageGUIElementStyle& elem, const core::rect<s32>& rect, const core::rect<s32>* clip, video::SColor* color = 0);
+	void drawElementStyle(const SImageGUIElementStyle& elem, const core::rect<s32>& rect, const core::rect<s32>* clip, video::SColor* color = 0, s32 roundedRadius = -1);
 	u8 getElementAlpha(const IGUIElement* element) const;
 	void drawRoundedButtonPane(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip, u8 state);
 
