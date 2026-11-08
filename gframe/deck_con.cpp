@@ -944,6 +944,9 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				GetHoveredCard();
 				break;
 			}
+			// Use the actual release coordinates for hit testing, including touch
+			// drivers that report the final pointer position only on release.
+			mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
 			GetHoveredCard();
 			const int targetPos = hovered_pos;
 			// Dropping a card from a deck onto the Search Result area removes it
@@ -971,6 +974,38 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				drag_start_seq = -1;
 				dragging_pointer = nullptr;
 				break;
+			}
+			// A direct hit on another card in the same deck swaps the two
+			// entries. Drops in the gaps continue through the insertion path below.
+			if(drag_source_in_deck && click_pos == targetPos &&
+			   drag_start_seq >= 0 && hovered_seq >= 0) {
+				const auto grid = mainGame->GetDeckGridLayout();
+				const auto logicalRelease = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
+				const int targetRow = hovered_seq / 5;
+				const int targetCol = hovered_seq % 5;
+				const float scrollRows = targetPos == 1 ? main_deck_scroll_offset : 0.0f;
+				const int cardLeft = grid.gridLeft + targetCol * grid.slotWidth +
+					(grid.slotWidth - grid.cardWidth) / 2;
+				const int cardTop = grid.firstRowY + static_cast<int>(std::round(
+					(static_cast<float>(targetRow) - scrollRows) * grid.rowStep));
+				const irr::core::recti targetCardRect{
+					cardLeft, cardTop, cardLeft + grid.cardWidth, cardTop + grid.cardHeight
+				};
+				if(targetCardRect.isPointInside(logicalRelease)) {
+					auto& deck = targetPos == 1 ? current_deck.main :
+						(targetPos == 2 ? current_deck.extra : current_deck.side);
+					if(drag_start_seq < static_cast<int>(deck.size()) && hovered_seq < static_cast<int>(deck.size())) {
+						if(drag_start_seq != hovered_seq)
+							std::swap(deck[drag_start_seq], deck[hovered_seq]);
+						is_draging = false;
+						drag_pending = false;
+						drag_source_in_deck = false;
+						drag_start_seq = -1;
+						dragging_pointer = nullptr;
+						GetHoveredCard();
+						break;
+					}
+				}
 			}
 			bool pushed = false;
 			int targetSeq = hovered_seq;
