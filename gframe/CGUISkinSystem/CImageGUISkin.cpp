@@ -22,7 +22,7 @@ void drawRoundedRect(irr::video::IVideoDriver* driver,
 
 	const irr::s32 width = rect.getWidth();
 	const irr::s32 height = rect.getHeight();
-	radius = irr::core::clamp(radius, 0, std::min(width, height) / 2);
+	radius = std::max<irr::s32>(0, std::min(radius, std::min(width, height) / 2));
 
 	for(irr::s32 y = 0; y < height; ++y) {
 		irr::s32 inset = 0;
@@ -103,7 +103,7 @@ u8 CImageGUISkin::getElementAlpha(const IGUIElement* element) const {
 	return found == element_alpha.end() ? 255 : found->second;
 }
 
-void CImageGUISkin::drawFallbackButtonPane(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip, u8 state) {
+void CImageGUISkin::drawRoundedButtonPane(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip, u8 state) {
 	if(!VideoDriver || !element)
 		return;
 
@@ -201,26 +201,7 @@ void CImageGUISkin::setIcon(EGUI_DEFAULT_ICON icon, u32 index) {
 }
 
 void CImageGUISkin::draw3DButtonPaneStandard(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip) {
-	const u8 alpha = getElementAlpha(element);
-	if(element->isEnabled()) {
-		if(!Config.Button.Texture) {
-			drawFallbackButtonPane(element, rect, clip, 0);
-			return;
-		}
-
-		auto style = Config.Button;
-		style.Color.setAlpha(static_cast<u32>(style.Color.getAlpha()) * alpha / 255);
-		drawElementStyle(style, rect, clip);
-	} else {
-		if(!Config.ButtonDisabled.Texture) {
-			drawFallbackButtonPane(element, rect, clip, 1);
-			return;
-		}
-
-		auto style = Config.ButtonDisabled;
-		style.Color.setAlpha(static_cast<u32>(style.Color.getAlpha()) * alpha / 255);
-		drawElementStyle(style, rect, clip);
-	}
+	drawRoundedButtonPane(element, rect, clip, element && !element->isEnabled() ? 1 : 0);
 }
 
 void CImageGUISkin::draw3DButtonPaneDisabled(IGUIElement* element,
@@ -228,19 +209,11 @@ void CImageGUISkin::draw3DButtonPaneDisabled(IGUIElement* element,
 											 const core::rect<s32>* clip) {
 	if(!VideoDriver)
 		return;
-	drawFallbackButtonPane(element, rect, clip, 1);
+	drawRoundedButtonPane(element, rect, clip, 1);
 }
 
 void CImageGUISkin::draw3DButtonPanePressed(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip) {
-	const u8 alpha = getElementAlpha(element);
-	if(!Config.Button.Texture) {
-		drawFallbackButtonPane(element, rect, clip, 2);
-		return;
-	}
-
-	auto style = Config.ButtonPressed;
-	style.Color.setAlpha(static_cast<u32>(style.Color.getAlpha()) * alpha / 255);
-	drawElementStyle(style, rect, clip);
+	drawRoundedButtonPane(element, rect, clip, 2);
 }
 
 void CImageGUISkin::draw3DSunkenPane(IGUIElement* element,
