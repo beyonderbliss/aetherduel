@@ -317,7 +317,8 @@ void CImageGUISkin::draw3DSunkenPane(IGUIElement* element,
 	} else if(element->getType() == EGUIET_EDIT_BOX || element->getType() == EGUIET_COMBO_BOX) {
 		// Input geometry belongs to the application, not to an individual skin texture.
 		// Keep the active skin's editable palette for normal, focused, and disabled states.
-		const bool focused = element->getEnvironment() && element->getEnvironment()->hasFocus(element);
+		IGUIElement* focusedElement = element->getEnvironment() ? element->getEnvironment()->getFocus() : nullptr;
+		const bool focused = focusedElement && (focusedElement == element || element->isMyChild(focusedElement));
 		const video::SColor background = !element->isEnabled()
 			? getColor(EGDC_GRAY_EDITABLE)
 			: focused ? getColor(EGDC_FOCUSED_EDITABLE) : getColor(EGDC_EDITABLE);
