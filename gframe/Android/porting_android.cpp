@@ -103,14 +103,26 @@ extern "C" {
 					changeEvent.GUIEvent.Caller = editbox;
 					changeEvent.GUIEvent.Element = 0;
 					changeEvent.GUIEvent.EventType = irr::gui::EGET_EDITBOX_CHANGED;
-					device->postEventFromUser(changeEvent);
+					const bool isDeckNameInput = ygo::mainGame &&
+						editbox == ygo::mainGame->ebDeckname &&
+						ygo::mainGame->deckBuilder.deck_name_input_mode != 0;
+					if(isDeckNameInput) {
+						// The deck editor is a separate event receiver; dispatch directly
+							// so Rename and Save As do not depend on the active device receiver.
+						ygo::mainGame->deckBuilder.OnEvent(changeEvent);
+					} else {
+						device->postEventFromUser(changeEvent);
+					}
 					if(send_enter) {
 						irr::SEvent enterEvent{};
 						enterEvent.EventType = irr::EET_GUI_EVENT;
 						enterEvent.GUIEvent.Caller = editbox;
 						enterEvent.GUIEvent.Element = 0;
 						enterEvent.GUIEvent.EventType = irr::gui::EGET_EDITBOX_ENTER;
-						device->postEventFromUser(enterEvent);
+						if(isDeckNameInput)
+							ygo::mainGame->deckBuilder.OnEvent(enterEvent);
+						else
+							device->postEventFromUser(enterEvent);
 					}
 				}
 			});
@@ -366,6 +378,9 @@ void setDeckNameInputMode(bool active) {
 }
 
 void showInputDialog(epro::path_stringview current, bool deckNameInput) {
+	if(deckNameInput && ygo::mainGame)
+		activeInputEditBox = ygo::mainGame->ebDeckname;
+
 	jmethodID showdialog = jnienv->GetMethodID(nativeActivity, "showDialog",
 		JPARAMS(JSTRING JBOOL JINT JINT JINT JINT JINT JINT)JVOID);
 
@@ -416,22 +431,35 @@ void showComboBox(const std::vector<std::string>& parameters, int selected) {
 bool transformEvent(const irr::SEvent& event, bool& stopPropagation) {
 	switch(event.EventType) {
 		case irr::EET_MOUSE_INPUT_EVENT: {
-			if(event.MouseInput.Event == irr::EMIE_LMOUSE_PRESSED_DOWN) {
-				auto hovered = ygo::mainGame->env->getRootGUIElement()->getElementFromPoint({ event.MouseInput.X, event.MouseInput.Y });
-				if(hovered && hovered->isEnabled()) {
-					if(hovered->getType() == irr::gui::EGUIET_EDIT_BOX) {
-						bool retval = hovered->OnEvent(event);
-						auto editbox = static_cast<irr::gui::IGUIEditBox*>(hovered);
-						activeInputEditBox = editbox;
-						ygo::mainGame->env->removeFocus(editbox);
-						ygo::mainGame->env->setFocus(editbox->getParent());
-						const bool deckNameInput = hovered == ygo::mainGame->ebDeckname &&
-							ygo::mainGame->deckBuilder.deck_name_input_mode != 0;
-						porting::showInputDialog(
-							BufferIO::EncodeUTF8(((irr::gui::IGUIEditBox*)hovered)->getText()),
-							deckNameInput);
-						stopPropagation = retval;
-						return retval;
+			auto hovered = ygo::mainGame->env->getRootGUIElement()->getElementFromPoint(
+				{ event.MouseInput.X, event.MouseInput.Y });
+			if(event.MouseInput.Event == irr::EMIE_LMOUSE_PRESSED_DOWN && hovered && hovered->isEnabled()) {
+				if(hovered->getType() == irr::gui::EGUIET_EDIT_BOX) {
+					bool retval = hovered->OnEvent(event);
+					auto editbox = static_cast<irr::gui::IGUIEditBox*>(hovered);
+					activeInputEditBox = editbox;
+					ygo::mainGame->env->removeFocus(editbox);
+					ygo::mainGame->env->setFocus(editbox->getParent());
+					const bool deckNameInput = hovered == ygo::mainGame->ebDeckname &&
+						ygo::mainGame->deckBuilder.deck_name_input_mode != 0;
+					porting::showInputDialog(
+						BufferIO::EncodeUTF8(editbox->getText()), deckNameInput);
+					stopPropagation = retval;
+					return retval;
+				}
+			}
+
+			// A touch can hit the combo box's SelectedText child instead of the
+			// combo itself. Route both ends of the click to the owning combo box.
+			if(event.MouseInput.Event == irr::EMIE_LMOUSE_PRESSED_DOWN ||
+			   event.MouseInput.Event == irr::EMIE_LMOUSE_LEFT_UP) {
+				for(auto* element = hovered; element; element = element->getParent()) {
+					if(element->getType() == irr::gui::EGUIET_COMBO_BOX) {
+						if(element->OnEvent(event)) {
+							stopPropagation = true;
+							return true;
+						}
+						break;
 					}
 				}
 			}
