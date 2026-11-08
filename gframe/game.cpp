@@ -2034,14 +2034,14 @@ bool Game::MainLoop() {
 #endif
 	// Reapply centered alignment to editable text fields and dropdowns,
 	// including controls created later by dynamically opened dialogs.
-	const auto centerTextControls = [](auto&& self, irr::gui::IGUIElement* element) -> void {
+	const auto centerTextControls = [this](auto&& self, irr::gui::IGUIElement* element) -> void {
 		if(!element)
 			return;
 		if(element->getType() == irr::gui::EGUIET_EDIT_BOX) {
 			auto* editBox = static_cast<irr::gui::IGUIEditBox*>(element);
 			editBox->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
-			if(mainGame->skinSystem)
-				editBox->setOverrideColor(mainGame->skinSystem->getCustomColor(
+			if(skinSystem)
+				editBox->setOverrideColor(skinSystem->getCustomColor(
 					ygo::skin::INPUT_TEXT_COLOR, env->getSkin()->getColor(irr::gui::EGDC_BUTTON_TEXT)));
 		}
 #if EDOPRO_ANDROID || EDOPRO_IOS
