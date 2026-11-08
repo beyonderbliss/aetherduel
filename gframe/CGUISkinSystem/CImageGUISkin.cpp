@@ -48,6 +48,48 @@ void drawRoundedRect(irr::video::IVideoDriver* driver,
 	}
 }
 
+void drawElementStylePatch(irr::video::IVideoDriver* driver,
+					   irr::video::ITexture* texture,
+					   const irr::core::rect<irr::s32>& dst,
+					   const irr::core::rect<irr::s32>& src,
+					   const irr::core::rect<irr::s32>& outer,
+					   irr::s32 radius,
+					   const irr::core::rect<irr::s32>* clip,
+					   const irr::video::SColor* colors) {
+	if(!driver || !texture || dst.getWidth() <= 0 || dst.getHeight() <= 0 || src.getWidth() <= 0 || src.getHeight() <= 0)
+		return;
+	if(radius < 0) {
+		driver->draw2DImage(texture, dst, src, clip, colors, true);
+		return;
+	}
+	radius = std::max<irr::s32>(0, std::min(radius, std::min(outer.getWidth(), outer.getHeight()) / 2));
+	for(irr::s32 y = std::max(dst.UpperLeftCorner.Y, outer.UpperLeftCorner.Y); y < std::min(dst.LowerRightCorner.Y, outer.LowerRightCorner.Y); ++y) {
+		const irr::s32 localY = y - outer.UpperLeftCorner.Y;
+		irr::s32 inset = 0;
+		if(radius > 0) {
+			const irr::s32 dy = std::min(localY, outer.getHeight() - 1 - localY);
+			if(dy < radius) {
+				const irr::f32 dx = std::sqrt(static_cast<irr::f32>(radius * radius - (radius - dy) * (radius - dy)));
+				inset = radius - static_cast<irr::s32>(dx);
+			}
+		}
+		irr::s32 left = std::max(dst.UpperLeftCorner.X, outer.UpperLeftCorner.X + inset);
+		irr::s32 right = std::min(dst.LowerRightCorner.X, outer.LowerRightCorner.X - inset);
+		if(clip) {
+			left = std::max(left, clip->UpperLeftCorner.X);
+			right = std::min(right, clip->LowerRightCorner.X);
+			if(y < clip->UpperLeftCorner.Y || y >= clip->LowerRightCorner.Y) continue;
+		}
+		if(left >= right) continue;
+		const irr::s32 sy = src.UpperLeftCorner.Y + std::min(src.getHeight() - 1, (y - dst.UpperLeftCorner.Y) * src.getHeight() / dst.getHeight());
+		const irr::s32 sx1 = src.UpperLeftCorner.X + (left - dst.UpperLeftCorner.X) * src.getWidth() / dst.getWidth();
+		const irr::s32 sx2 = src.UpperLeftCorner.X + ((right - dst.UpperLeftCorner.X) * src.getWidth() + dst.getWidth() - 1) / dst.getWidth();
+		if(sx1 >= sx2) continue;
+		driver->draw2DImage(texture, irr::core::rect<irr::s32>(left, y, right, y + 1),
+			irr::core::rect<irr::s32>(sx1, sy, std::min(src.LowerRightCorner.X, sx2), sy + 1), clip, colors, true);
+	}
+}
+
 } // namespace
 
 namespace irr {
@@ -228,49 +270,23 @@ void CImageGUISkin::draw3DSunkenPane(IGUIElement* element,
 
 		drawElementStyle(Config.MenuPressed, rect, clip);
 	} else if(element->getType() == EGUIET_CHECK_BOX) {
-		// PrimaNyx checkbox geometry is procedural and independent of skin textures.
-		const bool enabled = element->isEnabled();
-		const u8 alpha = getElementAlpha(element);
-		const auto faded = [alpha](video::SColor color) {
-			color.setAlpha(static_cast<u32>(color.getAlpha()) * alpha / 255);
-			return color;
-		};
-		const s32 width = rect.getWidth();
-		const s32 height = rect.getHeight();
-		const s32 radius = std::max<s32>(1, std::min(width, height) / 4);
-		const video::SColor border = faded(getColor(enabled ? EGDC_3D_SHADOW : EGDC_3D_DARK_SHADOW));
-		const video::SColor face = faded(enabled ? getColor(EGDC_3D_FACE) : getColor(EGDC_3D_HIGH_LIGHT));
-		drawRoundedRect(VideoDriver, rect, radius, border, border, clip);
-		if(width > 2 && height > 2) {
-			const core::rect<s32> inner(rect.UpperLeftCorner.X + 1, rect.UpperLeftCorner.Y + 1,
-				rect.LowerRightCorner.X - 1, rect.LowerRightCorner.Y - 1);
-			drawRoundedRect(VideoDriver, inner, std::max<s32>(0, radius - 1),
-				fillBackGround ? faded(bgcolor) : face,
-				fillBackGround ? faded(bgcolor) : face, clip);
+		// Round only the checkbox shell; preserve the active skin texture and its separately drawn icon.
+		const SImageGUIElementStyle& style = element->isEnabled() ? Config.CheckBox : Config.CheckBoxDisabled;
+		if(!style.Texture) {
+			FallbackSkin->draw3DSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip);
+			return;
 		}
+		const s32 radius = std::max<s32>(1, std::min(rect.getWidth(), rect.getHeight()) / 4);
+		drawElementStyle(style, rect, clip, 0, radius);
 	} else if(element->getType() == EGUIET_EDIT_BOX) {
-		// Keep the edit box's original bounds; only its pane geometry is rounded.
-		const bool enabled = element->isEnabled();
-		const bool focused = element->hasFocus();
-		const u8 alpha = getElementAlpha(element);
-		const auto faded = [alpha](video::SColor color) {
-			color.setAlpha(static_cast<u32>(color.getAlpha()) * alpha / 255);
-			return color;
-		};
-		const s32 width = rect.getWidth();
-		const s32 height = rect.getHeight();
-		const s32 radius = std::max<s32>(1, std::min(height / 4, width / 8));
-		const video::SColor border = faded(!enabled
-			? getColor(EGDC_3D_DARK_SHADOW)
-			: (focused ? getColor(EGDC_3D_HIGH_LIGHT) : getColor(EGDC_3D_SHADOW)));
-		const video::SColor face = faded(enabled ? getColor(EGDC_3D_FACE) : getColor(EGDC_3D_HIGH_LIGHT));
-		drawRoundedRect(VideoDriver, rect, radius, border, border, clip);
-		if(width > 2 && height > 2) {
-			const core::rect<s32> inner(rect.UpperLeftCorner.X + 1, rect.UpperLeftCorner.Y + 1,
-				rect.LowerRightCorner.X - 1, rect.LowerRightCorner.Y - 1);
-			const video::SColor fill = fillBackGround ? faded(bgcolor) : face;
-			drawRoundedRect(VideoDriver, inner, std::max<s32>(0, radius - 1), fill, fill, clip);
+		if(!Config.SunkenPane.Texture) {
+			FallbackSkin->draw3DSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip);
+			return;
 		}
+		if(fillBackGround)
+			FallbackSkin->draw2DRectangle(element, bgcolor, rect, clip);
+		const s32 radius = std::max<s32>(1, std::min(rect.getHeight() / 4, rect.getWidth() / 8));
+		drawElementStyle(Config.SunkenPane, rect, clip, 0, radius);
 	} else if(element->getType() == EGUIET_COMBO_BOX) {
 		if(element->isEnabled()) {
 			if(!Config.ComboBox.Texture) {
@@ -456,7 +472,7 @@ void CImageGUISkin::drawHorizontalProgressBar(IGUIElement* element, const core::
 	}
 }
 
-void CImageGUISkin::drawElementStyle(const SImageGUIElementStyle& elem, const core::rect<s32>& rect, const core::rect<s32>* clip, video::SColor* pcolor) {
+void CImageGUISkin::drawElementStyle(const SImageGUIElementStyle& elem, const core::rect<s32>& rect, const core::rect<s32>* clip, video::SColor* pcolor, s32 roundedRadius) {
 	core::rect<s32> srcRect;
 	core::rect<s32> dstRect;
 
@@ -503,55 +519,55 @@ void CImageGUISkin::drawElementStyle(const SImageGUIElementStyle& elem, const co
 	srcRect = core::rect<s32>(0, 0, src.Left, src.Top);
 	dstRect = core::rect<s32>(rect.UpperLeftCorner.X, rect.UpperLeftCorner.Y, rect.UpperLeftCorner.X + dst.Left, rect.UpperLeftCorner.Y + dst.Top);
 	if(!clip || clipRects(dstRect, srcRect, *clip))
-		VideoDriver->draw2DImage(texture, dstRect, srcRect, clip, colors, true);
+		drawElementStylePatch(VideoDriver, texture, dstRect, srcRect, rect, roundedRadius, clip, colors);
 
 	// Draw the top right corner
 	srcRect = core::rect<s32>(tsize.Width - src.Right, 0, tsize.Width, src.Top);
 	dstRect = core::rect<s32>(rect.LowerRightCorner.X - dst.Right, rect.UpperLeftCorner.Y, rect.LowerRightCorner.X, rect.UpperLeftCorner.Y + dst.Top);
 	if(!clip || clipRects(dstRect, srcRect, *clip))
-		VideoDriver->draw2DImage(texture, dstRect, srcRect, clip, colors, true);
+		drawElementStylePatch(VideoDriver, texture, dstRect, srcRect, rect, roundedRadius, clip, colors);
 
 	// Draw the top border
 	srcRect = core::rect<s32>(src.Left, 0, tsize.Width - src.Right, src.Top);
 	dstRect = core::rect<s32>(rect.UpperLeftCorner.X + dst.Left, rect.UpperLeftCorner.Y, rect.LowerRightCorner.X - dst.Right, rect.UpperLeftCorner.Y + dst.Top);
 	if(!clip || clipRects(dstRect, srcRect, *clip))
-		VideoDriver->draw2DImage(texture, dstRect, srcRect, clip, colors, true);
+		drawElementStylePatch(VideoDriver, texture, dstRect, srcRect, rect, roundedRadius, clip, colors);
 
 	// Draw the left border
 	srcRect = core::rect<s32>(0, src.Top, src.Left, tsize.Height - src.Bottom);
 	dstRect = core::rect<s32>(rect.UpperLeftCorner.X, rect.UpperLeftCorner.Y + dst.Top, rect.UpperLeftCorner.X + dst.Left, rect.LowerRightCorner.Y - dst.Bottom);
 	if(!clip || clipRects(dstRect, srcRect, *clip))
-		VideoDriver->draw2DImage(texture, dstRect, srcRect, clip, colors, true);
+		drawElementStylePatch(VideoDriver, texture, dstRect, srcRect, rect, roundedRadius, clip, colors);
 
 	// Draw the right border
 	srcRect = core::rect<s32>(tsize.Width - src.Right, src.Top, tsize.Width, tsize.Height - src.Bottom);
 	dstRect = core::rect<s32>(rect.LowerRightCorner.X - dst.Right, rect.UpperLeftCorner.Y + dst.Top, rect.LowerRightCorner.X, rect.LowerRightCorner.Y - dst.Bottom);
 	if(!clip || clipRects(dstRect, srcRect, *clip))
-		VideoDriver->draw2DImage(texture, dstRect, srcRect, clip, colors, true);
+		drawElementStylePatch(VideoDriver, texture, dstRect, srcRect, rect, roundedRadius, clip, colors);
 
 	// Draw the middle section
 	srcRect = core::rect<s32>(src.Left, src.Top, tsize.Width - src.Right, tsize.Height - src.Bottom);
 	dstRect = core::rect<s32>(rect.UpperLeftCorner.X + dst.Left, rect.UpperLeftCorner.Y + dst.Top, rect.LowerRightCorner.X - dst.Right, rect.LowerRightCorner.Y - dst.Bottom);
 	if(!clip || clipRects(dstRect, srcRect, *clip))
-		VideoDriver->draw2DImage(texture, dstRect, srcRect, clip, colors, true);
+		drawElementStylePatch(VideoDriver, texture, dstRect, srcRect, rect, roundedRadius, clip, colors);
 
 	// Draw the bottom left corner
 	srcRect = core::rect<s32>(0, tsize.Height - src.Bottom, src.Left, tsize.Height);
 	dstRect = core::rect<s32>(rect.UpperLeftCorner.X, rect.LowerRightCorner.Y - dst.Bottom, rect.UpperLeftCorner.X + dst.Left, rect.LowerRightCorner.Y);
 	if(!clip || clipRects(dstRect, srcRect, *clip))
-		VideoDriver->draw2DImage(texture, dstRect, srcRect, clip, colors, true);
+		drawElementStylePatch(VideoDriver, texture, dstRect, srcRect, rect, roundedRadius, clip, colors);
 
 	// Draw the bottom right corner
 	srcRect = core::rect<s32>(tsize.Width - src.Right, tsize.Height - src.Bottom, tsize.Width, tsize.Height);
 	dstRect = core::rect<s32>(rect.LowerRightCorner.X - dst.Right, rect.LowerRightCorner.Y - dst.Bottom, rect.LowerRightCorner.X, rect.LowerRightCorner.Y);
 	if(!clip || clipRects(dstRect, srcRect, *clip))
-		VideoDriver->draw2DImage(texture, dstRect, srcRect, clip, colors, true);
+		drawElementStylePatch(VideoDriver, texture, dstRect, srcRect, rect, roundedRadius, clip, colors);
 
 	// Draw the bottom border
 	srcRect = core::rect<s32>(src.Left, tsize.Height - src.Bottom, tsize.Width - src.Right, tsize.Height);
 	dstRect = core::rect<s32>(rect.UpperLeftCorner.X + dst.Left, rect.LowerRightCorner.Y - dst.Bottom, rect.LowerRightCorner.X - dst.Right, rect.LowerRightCorner.Y);
 	if(!clip || clipRects(dstRect, srcRect, *clip))
-		VideoDriver->draw2DImage(texture, dstRect, srcRect, clip, colors, true);
+		drawElementStylePatch(VideoDriver, texture, dstRect, srcRect, rect, roundedRadius, clip, colors);
 }
 
 void CImageGUISkin::draw2DRectangle(IGUIElement* element, const video::SColor &color,
