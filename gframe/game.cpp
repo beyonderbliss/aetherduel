@@ -2032,14 +2032,19 @@ bool Game::MainLoop() {
 	bool last_resize = false;
 	irr::core::dimension2d<irr::u32> prev_window_size;
 #endif
-	// Reapply centered alignment to every edit box, including controls created
-	// later by server, LAN/AI, replay, puzzle, and settings dialogs.
-	const auto centerEditBoxes = [](auto&& self, irr::gui::IGUIElement* element) -> void {
+	// Reapply centered alignment to editable text fields and dropdowns,
+	// including controls created later by dynamically opened dialogs.
+	const auto centerTextControls = [](auto&& self, irr::gui::IGUIElement* element) -> void {
 		if(!element)
 			return;
 		if(element->getType() == irr::gui::EGUIET_EDIT_BOX)
 			static_cast<irr::gui::IGUIEditBox*>(element)->setTextAlignment(
 				irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
+#if EDOPRO_ANDROID || EDOPRO_IOS
+		else if(element->getType() == irr::gui::EGUIET_COMBO_BOX)
+			static_cast<irr::gui::CGUICustomComboBox*>(element)->setTextAlignment(
+				irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
+#endif
 		for(auto* child : element->getChildren())
 			self(self, child);
 	};
@@ -2141,7 +2146,7 @@ bool Game::MainLoop() {
 		}
 		atkframe += 0.1f * (float)delta_time * 60.0f / 1000.0f;
 		atkdy = (float)sin(atkframe);
-		centerEditBoxes(centerEditBoxes, env->getRootGUIElement());
+		centerTextControls(centerTextControls, env->getRootGUIElement());
 		driver->beginScene(true, true, irr::video::SColor(0, 0, 0, 0));
 		gMutex.lock();
 		if(dInfo.isInDuel) {
