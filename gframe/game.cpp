@@ -2070,8 +2070,19 @@ bool Game::MainLoop() {
 			auto* editBox = static_cast<irr::gui::IGUIEditBox*>(element);
 			editBox->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 			if(skinSystem) {
-				editBox->setOverrideColor(skinSystem->getCustomColor(
-					ygo::skin::INPUT_TEXT_COLOR, env->getSkin()->getColor(irr::gui::EGDC_BUTTON_TEXT)));
+				if(editBox->isEnabled()) {
+					editBox->setOverrideColor(skinSystem->getCustomColor(
+						ygo::skin::INPUT_TEXT_COLOR, env->getSkin()->getColor(irr::gui::EGDC_BUTTON_TEXT)));
+				} else {
+					// Use a muted neutral color with enough separation from the disabled edit-box background.
+					const auto background = env->getSkin()->getColor(irr::gui::EGDC_GRAY_EDITABLE);
+					const irr::u32 luminance = (background.getRed() * 299
+						+ background.getGreen() * 587 + background.getBlue() * 114) / 1000;
+					const irr::video::SColor disabledText = luminance < 128
+						? irr::video::SColor(255, 176, 181, 190)
+						: irr::video::SColor(255, 85, 91, 101);
+					editBox->setOverrideColor(disabledText);
+				}
 				editBox->enableOverrideColor(true);
 			}
 		}
