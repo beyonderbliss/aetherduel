@@ -111,7 +111,7 @@ private:
 	EGUI_ALIGNMENT HAlign, VAlign;
 	u32 MaxSelectionRows;
 	bool HasFocus;
-	bool TouchWholeArea = false;
+	bool TouchWholeArea = true;
 	bool ArrowOnlyClick = false;
 	bool MousePressedInside = false;
 	IGUIFont* ActiveFont;
