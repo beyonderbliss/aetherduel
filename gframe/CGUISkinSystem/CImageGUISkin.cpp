@@ -228,20 +228,48 @@ void CImageGUISkin::draw3DSunkenPane(IGUIElement* element,
 
 		drawElementStyle(Config.MenuPressed, rect, clip);
 	} else if(element->getType() == EGUIET_CHECK_BOX) {
-		if(element->isEnabled()) {
-			if(!Config.CheckBox.Texture) {
-				FallbackSkin->draw3DSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip);
-				return;
-			}
-
-			drawElementStyle(Config.CheckBox, rect, clip);
-		} else {
-			if(!Config.CheckBoxDisabled.Texture) {
-				FallbackSkin->draw3DSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip);
-				return;
-			}
-
-			drawElementStyle(Config.CheckBoxDisabled, rect, clip);
+		// PrimaNyx checkbox geometry is procedural and independent of skin textures.
+		const bool enabled = element->isEnabled();
+		const u8 alpha = getElementAlpha(element);
+		const auto faded = [alpha](video::SColor color) {
+			color.setAlpha(static_cast<u32>(color.getAlpha()) * alpha / 255);
+			return color;
+		};
+		const s32 width = rect.getWidth();
+		const s32 height = rect.getHeight();
+		const s32 radius = std::max<s32>(1, std::min(width, height) / 4);
+		const video::SColor border = faded(getColor(enabled ? EGDC_3D_SHADOW : EGDC_3D_DARK_SHADOW));
+		const video::SColor face = faded(enabled ? getColor(EGDC_3D_FACE) : getColor(EGDC_3D_HIGH_LIGHT));
+		drawRoundedRect(VideoDriver, rect, radius, border, border, clip);
+		if(width > 2 && height > 2) {
+			const core::rect<s32> inner(rect.UpperLeftCorner.X + 1, rect.UpperLeftCorner.Y + 1,
+				rect.LowerRightCorner.X - 1, rect.LowerRightCorner.Y - 1);
+			drawRoundedRect(VideoDriver, inner, std::max<s32>(0, radius - 1),
+				fillBackGround ? faded(bgcolor) : face,
+				fillBackGround ? faded(bgcolor) : face, clip);
+		}
+	} else if(element->getType() == EGUIET_EDIT_BOX) {
+		// Keep the edit box's original bounds; only its pane geometry is rounded.
+		const bool enabled = element->isEnabled();
+		const bool focused = element->hasFocus();
+		const u8 alpha = getElementAlpha(element);
+		const auto faded = [alpha](video::SColor color) {
+			color.setAlpha(static_cast<u32>(color.getAlpha()) * alpha / 255);
+			return color;
+		};
+		const s32 width = rect.getWidth();
+		const s32 height = rect.getHeight();
+		const s32 radius = std::max<s32>(1, std::min(height / 4, width / 8));
+		const video::SColor border = faded(!enabled
+			? getColor(EGDC_3D_DARK_SHADOW)
+			: (focused ? getColor(EGDC_3D_HIGH_LIGHT) : getColor(EGDC_3D_SHADOW)));
+		const video::SColor face = faded(enabled ? getColor(EGDC_3D_FACE) : getColor(EGDC_3D_HIGH_LIGHT));
+		drawRoundedRect(VideoDriver, rect, radius, border, border, clip);
+		if(width > 2 && height > 2) {
+			const core::rect<s32> inner(rect.UpperLeftCorner.X + 1, rect.UpperLeftCorner.Y + 1,
+				rect.LowerRightCorner.X - 1, rect.LowerRightCorner.Y - 1);
+			const video::SColor fill = fillBackGround ? faded(bgcolor) : face;
+			drawRoundedRect(VideoDriver, inner, std::max<s32>(0, radius - 1), fill, fill, clip);
 		}
 	} else if(element->getType() == EGUIET_COMBO_BOX) {
 		if(element->isEnabled()) {
