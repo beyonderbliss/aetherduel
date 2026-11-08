@@ -90,6 +90,8 @@ public:
 
 		const auto& bounds = Anchor ? Anchor->getAbsolutePosition() : AbsoluteRect;
 		const auto& clip = Anchor ? Anchor->getAbsoluteClippingRect() : AbsoluteClippingRect;
+		const auto& shadowClip = Anchor && Anchor->getParent()
+			? Anchor->getParent()->getAbsoluteClippingRect() : clip;
 		if(bounds.getWidth() <= 0 || bounds.getHeight() <= 0)
 			return;
 
@@ -101,14 +103,14 @@ public:
 		auto shadowBounds = bounds;
 		shadowBounds.UpperLeftCorner.Y += 2;
 		shadowBounds.LowerRightCorner.Y += 2;
-		drawRoundedRect(shadowBounds, Radius, shadowFar, clip);
+		drawRoundedRect(shadowBounds, Radius, shadowFar, shadowClip);
 
 		auto shadowNear = skin->getColor(irr::gui::EGDC_3D_DARK_SHADOW);
 		shadowNear.setAlpha(static_cast<irr::u32>(shadowNear.getAlpha()) * 44 / 255);
 		shadowBounds = bounds;
 		shadowBounds.UpperLeftCorner.Y += 1;
 		shadowBounds.LowerRightCorner.Y += 1;
-		drawRoundedRect(shadowBounds, Radius, shadowNear, clip);
+		drawRoundedRect(shadowBounds, Radius, shadowNear, shadowClip);
 
 		const auto borderColor = skin->getColor(irr::gui::EGDC_ACTIVE_BORDER);
 		drawRoundedRect(bounds, Radius, borderColor, clip);
