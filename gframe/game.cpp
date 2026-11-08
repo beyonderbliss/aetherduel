@@ -145,6 +145,8 @@ private:
 
 namespace ygo {
 
+#define AddEditBox(env, ...) ([&]() { auto* editBox = (env)->addEditBox(__VA_ARGS__); if(editBox) editBox->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER); return editBox; }())
+
 #if EDOPRO_ANDROID || EDOPRO_IOS
 #define AddComboBox(env, ...) irr::gui::CGUICustomComboBox::addCustomComboBox(env, __VA_ARGS__)
 #else
@@ -356,21 +358,20 @@ void Game::Initialize() {
 	wLanWindow->setVisible(false);
 	irr::gui::IGUIElement* tmpptr = env->addStaticText(gDataManager->GetSysString(1220).data(), Scale(10, 30, 220, 50), false, false, wLanWindow);
 	defaultStrings.emplace_back(tmpptr, 1220);
-	ebNickName = env->addEditBox(gGameConfig->nickname.data(), Scale(110, 25, 450, 50), true, wLanWindow, EDITBOX_NICKNAME);
-	ebNickName->setTextAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_CENTER);
+	ebNickName = AddEditBox(env, gGameConfig->nickname.data(), Scale(110, 25, 450, 50), true, wLanWindow, EDITBOX_NICKNAME);
 	lstHostList = env->addListBox(Scale(10, 60, 570, 320), wLanWindow, LISTBOX_LAN_HOST, true);
 	lstHostList->setItemHeight(Scale(18));
 	btnLanRefresh = env->addButton(Scale(240, 325, 340, 350), wLanWindow, BUTTON_LAN_REFRESH, gDataManager->GetSysString(1217).data());
 	defaultStrings.emplace_back(btnLanRefresh, 1217);
 	tmpptr = env->addStaticText(gDataManager->GetSysString(1221).data(), Scale(10, 360, 220, 380), false, false, wLanWindow);
 	defaultStrings.emplace_back(tmpptr, 1221);
-	ebJoinHost = env->addEditBox(gGameConfig->lasthost.data(), Scale(110, 355, 350, 380), true, wLanWindow);
+	ebJoinHost = AddEditBox(env, gGameConfig->lasthost.data(), Scale(110, 355, 350, 380), true, wLanWindow);
 	ebJoinHost->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
-	ebJoinPort = env->addEditBox(gGameConfig->lastport.data(), Scale(360, 355, 420, 380), true, wLanWindow, EDITBOX_PORT_BOX);
+	ebJoinPort = AddEditBox(env, gGameConfig->lastport.data(), Scale(360, 355, 420, 380), true, wLanWindow, EDITBOX_PORT_BOX);
 	ebJoinPort->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	tmpptr = env->addStaticText(gDataManager->GetSysString(1222).data(), Scale(10, 390, 220, 410), false, false, wLanWindow);
 	defaultStrings.emplace_back(tmpptr, 1222);
-	ebJoinPass = env->addEditBox(gGameConfig->roompass.data(), Scale(110, 385, 420, 410), true, wLanWindow);
+	ebJoinPass = AddEditBox(env, gGameConfig->roompass.data(), Scale(110, 385, 420, 410), true, wLanWindow);
 	ebJoinPass->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	btnJoinHost = env->addButton(Scale(460, 355, 570, 380), wLanWindow, BUTTON_JOIN_HOST, gDataManager->GetSysString(1223).data());
 	defaultStrings.emplace_back(btnJoinHost, 1223);
@@ -560,7 +561,7 @@ void Game::Initialize() {
 	wANCard = env->addWindow(Scale(430, 170, 840, 370), false, L"");
 	wANCard->getCloseButton()->setVisible(false);
 	wANCard->setVisible(false);
-	ebANCard = env->addEditBox(L"", Scale(20, 25, 390, 45), true, wANCard, EDITBOX_ANCARD);
+	ebANCard = AddEditBox(env, L"", Scale(20, 25, 390, 45), true, wANCard, EDITBOX_ANCARD);
 	ebANCard->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	lstANCard = env->addListBox(Scale(20, 50, 390, 160), wANCard, LISTBOX_ANCARD, true);
 	btnANCardOK = env->addButton(Scale(60, 165, 350, 190), wANCard, BUTTON_ANCARD_OK, gDataManager->GetSysString(1211).data());
@@ -654,7 +655,7 @@ void Game::Initialize() {
 	btnSaveDeck = AlignElementWithParent(env->addButton(Scale(225, 35, 290, 60), wDeckEdit, BUTTON_SAVE_DECK, gDataManager->GetSysString(1302).data()));
 	defaultStrings.emplace_back(btnSaveDeck, 1302);
 	btnRenameDeck = AlignElementWithParent(env->addButton(Scale(5, 65, 75, 90), wDeckEdit, BUTTON_RENAME_DECK, L"✎"));
-	ebDeckname = AlignElementWithParent(env->addEditBox(L"", Scale(80, 65, 220, 90), true, wDeckEdit, EDITBOX_DECK_NAME));
+	ebDeckname = AlignElementWithParent(AddEditBox(env, L"", Scale(80, 65, 220, 90), true, wDeckEdit, EDITBOX_DECK_NAME));
 	ebDeckname->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	ebDeckname->setVisible(false);
 	btnSaveDeckAs = AlignElementWithParent(env->addButton(Scale(225, 65, 290, 90), wDeckEdit, BUTTON_SAVE_DECK_AS, gDataManager->GetSysString(1303).data()));
@@ -706,7 +707,7 @@ void Game::Initialize() {
 	defaultStrings.emplace_back(chkHandTestNoShuffle, 1230);
 	tmpptr = env->addStaticText(gDataManager->GetSysString(1232).data(), nextHandTestRow(10, 90), false, false, wHandTest);
 	defaultStrings.emplace_back(tmpptr, 1232);
-	ebHandTestStartHand = env->addEditBox(L"5", nextHandTestRow(95, 175, false), true, wHandTest, EDITBOX_NUMERIC);
+	ebHandTestStartHand = AddEditBox(env, L"5", nextHandTestRow(95, 175, false), true, wHandTest, EDITBOX_NUMERIC);
 	ebHandTestStartHand->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	tmpptr = env->addStaticText(gDataManager->GetSysString(1236).data(), nextHandTestRow(10, 90), false, false, wHandTest);
 	defaultStrings.emplace_back(tmpptr, 1236);
@@ -815,25 +816,25 @@ void Game::Initialize() {
 	stAttack = env->addStaticText(gDataManager->GetSysString(1322).data(), Scale(205, 30, 255, 50), false, false, wFilter);
 	stAttack->setTextAlignment(irr::gui::EGUIA_LOWERRIGHT, irr::gui::EGUIA_CENTER);
 	defaultStrings.emplace_back(stAttack, 1322);
-	ebAttack = AlignElementWithParent(env->addEditBox(L"", Scale(260, 28, 340, 48), true, wFilter, EDITBOX_ATTACK));
+	ebAttack = AlignElementWithParent(AddEditBox(env, L"", Scale(260, 28, 340, 48), true, wFilter, EDITBOX_ATTACK));
 	ebAttack->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	stDefense = env->addStaticText(gDataManager->GetSysString(1323).data(), Scale(205, 53, 255, 73), false, false, wFilter);
 	stDefense->setTextAlignment(irr::gui::EGUIA_LOWERRIGHT, irr::gui::EGUIA_CENTER);
 	defaultStrings.emplace_back(stDefense, 1323);
-	ebDefense = AlignElementWithParent(env->addEditBox(L"", Scale(260, 51, 340, 71), true, wFilter, EDITBOX_DEFENSE));
+	ebDefense = AlignElementWithParent(AddEditBox(env, L"", Scale(260, 51, 340, 71), true, wFilter, EDITBOX_DEFENSE));
 	ebDefense->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	stStar = env->addStaticText(gDataManager->GetSysString(1324).data(), Scale(5, 76, 80, 96), false, false, wFilter);
 	defaultStrings.emplace_back(stStar, 1324);
-	ebStar = AlignElementWithParent(env->addEditBox(L"", Scale(60, 74, 100, 94), true, wFilter, EDITBOX_STAR));
+	ebStar = AlignElementWithParent(AddEditBox(env, L"", Scale(60, 74, 100, 94), true, wFilter, EDITBOX_STAR));
 	ebStar->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	stScale = env->addStaticText(gDataManager->GetSysString(1336).data(), Scale(110, 76, 150, 96), false, false, wFilter);
 	defaultStrings.emplace_back(stScale, 1336);
-	ebScale = AlignElementWithParent(env->addEditBox(L"", Scale(150, 74, 190, 94), true, wFilter, EDITBOX_SCALE));
+	ebScale = AlignElementWithParent(AddEditBox(env, L"", Scale(150, 74, 190, 94), true, wFilter, EDITBOX_SCALE));
 	ebScale->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	stSearch = env->addStaticText(gDataManager->GetSysString(1325).data(), Scale(205, 76, 255, 96), false, false, wFilter);
 	stSearch->setTextAlignment(irr::gui::EGUIA_LOWERRIGHT, irr::gui::EGUIA_CENTER);
 	defaultStrings.emplace_back(stSearch, 1325);
-	ebCardName = AlignElementWithParent(env->addEditBox(L"", Scale(260, 74, 390, 94), true, wFilter, EDITBOX_KEYWORD));
+	ebCardName = AlignElementWithParent(AddEditBox(env, L"", Scale(260, 74, 390, 94), true, wFilter, EDITBOX_KEYWORD));
 	ebCardName->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	btnEffectFilter = AlignElementWithParent(env->addButton(Scale(345, 30, 390, 71), wFilter, BUTTON_EFFECT_FILTER, gDataManager->GetSysString(1326).data()));
 	defaultStrings.emplace_back(btnEffectFilter, 1326);
@@ -913,7 +914,7 @@ void Game::Initialize() {
 	defaultStrings.emplace_back(chkYrp, 1356);
  	tmpptr = env->addStaticText(gDataManager->GetSysString(1353).data(), Scale(360, 275, 570, 295), false, true, wReplay);
 	defaultStrings.emplace_back(tmpptr, 1353);
-	ebRepStartTurn = env->addEditBox(L"", Scale(360, 300, 460, 320), true, wReplay, -1);
+	ebRepStartTurn = AddEditBox(env, L"", Scale(360, 300, 460, 320), true, wReplay, -1);
 	ebRepStartTurn->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	//single play window
 	wSinglePlay = env->addWindow(Scale(220, 100, 800, 520), false, gDataManager->GetSysString(1201).data());
@@ -955,7 +956,7 @@ void Game::Initialize() {
 	wFileSave->getCloseButton()->setVisible(false);
 	wFileSave->setVisible(false);
 	stFileSaveHint = env->addStaticText(gDataManager->GetSysString(1342).data(), Scale(20, 25, 290, 45), false, false, wFileSave);
-	ebFileSaveName =  env->addEditBox(L"", Scale(20, 50, 290, 70), true, wFileSave, EDITBOX_FILE_NAME);
+	ebFileSaveName =  AddEditBox(env, L"", Scale(20, 50, 290, 70), true, wFileSave, EDITBOX_FILE_NAME);
 	ebFileSaveName->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	btnFileSaveYes = env->addButton(Scale(70, 80, 140, 105), wFileSave, BUTTON_FILE_SAVE, gDataManager->GetSysString(1341).data());
 	defaultStrings.emplace_back(btnFileSaveYes, 1341);
@@ -982,7 +983,7 @@ void Game::Initialize() {
 	wChat->setDraggable(false);
 	wChat->setDrawTitlebar(false);
 	wChat->setVisible(false);
-	ebChatInput = env->addEditBox(L"", Scale(3, 2, 710, 22), true, wChat, EDITBOX_CHAT);
+	ebChatInput = AddEditBox(env, L"", Scale(3, 2, 710, 22), true, wChat, EDITBOX_CHAT);
 	ebChatInput->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_LOWERRIGHT, irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_LOWERRIGHT);
 	//swap
 	btnSpectatorSwap = AlignElementWithParent(env->addButton(Resize(211, 50, 301, 85), 0, BUTTON_REPLAY_SWAP, gDataManager->GetSysString(1346).data()));
@@ -1056,7 +1057,7 @@ void Game::Initialize() {
 	statictext = env->addStaticText(gDataManager->GetSysString(1220).data(), Scale(10, 60, 110, 80), false, false, wRoomListPlaceholder, -1, false); // 1220 = Nickname:
 	defaultStrings.emplace_back(statictext, 1220);
 	statictext->setOverrideColor(roomlistcolor);
-	ebNickNameOnline = env->addEditBox(gGameConfig->nickname.data(), Scale(90, 55, 275, 80), true, wRoomListPlaceholder, EDITBOX_NICKNAME);
+	ebNickNameOnline = AddEditBox(env, gGameConfig->nickname.data(), Scale(90, 55, 275, 80), true, wRoomListPlaceholder, EDITBOX_NICKNAME);
 
 	//top right host online game button
 	btnCreateHost2 = env->addButton(Scale(904, 25, 1014, 50), wRoomListPlaceholder, BUTTON_CREATE_HOST2, gDataManager->GetSysString(1224).data());
@@ -1079,7 +1080,7 @@ void Game::Initialize() {
 	cbFilterMatchMode->addItem(gDataManager->GetSysString(1245).data());
 	cbFilterMatchMode->addItem(gDataManager->GetSysString(1246).data());*/
 	//Scale(392, 55, 532, 80)
-	ebOnlineTeam1 = env->addEditBox(L"0", Scale(140 + (392 - 140), 55, 170 + (392 - 140), 80), true, wRoomListPlaceholder, EDITBOX_TEAM_COUNT);
+	ebOnlineTeam1 = AddEditBox(env, L"0", Scale(140 + (392 - 140), 55, 170 + (392 - 140), 80), true, wRoomListPlaceholder, EDITBOX_TEAM_COUNT);
 	ebOnlineTeam1->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	ebOnlineTeam1->setAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER, irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT);
 	stVersus = env->addStaticText(gDataManager->GetSysString(1380).data(), Scale(175 + (392 - 140), 55, 195 + (392 - 140), 80), true, false, wRoomListPlaceholder);
@@ -1087,7 +1088,7 @@ void Game::Initialize() {
 	stVersus->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	stVersus->setAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER, irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT);
 	stVersus->setOverrideColor(roomlistcolor);
-	ebOnlineTeam2 = env->addEditBox(L"0", Scale(200 + (392 - 140), 55, 230 + (392 - 140), 80), true, wRoomListPlaceholder, EDITBOX_TEAM_COUNT);
+	ebOnlineTeam2 = AddEditBox(env, L"0", Scale(200 + (392 - 140), 55, 230 + (392 - 140), 80), true, wRoomListPlaceholder, EDITBOX_TEAM_COUNT);
 	ebOnlineTeam2->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	ebOnlineTeam2->setAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER, irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT);
 	stBestof = env->addStaticText(gDataManager->GetSysString(1381).data(), Scale(235 + (392 - 140), 55, 280 + (392 - 140), 80), true, false, wRoomListPlaceholder);
@@ -1095,7 +1096,7 @@ void Game::Initialize() {
 	stBestof->setTextAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_CENTER);
 	stBestof->setAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER, irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT);
 	stBestof->setOverrideColor(roomlistcolor);
-	ebOnlineBestOf = env->addEditBox(L"0", Scale(285 + (392 - 140), 55, 315 + (392 - 140), 80), true, wRoomListPlaceholder, EDITBOX_NUMERIC);
+	ebOnlineBestOf = AddEditBox(env, L"0", Scale(285 + (392 - 140), 55, 315 + (392 - 140), 80), true, wRoomListPlaceholder, EDITBOX_NUMERIC);
 	ebOnlineBestOf->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	ebOnlineBestOf->setAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER, irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT);
 	btnFilterRelayMode = env->addButton(Scale(325 + (392 - 140), 55, 370 + (392 - 140), 80), wRoomListPlaceholder, BUTTON_FILTER_RELAY, gDataManager->GetSysString(1247).data());
@@ -1107,7 +1108,7 @@ void Game::Initialize() {
 	ebRoomNameText = env->addStaticText(gDataManager->GetSysString(2021).data(), Scale(572, 30, 682, 50), false, false, wRoomListPlaceholder); //2021 = Filter:
 	defaultStrings.emplace_back(ebRoomNameText, 2021);
 	ebRoomNameText->setOverrideColor(roomlistcolor);
-	ebRoomName = env->addEditBox(L"", Scale(642, 25, 782, 50), true, wRoomListPlaceholder, EDIT_ONLINE_ROOM_NAME); //filter textbox
+	ebRoomName = AddEditBox(env, L"", Scale(642, 25, 782, 50), true, wRoomListPlaceholder, EDIT_ONLINE_ROOM_NAME); //filter textbox
 	ebRoomName->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	ebRoomNameText->setAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER, irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT);
 	ebRoomName->setAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER, irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT);
@@ -1165,7 +1166,7 @@ void Game::Initialize() {
 	wRoomPassword->setAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
  	tmpptr = env->addStaticText(gDataManager->GetSysString(2038).data(), Scale(20, 25, 290, 45), false, false, wRoomPassword);
 	defaultStrings.emplace_back(tmpptr, 2038);
-	ebRPName = env->addEditBox(L"", Scale(20, 50, 290, 70), true, wRoomPassword, -1);
+	ebRPName = AddEditBox(env, L"", Scale(20, 50, 290, 70), true, wRoomPassword, -1);
 	ebRPName->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	btnRPYes = env->addButton(Scale(70, 80, 140, 105), wRoomPassword, BUTTON_ROOMPASSWORD_OK, gDataManager->GetSysString(1211).data());
 	defaultStrings.emplace_back(btnRPYes, 1211);
@@ -1297,24 +1298,24 @@ void Game::PopulateGameHostWindows() {
 		cbRule->setSelected(gGameConfig->lastallowedcards);
 		defaultStrings.emplace_back(env->addStaticText(gDataManager->GetSysString(1227).data(), Scale(20, 70, 220, 90), false, false, tDuelSettings), 1227);
 #define WStr(i) epro::to_wstring<int>(i).data()
-		ebTeam1 = env->addEditBox(WStr(gGameConfig->team1count), Scale(140, 65, 170, 90), true, tDuelSettings, EDITBOX_TEAM_COUNT);
+		ebTeam1 = AddEditBox(env, WStr(gGameConfig->team1count), Scale(140, 65, 170, 90), true, tDuelSettings, EDITBOX_TEAM_COUNT);
 		ebTeam1->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 		auto vsstring = env->addStaticText(gDataManager->GetSysString(1380).data(), Scale(175, 65, 195, 90), false, false, tDuelSettings);
 		defaultStrings.emplace_back(vsstring, 1380);
 		vsstring->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
-		ebTeam2 = env->addEditBox(WStr(gGameConfig->team2count), Scale(200, 65, 230, 90), true, tDuelSettings, EDITBOX_TEAM_COUNT);
+		ebTeam2 = AddEditBox(env, WStr(gGameConfig->team2count), Scale(200, 65, 230, 90), true, tDuelSettings, EDITBOX_TEAM_COUNT);
 		ebTeam2->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 		vsstring = env->addStaticText(gDataManager->GetSysString(1381).data(), Scale(235, 65, 280, 90), false, false, tDuelSettings);
 		defaultStrings.emplace_back(vsstring, 1381);
 		vsstring->setTextAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_CENTER);
-		ebBestOf = env->addEditBox(WStr(gGameConfig->bestOf), Scale(285, 65, 315, 90), true, tDuelSettings, EDITBOX_NUMERIC);
+		ebBestOf = AddEditBox(env, WStr(gGameConfig->bestOf), Scale(285, 65, 315, 90), true, tDuelSettings, EDITBOX_NUMERIC);
 		ebBestOf->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 		btnRelayMode = env->addButton(Scale(325, 65, 370, 90), tDuelSettings, -1, gDataManager->GetSysString(1247).data());
 		defaultStrings.emplace_back(btnRelayMode, 1247);
 		btnRelayMode->setIsPushButton(true);
 		btnRelayMode->setPressed(gGameConfig->relayDuel);
 		defaultStrings.emplace_back(env->addStaticText(gDataManager->GetSysString(1237).data(), Scale(20, 100, 320, 120), false, false, tDuelSettings), 1237);
-		ebTimeLimit = env->addEditBox(WStr(gGameConfig->timeLimit), Scale(140, 95, 220, 120), true, tDuelSettings, EDITBOX_NUMERIC);
+		ebTimeLimit = AddEditBox(env, WStr(gGameConfig->timeLimit), Scale(140, 95, 220, 120), true, tDuelSettings, EDITBOX_NUMERIC);
 		ebTimeLimit->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 		defaultStrings.emplace_back(env->addStaticText(gDataManager->GetSysString(1236).data(), Scale(20, 130, 220, 150), false, false, tDuelSettings), 1236);
 		cbDuelRule = AddComboBox(env, Scale(140, 125, 300, 150), tDuelSettings, COMBOBOX_DUEL_RULE);
@@ -1335,21 +1336,21 @@ void Game::PopulateGameHostWindows() {
 		menuHandler.MakeElementSynchronized(chkNoCheckDeckSize);
 
 		defaultStrings.emplace_back(env->addStaticText(gDataManager->GetSysString(1231).data(), Scale(20, 250, 320, 270), false, false, tDuelSettings), 1231);
-		ebStartLP = env->addEditBox(WStr(gGameConfig->startLP), Scale(140, 245, 220, 270), true, tDuelSettings, EDITBOX_NUMERIC);
+		ebStartLP = AddEditBox(env, WStr(gGameConfig->startLP), Scale(140, 245, 220, 270), true, tDuelSettings, EDITBOX_NUMERIC);
 		ebStartLP->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 		defaultStrings.emplace_back(env->addStaticText(gDataManager->GetSysString(1232).data(), Scale(20, 280, 320, 300), false, false, tDuelSettings), 1232);
-		ebStartHand = env->addEditBox(WStr(gGameConfig->startHand), Scale(140, 275, 220, 300), true, tDuelSettings, EDITBOX_NUMERIC);
+		ebStartHand = AddEditBox(env, WStr(gGameConfig->startHand), Scale(140, 275, 220, 300), true, tDuelSettings, EDITBOX_NUMERIC);
 		ebStartHand->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 		defaultStrings.emplace_back(env->addStaticText(gDataManager->GetSysString(1233).data(), Scale(20, 310, 320, 330), false, false, tDuelSettings), 1233);
-		ebDrawCount = env->addEditBox(WStr(gGameConfig->drawCount), Scale(140, 305, 220, 330), true, tDuelSettings, EDITBOX_NUMERIC);
+		ebDrawCount = AddEditBox(env, WStr(gGameConfig->drawCount), Scale(140, 305, 220, 330), true, tDuelSettings, EDITBOX_NUMERIC);
 		ebDrawCount->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 		defaultStrings.emplace_back(env->addStaticText(gDataManager->GetSysString(1234).data(), Scale(10, 340, 220, 360), false, false, tDuelSettings), 1234);
-		ebServerName = env->addEditBox(gGameConfig->gamename.data(), Scale(110, 335, 250, 360), true, tDuelSettings);
+		ebServerName = AddEditBox(env, gGameConfig->gamename.data(), Scale(110, 335, 250, 360), true, tDuelSettings);
 		ebServerName->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 		btnRuleCards = env->addButton(Scale(260, 335, 370, 360), tDuelSettings, BUTTON_RULE_CARDS, gDataManager->GetSysString(1625).data());
 		defaultStrings.emplace_back(btnRuleCards, 1625);
 		defaultStrings.emplace_back(env->addStaticText(gDataManager->GetSysString(1235).data(), Scale(10, 370, 220, 390), false, false, tDuelSettings), 1235);
-		ebServerPass = env->addEditBox(L"", Scale(110, 365, 250, 390), true, tDuelSettings);
+		ebServerPass = AddEditBox(env, L"", Scale(110, 365, 250, 390), true, tDuelSettings);
 		ebServerPass->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 		btnHostConfirm = env->addButton(Scale(260, 365, 370, 390), tDuelSettings, BUTTON_HOST_CONFIRM, gDataManager->GetSysString(1211).data());
 		defaultStrings.emplace_back(btnHostConfirm, 1211);
@@ -1357,12 +1358,12 @@ void Game::PopulateGameHostWindows() {
 		defaultStrings.emplace_back(btnHostCancel, 1212);
 		stHostPort = env->addStaticText(gDataManager->GetSysString(1238).data(), Scale(10, 400, 220, 420), false, false, tDuelSettings);
 		defaultStrings.emplace_back(stHostPort, 1238);
-		ebHostPort = env->addEditBox(gGameConfig->serverport.data(), Scale(110, 395, 250, 420), true, tDuelSettings, EDITBOX_PORT_BOX);
+		ebHostPort = AddEditBox(env, gGameConfig->serverport.data(), Scale(110, 395, 250, 420), true, tDuelSettings, EDITBOX_PORT_BOX);
 		ebHostPort->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 		stHostNotes = env->addStaticText(gDataManager->GetSysString(2024).data(), Scale(10, 400, 220, 420), false, false, tDuelSettings);
 		defaultStrings.emplace_back(stHostNotes, 2024);
 		stHostNotes->setVisible(false);
-		ebHostNotes = env->addEditBox(L"", Scale(110, 395, 250, 420), true, tDuelSettings);
+		ebHostNotes = AddEditBox(env, L"", Scale(110, 395, 250, 420), true, tDuelSettings);
 		ebHostNotes->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 		ebHostNotes->setVisible(false);
 
@@ -1410,12 +1411,12 @@ void Game::PopulateGameHostWindows() {
 		menuHandler.MakeElementSynchronized(chkNoCheckDeckSizeSecondary);
 
 #define ADD_DECK_SIZE_CHECKBOXES(deck) do { \
-		eb##deck##Min = env->addEditBox(WStr(gGameConfig->min##deck##DeckSize), GetCurrentRectWithXOffset(310, 360), true, tDeckSettings, EDITBOX_NUMERIC); \
+		eb##deck##Min = AddEditBox(env, WStr(gGameConfig->min##deck##DeckSize), GetCurrentRectWithXOffset(310, 360), true, tDeckSettings, EDITBOX_NUMERIC); \
 		defaultStrings.emplace_back(env->addStaticText(gDataManager->GetSysString(12106 + idx).data(), GetCurrentRectWithXOffset(20, 300), false, false, tDeckSettings), 12106 + idx); \
 		eb##deck##Min->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER); \
 		cur_y += y_incr; \
 		++idx; \
-		eb##deck##Max = env->addEditBox(WStr(gGameConfig->max##deck##DeckSize), GetCurrentRectWithXOffset(310, 360), true, tDeckSettings, EDITBOX_NUMERIC); \
+		eb##deck##Max = AddEditBox(env, WStr(gGameConfig->max##deck##DeckSize), GetCurrentRectWithXOffset(310, 360), true, tDeckSettings, EDITBOX_NUMERIC); \
 		defaultStrings.emplace_back(env->addStaticText(gDataManager->GetSysString(12106 + idx).data(), GetCurrentRectWithXOffset(20, 300), false, false, tDeckSettings), 12106 + idx); \
 		eb##deck##Max->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER); \
 		cur_y += y_incr; \
@@ -1718,7 +1719,7 @@ void Game::PopulateSettingsWindow() {
 		{
 			gSettings.stDpiScale = env->addStaticText(gDataManager->GetSysString(2070).data(), GetCurrentRectWithXOffset(15, 90), false, false, sPanel);
 			defaultStrings.emplace_back(gSettings.stDpiScale, 2070);
-			gSettings.ebDpiScale = env->addEditBox(WStr(gGameConfig->dpi_scale * 100), GetCurrentRectWithXOffset(95, 150), true, sPanel, EDITBOX_NUMERIC);
+			gSettings.ebDpiScale = AddEditBox(env, WStr(gGameConfig->dpi_scale * 100), GetCurrentRectWithXOffset(95, 150), true, sPanel, EDITBOX_NUMERIC);
 			env->addStaticText(L"%", GetCurrentRectWithXOffset(155, 170), false, false, sPanel);
 			gSettings.ebDpiScale->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 			gSettings.btnRestart = env->addButton(GetCurrentRectWithXOffset(175, 320), sPanel, BUTTON_APPLY_RESTART, gDataManager->GetSysString(2071).data());
@@ -1876,7 +1877,7 @@ void Game::PopulateSettingsWindow() {
 		{
 			gSettings.stAntiAlias = env->addStaticText(gDataManager->GetSysString(2075).data(), GetCurrentRectWithXOffset(15, 220), false, true, sPanel);
 			defaultStrings.emplace_back(gSettings.stAntiAlias, 2075);
-			gSettings.ebAntiAlias = env->addEditBox(WStr(gGameConfig->antialias), GetCurrentRectWithXOffset(225, 320), true, sPanel, EDITBOX_NUMERIC);
+			gSettings.ebAntiAlias = AddEditBox(env, WStr(gGameConfig->antialias), GetCurrentRectWithXOffset(225, 320), true, sPanel, EDITBOX_NUMERIC);
 			IncrementXorY();
 		}
 		{
@@ -1890,7 +1891,7 @@ void Game::PopulateSettingsWindow() {
 		{
 			gSettings.stFPSCap = env->addStaticText(gDataManager->GetSysString(2074).data(), GetCurrentRectWithXOffset(15, 220), false, true, sPanel);
 			defaultStrings.emplace_back(gSettings.stFPSCap, 2074);
-			gSettings.ebFPSCap = env->addEditBox(WStr(gGameConfig->maxFPS), GetCurrentRectWithXOffset(225, 275), true, sPanel, EDITBOX_FPS_CAP);
+			gSettings.ebFPSCap = AddEditBox(env, WStr(gGameConfig->maxFPS), GetCurrentRectWithXOffset(225, 275), true, sPanel, EDITBOX_FPS_CAP);
 			gSettings.btnFPSCap = env->addButton(GetCurrentRectWithXOffset(280, 320), sPanel, BUTTON_FPS_CAP, gDataManager->GetSysString(1211).data());
 			defaultStrings.emplace_back(gSettings.btnFPSCap, 1211);
 			IncrementXorY();
@@ -1940,19 +1941,19 @@ void Game::PopulateSettingsWindow() {
 		{
 			gSettings.stMaxImagesPerFrame = env->addStaticText(gDataManager->GetSysString(2097).data(), GetCurrentRectWithXOffset(15, 270), false, true, sPanel);
 			defaultStrings.emplace_back(gSettings.stMaxImagesPerFrame, 2097);
-			gSettings.ebMaxImagesPerFrame = env->addEditBox(WStr(gGameConfig->maxImagesPerFrame), GetCurrentRectWithXOffset(275, 320), true, sPanel, EDITBOX_NUMERIC);
+			gSettings.ebMaxImagesPerFrame = AddEditBox(env, WStr(gGameConfig->maxImagesPerFrame), GetCurrentRectWithXOffset(275, 320), true, sPanel, EDITBOX_NUMERIC);
 			IncrementXorY();
 		}
 		{
 			gSettings.stImageLoadThreads = env->addStaticText(gDataManager->GetSysString(2098).data(), GetCurrentRectWithXOffset(15, 270), false, true, sPanel);
 			defaultStrings.emplace_back(gSettings.stImageLoadThreads, 2098);
-			gSettings.ebImageLoadThreads = env->addEditBox(WStr(gGameConfig->imageLoadThreads), GetCurrentRectWithXOffset(275, 320), true, sPanel, EDITBOX_NUMERIC);
+			gSettings.ebImageLoadThreads = AddEditBox(env, WStr(gGameConfig->imageLoadThreads), GetCurrentRectWithXOffset(275, 320), true, sPanel, EDITBOX_NUMERIC);
 			IncrementXorY();
 		}
 		{
 			gSettings.stImageDownloadThreads = env->addStaticText(gDataManager->GetSysString(2099).data(), GetCurrentRectWithXOffset(15, 270), false, true, sPanel);
 			defaultStrings.emplace_back(gSettings.stImageDownloadThreads, 2099);
-			gSettings.ebImageDownloadThreads = env->addEditBox(WStr(gGameConfig->imageDownloadThreads), GetCurrentRectWithXOffset(275, 320), true, sPanel, EDITBOX_NUMERIC);
+			gSettings.ebImageDownloadThreads = AddEditBox(env, WStr(gGameConfig->imageDownloadThreads), GetCurrentRectWithXOffset(275, 320), true, sPanel, EDITBOX_NUMERIC);
 			IncrementXorY();
 		}
 #ifdef DISCORD_APP_ID
