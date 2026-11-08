@@ -28,8 +28,12 @@ These are confirmed values, not estimates. The dropdown implementation is curren
 - Theme/skin configuration may provide appearance values, but must not be the only mechanism that enables the rounded component geometry.
 - Do not change existing component bounds, dimensions, spacing, hitboxes, focus behavior, or events as part of the visual migration.
 - Preserve normal, pressed, focused, disabled, and selected states.
-- Reuse shared geometry values rather than introducing unrelated per-component radii.
-- Do not assume that the dropdown's 14 dp panel radius should be used for every control.
+- **Corner radius is contextual, not global.** It must be chosen for each component category and visual role, taking the component's dimensions and proportions into account.
+- Do not apply one fixed radius to every component, and do not derive every component's radius from the dropdown panel.
+- Use semantic/category-based radius tokens where shared values are appropriate. Components with different roles or scales may use different tokens; sharing a token is a deliberate design decision, not a default.
+- A radius must remain visually appropriate for the actual rendered dimensions. Small controls must not inherit a radius that makes them look excessively pill-shaped or collapses their usable shape.
+- Confirmed reference values are: dropdown panel **14 dp**, dropdown item **9 dp**, and menu panel **8 dp**.
+- The values above apply only to those respective components. Other controls' radii remain **to be measured or approved**; do not invent values before inspecting their actual dimensions and appearance.
 
 ## Initial component scope
 
@@ -57,4 +61,4 @@ This is the initial implementation entry point, not permission to make the round
 
 ## Next implementation step
 
-Implement the first application-level rounded button renderer while preserving the existing button API, layout, hitboxes, and events. Confirm the button's final radius and visual states against the approved dropdown reference before applying the same geometry system to other controls.
+Implement the first application-level rounded button renderer while preserving the existing button API, layout, hitboxes, and events. Determine the button radius from the button's actual dimensions and visual role; do not automatically reuse the dropdown or menu radius. Confirm the button's final radius and visual states before applying the same geometry system to other controls.
