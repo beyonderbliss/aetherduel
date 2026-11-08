@@ -298,7 +298,8 @@ void CImageGUISkin::draw3DSunkenPane(IGUIElement* element,
 									 const core::rect<s32>* clip) {
 	if(element->getType() == EGUIET_MENU) {
 		if(!Config.MenuPressed.Texture) {
-			FallbackSkin->draw3DSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip);
+			const s32 radius = std::max<s32>(1, std::min<s32>(6, std::min(rect.getWidth(), rect.getHeight()) / 4));
+			drawRoundedSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip, radius);
 			return;
 		}
 
@@ -371,31 +372,33 @@ core::rect<s32> CImageGUISkin::draw3DWindowBackground(IGUIElement* element,
 													  core::rect<s32>* checkClientArea) {
 	if(!Config.Window.Texture) {
 		const s32 radius = std::max<s32>(1, std::min<s32>(8, std::min(rect.getWidth(), rect.getHeight()) / 4));
-		const s32 border = 1;
-		const s32 titleHeight = drawTitleBar ? std::min<s32>(rect.getHeight(), std::max<s32>(0, getSize(EGDS_WINDOW_BUTTON_WIDTH) + 4)) : 0;
-		drawRoundedSunkenPane(element, getColor(EGDC_3D_FACE), false, true, rect, clip, radius);
+		const s32 titleHeight = std::min<s32>(rect.getHeight(), std::max<s32>(0, getSize(EGDS_WINDOW_BUTTON_WIDTH) + 4));
 
-		if(drawTitleBar && titleHeight > 0) {
-			core::rect<s32> titleRect(rect.UpperLeftCorner.X + border, rect.UpperLeftCorner.Y + border,
-				rect.LowerRightCorner.X - border, rect.UpperLeftCorner.Y + titleHeight);
-			titleBarColor.setAlpha(static_cast<u32>(titleBarColor.getAlpha()) * getElementAlpha(element) / 255);
-			drawRoundedRect(VideoDriver, titleRect, std::max<s32>(0, radius - border), titleBarColor, titleBarColor, clip);
-			if(titleRect.getHeight() > radius) {
-				core::rect<s32> squareBottom(titleRect.UpperLeftCorner.X, titleRect.UpperLeftCorner.Y + radius,
-					titleRect.LowerRightCorner.X, titleRect.LowerRightCorner.Y);
-				VideoDriver->draw2DRectangle(titleBarColor, squareBottom, clip);
+		// The client-area query must not paint; CGUIWindow performs the actual draw separately.
+		if(checkClientArea) {
+			*checkClientArea = rect;
+			checkClientArea->UpperLeftCorner.X += 1;
+			checkClientArea->UpperLeftCorner.Y += drawTitleBar ? titleHeight : 1;
+			checkClientArea->LowerRightCorner.X -= 2;
+			checkClientArea->LowerRightCorner.Y -= 2;
+		} else {
+			drawRoundedSunkenPane(element, getColor(EGDC_3D_FACE), false, true, rect, clip, radius);
+
+			if(drawTitleBar && titleHeight > 0) {
+				core::rect<s32> titleRect(rect.UpperLeftCorner.X + 2, rect.UpperLeftCorner.Y + 2,
+					rect.LowerRightCorner.X - 2, rect.UpperLeftCorner.Y + titleHeight);
+				titleBarColor.setAlpha(static_cast<u32>(titleBarColor.getAlpha()) * getElementAlpha(element) / 255);
+				drawRoundedRect(VideoDriver, titleRect, std::max<s32>(0, radius - 1), titleBarColor, titleBarColor, clip);
+				if(titleRect.getHeight() > radius) {
+					core::rect<s32> squareBottom(titleRect.UpperLeftCorner.X, titleRect.UpperLeftCorner.Y + radius,
+						titleRect.LowerRightCorner.X, titleRect.LowerRightCorner.Y);
+					VideoDriver->draw2DRectangle(titleBarColor, squareBottom, clip);
+				}
 			}
 		}
 
-		if(checkClientArea) {
-			*checkClientArea = rect;
-			checkClientArea->UpperLeftCorner.X += border;
-			checkClientArea->UpperLeftCorner.Y += titleHeight;
-			checkClientArea->LowerRightCorner.X -= border;
-			checkClientArea->LowerRightCorner.Y -= border;
-		}
-		return core::rect<s32>(rect.UpperLeftCorner.X + border, rect.UpperLeftCorner.Y,
-			rect.LowerRightCorner.X - border, rect.UpperLeftCorner.Y + titleHeight);
+		return core::rect<s32>(rect.UpperLeftCorner.X + 2, rect.UpperLeftCorner.Y + 2,
+			rect.LowerRightCorner.X - 2, rect.UpperLeftCorner.Y + titleHeight);
 	}
 
 	if(checkClientArea) {
@@ -461,11 +464,14 @@ void CImageGUISkin::draw3DTabBody(IGUIElement* element, bool border, bool backgr
 		if(!border && !background)
 			return;
 
+		if(tabHeight == -1)
+			tabHeight = getSize(EGDS_BUTTON_HEIGHT);
+
 		core::rect<s32> bodyRect(rect);
 		if(alignment == EGUIA_UPPERLEFT)
-			bodyRect.UpperLeftCorner.Y = std::min(bodyRect.LowerRightCorner.Y, bodyRect.UpperLeftCorner.Y + tabHeight);
+			bodyRect.UpperLeftCorner.Y = std::min(bodyRect.LowerRightCorner.Y, bodyRect.UpperLeftCorner.Y + tabHeight + 2);
 		else
-			bodyRect.LowerRightCorner.Y = std::max(bodyRect.UpperLeftCorner.Y, bodyRect.LowerRightCorner.Y - tabHeight);
+			bodyRect.LowerRightCorner.Y = std::max(bodyRect.UpperLeftCorner.Y, bodyRect.LowerRightCorner.Y - tabHeight - 2);
 
 		const s32 radius = std::max<s32>(1, std::min<s32>(8, std::min(bodyRect.getWidth(), bodyRect.getHeight()) / 4));
 		if(border)
