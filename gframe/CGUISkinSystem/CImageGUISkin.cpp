@@ -193,6 +193,40 @@ void CImageGUISkin::drawRoundedButtonPane(IGUIElement* element, const core::rect
 	}
 }
 
+
+void CImageGUISkin::drawRoundedSunkenPane(IGUIElement* element, video::SColor bgcolor, bool flat, bool fillBackGround,
+										 const core::rect<s32>& rect, const core::rect<s32>* clip, s32 radius) {
+	if(!VideoDriver || !element || rect.getWidth() <= 0 || rect.getHeight() <= 0)
+		return;
+
+	const u8 alpha = getElementAlpha(element);
+	const auto faded = [alpha](video::SColor color) {
+		color.setAlpha(static_cast<u32>(color.getAlpha()) * alpha / 255);
+		return color;
+	};
+	const auto insetRect = [](const core::rect<s32>& source, s32 amount) {
+		return core::rect<s32>(source.UpperLeftCorner.X + amount,
+			source.UpperLeftCorner.Y + amount,
+			source.LowerRightCorner.X - amount,
+			source.LowerRightCorner.Y - amount);
+	};
+
+	// Keep the skin's sunken-pane palette, but render its shell with rounded geometry.
+	const video::SColor outer = faded(getColor(flat ? EGDC_3D_SHADOW : EGDC_3D_DARK_SHADOW));
+	const video::SColor inner = faded(getColor(EGDC_3D_SHADOW));
+	drawRoundedRect(VideoDriver, rect, radius, outer, outer, clip);
+
+	if(rect.getWidth() <= 2 || rect.getHeight() <= 2)
+		return;
+	const core::rect<s32> innerRect = insetRect(rect, 1);
+	drawRoundedRect(VideoDriver, innerRect, std::max<s32>(0, radius - 1), inner, inner, clip);
+
+	if(fillBackGround && rect.getWidth() > 4 && rect.getHeight() > 4) {
+		const core::rect<s32> faceRect = insetRect(rect, 2);
+		drawRoundedRect(VideoDriver, faceRect, std::max<s32>(0, radius - 2), faded(bgcolor), faded(bgcolor), clip);
+	}
+}
+
 video::SColor CImageGUISkin::getColor(EGUI_DEFAULT_COLOR color) const {
 	return FallbackSkin->getColor(color);
 }
@@ -273,14 +307,16 @@ void CImageGUISkin::draw3DSunkenPane(IGUIElement* element,
 		// Round only the checkbox shell; preserve the active skin texture and its separately drawn icon.
 		const SImageGUIElementStyle& style = element->isEnabled() ? Config.CheckBox : Config.CheckBoxDisabled;
 		if(!style.Texture) {
-			FallbackSkin->draw3DSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip);
+			const s32 radius = std::max<s32>(1, std::min(rect.getWidth(), rect.getHeight()) / 4);
+			drawRoundedSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip, radius);
 			return;
 		}
 		const s32 radius = std::max<s32>(1, std::min(rect.getWidth(), rect.getHeight()) / 4);
 		drawElementStyle(style, rect, clip, 0, radius);
 	} else if(element->getType() == EGUIET_EDIT_BOX) {
 		if(!Config.SunkenPane.Texture) {
-			FallbackSkin->draw3DSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip);
+			const s32 radius = std::max<s32>(1, std::min(rect.getHeight() / 4, rect.getWidth() / 8));
+			drawRoundedSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip, radius);
 			return;
 		}
 		const s32 radius = std::max<s32>(1, std::min(rect.getHeight() / 4, rect.getWidth() / 8));
