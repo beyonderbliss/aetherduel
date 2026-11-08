@@ -104,8 +104,7 @@ extern "C" {
 					changeEvent.GUIEvent.Element = 0;
 					changeEvent.GUIEvent.EventType = irr::gui::EGET_EDITBOX_CHANGED;
 					const bool isDeckNameInput = ygo::mainGame &&
-						editbox == ygo::mainGame->ebDeckname &&
-						ygo::mainGame->deckBuilder.deck_name_input_mode != 0;
+						editbox == ygo::mainGame->ebDeckname;
 					if(isDeckNameInput) {
 						// The deck editor is a separate event receiver; dispatch directly
 						// so Rename and Save As do not depend on the active device receiver.
@@ -113,7 +112,9 @@ extern "C" {
 					} else {
 						device->postEventFromUser(changeEvent);
 					}
-					if(send_enter) {
+					// A deck-name dialog result is the user's confirmation action;
+					// always commit it, even if Android did not mark the result as IME Enter.
+					if(send_enter || isDeckNameInput) {
 						irr::SEvent enterEvent{};
 						enterEvent.EventType = irr::EET_GUI_EVENT;
 						enterEvent.GUIEvent.Caller = editbox;
