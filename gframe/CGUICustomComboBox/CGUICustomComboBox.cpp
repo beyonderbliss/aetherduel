@@ -512,8 +512,14 @@ void CGUICustomComboBox::openCloseMenu() {
 		if(ListBox->getAbsolutePosition().LowerRightCorner.Y > Environment->getRootGUIElement()->getAbsolutePosition().getHeight())
 			ListBox->setRelativePosition(core::rect<s32>(0, -ListBox->getAbsolutePosition().getHeight(), AbsoluteRect.getWidth(), 0));
 
-		for(s32 i = 0; i < (s32)Items.size(); ++i)
+		const video::SColor dropdownTextColor = ygo::mainGame && ygo::mainGame->skinSystem
+			? ygo::mainGame->skinSystem->getCustomColor(ygo::skin::DROPDOWN_TEXT_COLOR,
+				skin->getColor(EGDC_BUTTON_TEXT))
+			: skin->getColor(EGDC_BUTTON_TEXT);
+		for(s32 i = 0; i < (s32)Items.size(); ++i) {
 			ListBox->addItem(Items[i].Name.c_str());
+			ListBox->setItemOverrideColor(i, dropdownTextColor);
+		}
 
 		ListBox->setSelected(Selected);
 
