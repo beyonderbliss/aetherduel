@@ -940,8 +940,8 @@ jobs:
         working-directory: android-wrapper
         run: |
           set -euo pipefail
-          sed -i 's#services\\.gradle\\.org/distributions/#downloads.gradle.org/distributions/#' gradle/wrapper/gradle-wrapper.properties
-          grep -Fq 'distributionUrl=https\\://downloads.gradle.org/distributions/gradle-9.3.1-all.zip' gradle/wrapper/gradle-wrapper.properties
+          sed -i 's#services\.gradle\.org/distributions/#downloads.gradle.org/distributions/#' gradle/wrapper/gradle-wrapper.properties
+          grep -Fq 'distributionUrl=https\://downloads.gradle.org/distributions/gradle-9.3.1-all.zip' gradle/wrapper/gradle-wrapper.properties
           cat gradle/wrapper/gradle-wrapper.properties
 
       - name: Build debug APK
