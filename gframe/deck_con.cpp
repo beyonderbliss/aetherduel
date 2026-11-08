@@ -975,20 +975,21 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 							moved = push_side(dragging_pointer, -1, forceInput);
 						if(!moved) {
 							active_deck_tab = click_pos - 1;
-						if(click_pos == 1)
-							push_main(dragging_pointer, drag_start_seq, true);
-						else if(click_pos == 2)
-							push_extra(dragging_pointer, drag_start_seq, true);
-						else if(click_pos == 3)
-							push_side(dragging_pointer, drag_start_seq, true);
-					}
-					is_draging = false;
+							if(click_pos == 1)
+								push_main(dragging_pointer, drag_start_seq, true);
+							else if(click_pos == 2)
+								push_extra(dragging_pointer, drag_start_seq, true);
+							else if(click_pos == 3)
+								push_side(dragging_pointer, drag_start_seq, true);
+						}
+						is_draging = false;
 					drag_pending = false;
 					drag_source_in_deck = false;
 					drag_start_seq = -1;
 					dragging_pointer = nullptr;
 					GetHoveredCard();
 					break;
+					}
 				}
 			}
 			// Dropping a card from a deck onto the Search Result area removes it
