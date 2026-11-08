@@ -369,6 +369,16 @@ void CImageGUISkin::draw3DSunkenPane(IGUIElement* element,
 		}
 
 		drawElementStyle(Config.MenuPressed, rect, clip);
+	} else if(element->getType() == EGUIET_LIST_BOX) {
+		// Dropdown popups are elevated surfaces, not recessed input fields.
+		// Reuse the shared panel renderer so their depth follows the active skin palette.
+		if(!Config.SunkenPane.Texture) {
+			const s32 radius = std::max<s32>(1, std::min<s32>(6, std::min(rect.getWidth(), rect.getHeight()) / 4));
+			drawRoundedPanelPane(element, bgcolor, fillBackGround, rect, clip, radius);
+			return;
+		}
+
+		drawElementStyle(Config.SunkenPane, rect, clip);
 	} else if(element->getType() == EGUIET_CHECK_BOX) {
 		// Round only the checkbox shell; preserve the active skin texture and its separately drawn icon.
 		const SImageGUIElementStyle& style = element->isEnabled() ? Config.CheckBox : Config.CheckBoxDisabled;
