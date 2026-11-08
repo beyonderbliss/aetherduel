@@ -151,6 +151,9 @@ gui::CImageGUISkin* CGUISkinSystem::loadSkinFromFile(const fschar_t *skinname) {
 	ParseGUIElementStyle(skinConfig.MenuPressed, "MenuBar/MenuPressed");
 	ParseGUIElementStyle(skinConfig.CheckBox, "CheckBox");
 	ParseGUIElementStyle(skinConfig.CheckBoxDisabled, "CheckBox/CheckBoxDisabled");
+	// Optional custom checked-state icon; skins without it retain the fallback sprite.
+	if(registry->getValueAsCStr(L"texture", L"Skin/CheckBox/CheckBoxIcon").size())
+		ParseGUIElementStyle(skinConfig.CheckBoxIcon, "CheckBox/CheckBoxIcon");
 	ParseGUIElementStyle(skinConfig.ComboBox, "ComboBox");
 	ParseGUIElementStyle(skinConfig.ComboBoxDisabled, "ComboBox/ComboBoxDisabled");
 

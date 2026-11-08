@@ -44,8 +44,14 @@
         <EGDC_GRAY_EDITABLE a="255" r="24" g="27" b="34"/>
         <EGDC_FOCUSED_EDITABLE a="255" r="54" g="59" b="69"/>
 
-        <CheckBoxColor a="255" r="255" g="255" b="255"/>
+        <CheckBoxColor a="255" r="241" g="199" b="91"/>
     </Global>
+
+    <CheckBox>
+        <CheckBoxIcon>
+            <texture data="../../textures/primanyx-check.png"/>
+        </CheckBoxIcon>
+    </CheckBox>
 
     <Custom>
         <INPUT_TEXT_COLOR a="255" r="241" g="199" b="91"/>

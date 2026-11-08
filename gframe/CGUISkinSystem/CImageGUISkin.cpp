@@ -546,6 +546,22 @@ void CImageGUISkin::drawIcon(IGUIElement* element, EGUI_DEFAULT_ICON icon,
 	video::SColor Color = getColor(gui::EGDC_WINDOW_SYMBOL);
 
 	if(icon == gui::EGDI_CHECK_BOX_CHECKED) {
+		if(Config.CheckBoxIcon.Texture) {
+			const s32 iconSize = std::max<s32>(1, getSize(EGDS_CHECK_BOX_WIDTH) * 4 / 5);
+			const core::rect<s32> destination(
+				position.X - iconSize / 2,
+				position.Y - iconSize / 2,
+				position.X + (iconSize + 1) / 2,
+				position.Y + (iconSize + 1) / 2);
+			const core::dimension2du sourceSize = Config.CheckBoxIcon.Texture->getOriginalSize();
+			const video::SColor tint = Config.CheckBoxColor.getAlpha() > 0
+				? Config.CheckBoxColor : video::SColor(255, 255, 255, 255);
+			const video::SColor colors[4] = { tint, tint, tint, tint };
+			VideoDriver->draw2DImage(Config.CheckBoxIcon.Texture, destination,
+				core::rect<s32>(0, 0, sourceSize.Width, sourceSize.Height),
+				clip, colors, true);
+			return;
+		}
 		if(Config.CheckBoxColor.getAlpha() > 0)
 			Color = Config.CheckBoxColor;
 	}
