@@ -140,7 +140,7 @@ public:
 private:
 	void drawElementStyle(const SImageGUIElementStyle& elem, const core::rect<s32>& rect, const core::rect<s32>* clip, video::SColor* color = 0);
 	u8 getElementAlpha(const IGUIElement* element) const;
-	void drawFallbackButtonPane(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip, u8 state);
+	void drawRoundedButtonPane(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip, u8 state);
 
 	video::IVideoDriver* VideoDriver;
 	IGUISkin* FallbackSkin;
