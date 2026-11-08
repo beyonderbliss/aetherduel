@@ -205,6 +205,8 @@ void DeckBuilder::Initialize(bool refresh) {
 	main_deck_scroll_offset = 0.0f;
 	main_deck_scroll_velocity = 0.0f;
 	main_deck_scroll_inertia = false;
+	main_deck_scroll_auto_target = 0.0f;
+	main_deck_scroll_auto_active = false;
 	drag_source_in_deck = false;
 	prev_deck = mainGame->cbDBDecks->getSelected();
 	prev_operation = 0;
@@ -292,6 +294,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 		return static_cast<float>(unlockedRows - 3);
 	};
 	const auto updateMainDeckFreeScroll = [this, &getMainDeckMaxScroll](int logicalY) {
+		main_deck_scroll_auto_active = false;
 		const auto grid = mainGame->GetDeckGridLayout();
 		const float deltaRows = static_cast<float>(logicalY - deck_scroll_start_y) /
 			static_cast<float>(std::max(1, grid.rowStep));
@@ -1313,13 +1316,26 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 	return false;
 }
 void DeckBuilder::UpdateMainDeckScroll(uint32_t deltaTime) {
-	if(!main_deck_scroll_inertia || mainGame->is_siding || !mainGame->is_building)
+	if(mainGame->is_siding || !mainGame->is_building)
 		return;
 	const float dt = std::min(0.05f, static_cast<float>(deltaTime) / 1000.0f);
 	if(dt <= 0.0f)
 		return;
 	const int unlockedRows = std::max(3, static_cast<int>(current_deck.main.size() / 5) + 1);
 	const float maxScroll = static_cast<float>(unlockedRows - 3);
+	if(main_deck_scroll_auto_active) {
+		main_deck_scroll_auto_target = std::clamp(main_deck_scroll_auto_target, 0.0f, maxScroll);
+		const float remaining = main_deck_scroll_auto_target - main_deck_scroll_offset;
+		main_deck_scroll_offset += remaining * std::min(1.0f, dt * 8.0f);
+		if(std::abs(remaining) < 0.01f) {
+			main_deck_scroll_offset = main_deck_scroll_auto_target;
+			main_deck_scroll_auto_active = false;
+		}
+		GetHoveredCard();
+		return;
+	}
+	if(!main_deck_scroll_inertia)
+		return;
 	main_deck_scroll_offset = std::clamp(main_deck_scroll_offset + main_deck_scroll_velocity * dt, 0.0f, maxScroll);
 	if(main_deck_scroll_offset <= 0.0f || main_deck_scroll_offset >= maxScroll)
 		main_deck_scroll_velocity = 0.0f;
@@ -2006,6 +2022,8 @@ bool DeckBuilder::push_main(const CardDataC* pointer, int seq, bool forced) {
 	if((pointer->type & (TYPE_LINK | TYPE_SPELL)) == TYPE_LINK)
 		return false;
 	auto& container = current_deck.main;
+	const size_t previousSize = container.size();
+	const bool movingWithinMain = drag_source_in_deck && click_pos == 1;
 	if(!forced && !mainGame->is_siding) {
 		if(main_and_extra_legend_count_monster >= 1 && (pointer->ot & SCOPE_LEGEND) && (pointer->type & TYPE_MONSTER))
 			return false;
@@ -2022,6 +2040,15 @@ bool DeckBuilder::push_main(const CardDataC* pointer, int seq, bool forced) {
 		container.insert(container.begin() + seq, pointer);
 	else
 		container.push_back(pointer);
+	if(!mainGame->is_siding && mainGame->is_building && active_deck_tab == 0 &&
+	   !movingWithinMain && container.size() > previousSize &&
+	   previousSize >= 14 && container.size() % 5 == 0) {
+		const int unlockedRows = std::max(3, static_cast<int>(container.size() / 5) + 1);
+		main_deck_scroll_auto_target = static_cast<float>(unlockedRows - 3);
+		main_deck_scroll_velocity = 0.0f;
+		main_deck_scroll_inertia = false;
+		main_deck_scroll_auto_active = main_deck_scroll_auto_target > main_deck_scroll_offset + 0.01f;
+	}
 	GetHoveredCard();
 	RefreshLimitationStatusOnAdded(pointer, DeckType::MAIN);
 	return true;
