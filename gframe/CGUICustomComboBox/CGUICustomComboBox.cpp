@@ -421,17 +421,13 @@ void CGUICustomComboBox::draw() {
 		LastFocus = currentFocus;
 	}
 
-	// Keep the selected-value field visibly distinct from the surrounding panel.
-	// Use the editable surface at rest and the focused editable surface when active.
-	if(isEnabled()) {
-		SelectedText->setBackgroundColor(skin->getColor(HasFocus ? EGDC_FOCUSED_EDITABLE : EGDC_EDITABLE));
-		SelectedText->setDrawBackground(true);
-
+	// The ComboBox shell owns the rounded editable surface.
+	// Drawing a child background here would cover the shell's rounded corners.
+	SelectedText->setDrawBackground(false);
+	if(isEnabled())
 		SelectedText->setOverrideColor(skin->getColor(EGDC_BUTTON_TEXT));
-	} else {
-		SelectedText->setDrawBackground(false);
+	else
 		SelectedText->setOverrideColor(skin->getColor(EGDC_GRAY_TEXT));
-	}
 	ListButton->setSprite(EGBS_BUTTON_UP, skin->getIcon(EGDI_CURSOR_DOWN), skin->getColor(isEnabled() ? EGDC_WINDOW_SYMBOL : EGDC_GRAY_WINDOW_SYMBOL));
 	ListButton->setSprite(EGBS_BUTTON_DOWN, skin->getIcon(EGDI_CURSOR_DOWN), skin->getColor(isEnabled() ? EGDC_WINDOW_SYMBOL : EGDC_GRAY_WINDOW_SYMBOL));
 
