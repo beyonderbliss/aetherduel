@@ -4,6 +4,51 @@
 #include <IGUIElement.h>
 #include <IGUISpriteBank.h>
 #include "clipRects.h"
+#include <algorithm>
+#include <cmath>
+
+namespace {
+
+// Draw a procedural rounded rectangle as clipped horizontal spans.
+// Unlike draw2DPolygon(), every span accepts Irrlicht's clip rectangle.
+void drawRoundedRect(irr::video::IVideoDriver* driver,
+					 const irr::core::rect<irr::s32>& rect,
+					 irr::s32 radius,
+					 irr::video::SColor topColor,
+					 irr::video::SColor bottomColor,
+					 const irr::core::rect<irr::s32>* clip) {
+	if(!driver || rect.getWidth() <= 0 || rect.getHeight() <= 0)
+		return;
+
+	const irr::s32 width = rect.getWidth();
+	const irr::s32 height = rect.getHeight();
+	radius = irr::core::clamp(radius, 0, std::min(width, height) / 2);
+
+	for(irr::s32 y = 0; y < height; ++y) {
+		irr::s32 inset = 0;
+		if(radius > 0) {
+			const irr::s32 dy = std::min(y, height - 1 - y);
+			if(dy < radius) {
+				const irr::f32 dx = std::sqrt(static_cast<irr::f32>(radius * radius - (radius - dy) * (radius - dy)));
+				inset = radius - static_cast<irr::s32>(dx);
+			}
+		}
+
+		if(width <= inset * 2)
+			continue;
+
+		const irr::f32 amount = height > 1 ? static_cast<irr::f32>(y) / static_cast<irr::f32>(height - 1) : 0.0f;
+		const irr::video::SColor color = topColor.getInterpolated(bottomColor, amount);
+		const irr::core::rect<irr::s32> span(
+			rect.UpperLeftCorner.X + inset,
+			rect.UpperLeftCorner.Y + y,
+			rect.LowerRightCorner.X - inset,
+			rect.UpperLeftCorner.Y + y + 1);
+		driver->draw2DRectangle(color, span, clip);
+	}
+}
+
+} // namespace
 
 namespace irr {
 namespace gui {
@@ -59,75 +104,51 @@ u8 CImageGUISkin::getElementAlpha(const IGUIElement* element) const {
 }
 
 void CImageGUISkin::drawFallbackButtonPane(IGUIElement* element, const core::rect<s32>& rect, const core::rect<s32>* clip, u8 state) {
-	const auto drawDisabledPane = [&]() {
-		if(!VideoDriver)
-			return;
+	if(!VideoDriver || !element)
+		return;
 
-		core::rect<s32> disabledRect = rect;
-		auto skintype = FallbackSkin->getType();
+	const core::dimension2d<s32> size = rect.getSize();
+	if(size.Width <= 0 || size.Height <= 0)
+		return;
 
-		if(skintype == EGST_BURNING_SKIN) {
-			disabledRect.UpperLeftCorner.X -= 1;
-			disabledRect.UpperLeftCorner.Y -= 1;
-			disabledRect.LowerRightCorner.X += 1;
-			disabledRect.LowerRightCorner.Y += 1;
-			draw3DSunkenPane(element,
-				getColor(EGDC_WINDOW).getInterpolated(0xFFFFFFFF, 0.9f),
-				false, true, disabledRect, clip);
-			return;
-		}
-
-		VideoDriver->draw2DRectangle(getColor(EGDC_3D_DARK_SHADOW), disabledRect, clip);
-
-		disabledRect.LowerRightCorner.X -= 1;
-		disabledRect.LowerRightCorner.Y -= 1;
-		VideoDriver->draw2DRectangle(getColor(EGDC_3D_SHADOW), disabledRect, clip);
-
-		disabledRect.UpperLeftCorner.X += 1;
-		disabledRect.UpperLeftCorner.Y += 1;
-		VideoDriver->draw2DRectangle(getColor(EGDC_3D_SHADOW), disabledRect, clip);
-
-		disabledRect.LowerRightCorner.X -= 1;
-		disabledRect.LowerRightCorner.Y -= 1;
-
-		if(!((skintype == EGST_WINDOWS_METALLIC) || (skintype == EGST_BURNING_SKIN))) {
-			VideoDriver->draw2DRectangle(getColor(EGDC_3D_FACE), disabledRect, clip);
-		} else {
-			const video::SColor c1 = getColor(EGDC_3D_FACE);
-			const video::SColor c2 = c1.getInterpolated(getColor(EGDC_3D_DARK_SHADOW), 0.4f);
-			VideoDriver->draw2DRectangle(disabledRect, c1, c1, c2, c2, clip);
-		}
+	// Standard buttons use a compact radius derived from their own bounds.
+	// The width constraint prevents narrow controls from becoming pill-shaped.
+	const s32 radius = std::max<s32>(1, std::min(size.Height / 3, size.Width / 6));
+	const u8 alpha = getElementAlpha(element);
+	const auto faded = [alpha](video::SColor color) {
+		color.setAlpha(static_cast<u32>(color.getAlpha()) * alpha / 255);
+		return color;
+	};
+	const auto insetRect = [](const core::rect<s32>& source, s32 amount) {
+		return core::rect<s32>(source.UpperLeftCorner.X + amount,
+			source.UpperLeftCorner.Y + amount,
+			source.LowerRightCorner.X - amount,
+			source.LowerRightCorner.Y - amount);
 	};
 
-	const u8 alpha = getElementAlpha(element);
-	if(alpha == 255) {
-		if(state == 1)
-			drawDisabledPane();
-		else if(state == 2)
-			FallbackSkin->draw3DButtonPanePressed(element, rect, clip);
-		else
-			FallbackSkin->draw3DButtonPaneStandard(element, rect, clip);
+	const video::SColor dark = faded(getColor(EGDC_3D_DARK_SHADOW));
+	const video::SColor shadow = faded(getColor(EGDC_3D_SHADOW));
+	const video::SColor face = faded(getColor(EGDC_3D_FACE));
+	const video::SColor highlight = faded(getColor(EGDC_3D_HIGH_LIGHT));
+
+	drawRoundedRect(VideoDriver, rect, radius, dark, dark, clip);
+
+	if(size.Width <= 2 || size.Height <= 2)
 		return;
+	const core::rect<s32> borderRect = insetRect(rect, 1);
+	drawRoundedRect(VideoDriver, borderRect, std::max<s32>(0, radius - 1), shadow, shadow, clip);
+
+	if(size.Width <= 4 || size.Height <= 4)
+		return;
+	const core::rect<s32> faceRect = insetRect(rect, 2);
+	if(state == 2) {
+		const video::SColor pressed = faded(getColor(EGDC_3D_SHADOW));
+		drawRoundedRect(VideoDriver, faceRect, std::max<s32>(0, radius - 2), pressed, face, clip);
+	} else if(state == 1) {
+		drawRoundedRect(VideoDriver, faceRect, std::max<s32>(0, radius - 2), face, face, clip);
+	} else {
+		drawRoundedRect(VideoDriver, faceRect, std::max<s32>(0, radius - 2), highlight, face, clip);
 	}
-
-	video::SColor originalColors[EGDC_COUNT];
-	for(s32 i = 0; i < EGDC_COUNT; ++i) {
-		const auto colorId = static_cast<EGUI_DEFAULT_COLOR>(i);
-		originalColors[i] = FallbackSkin->getColor(colorId);
-		auto fadedColor = originalColors[i];
-		fadedColor.setAlpha(static_cast<u32>(fadedColor.getAlpha()) * alpha / 255);
-		FallbackSkin->setColor(colorId, fadedColor);
-	}
-
-	if(state == 1)
-		drawDisabledPane();
-	else if(state == 2)
-		FallbackSkin->draw3DButtonPanePressed(element, rect, clip);
-	else
-		FallbackSkin->draw3DButtonPaneStandard(element, rect, clip);
-
-	for(s32 i = 0; i < EGDC_COUNT; ++i)
-		FallbackSkin->setColor(static_cast<EGUI_DEFAULT_COLOR>(i), originalColors[i]);
 }
 
 video::SColor CImageGUISkin::getColor(EGUI_DEFAULT_COLOR color) const {
