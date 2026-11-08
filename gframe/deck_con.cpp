@@ -968,11 +968,11 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 						active_deck_tab = destinationTab;
 						bool moved = false;
 						if(destinationTab == 0)
-							moved = push_main(dragging_pointer);
+							moved = push_main(dragging_pointer, -1, forceInput);
 						else if(destinationTab == 1)
-							moved = push_extra(dragging_pointer);
+							moved = push_extra(dragging_pointer, -1, forceInput);
 						else
-							moved = push_side(dragging_pointer);
+							moved = push_side(dragging_pointer, -1, forceInput);
 						if(!moved) {
 							active_deck_tab = click_pos - 1;
 						if(click_pos == 1)
