@@ -983,12 +983,12 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 								push_side(dragging_pointer, drag_start_seq, true);
 						}
 						is_draging = false;
-					drag_pending = false;
-					drag_source_in_deck = false;
-					drag_start_seq = -1;
-					dragging_pointer = nullptr;
-					GetHoveredCard();
-					break;
+						drag_pending = false;
+						drag_source_in_deck = false;
+						drag_start_seq = -1;
+						dragging_pointer = nullptr;
+						GetHoveredCard();
+						break;
 					}
 				}
 			}
