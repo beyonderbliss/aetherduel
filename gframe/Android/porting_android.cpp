@@ -76,6 +76,15 @@ epro::mutex* queued_messages_mutex = nullptr;
 std::atomic_bool error_dialog_returned{ true };
 std::deque<std::function<void()>>* events = nullptr;
 std::unique_ptr<std::unique_lock<epro::mutex>> mainGameMutex = nullptr;
+
+jint getActiveSkinColor(irr::gui::EGUI_DEFAULT_COLOR color, jint fallback) {
+	if(ygo::mainGame && ygo::mainGame->env) {
+		auto* skin = ygo::mainGame->env->getSkin();
+		if(skin)
+			return static_cast<jint>(skin->getColor(color).color);
+	}
+	return fallback;
+}
 }
 
 extern "C" {
@@ -358,23 +367,32 @@ void setDeckNameInputMode(bool active) {
 }
 
 void showInputDialog(epro::path_stringview current, bool deckNameInput) {
-	jmethodID showdialog = jnienv->GetMethodID(nativeActivity, "showDialog", JPARAMS(JSTRING JBOOL)JVOID);
+	jmethodID showdialog = jnienv->GetMethodID(nativeActivity, "showDialog",
+		JPARAMS(JSTRING JBOOL JINT JINT JINT JINT JINT JINT)JVOID);
 
 	if(showdialog == 0) {
 		assert("porting::showInputDialog unable to find java show dialog method" == 0);
 	}
 
 	jstring jcurrent = NewJavaString(jnienv, current);
+	const jint panelColor = getActiveSkinColor(irr::gui::EGDC_WINDOW, static_cast<jint>(0xFF181B22));
+	const jint previewColor = getActiveSkinColor(irr::gui::EGDC_EDITABLE, static_cast<jint>(0xFF262B34));
+	const jint keyColor = getActiveSkinColor(irr::gui::EGDC_3D_FACE, static_cast<jint>(0xFF363B45));
+	const jint borderColor = getActiveSkinColor(irr::gui::EGDC_3D_HIGH_LIGHT, static_cast<jint>(0xFF4B525E));
+	const jint textColor = getActiveSkinColor(irr::gui::EGDC_BUTTON_TEXT, static_cast<jint>(0xFFFFFFFF));
+	const jint caretColor = getActiveSkinColor(irr::gui::EGDC_WINDOW_SYMBOL, static_cast<jint>(0xFFFFFFFF));
 
 	jnienv->CallVoidMethod(app_global->activity->clazz, showdialog, jcurrent,
-		deckNameInput ? JNI_TRUE : JNI_FALSE);
+		deckNameInput ? JNI_TRUE : JNI_FALSE, panelColor, previewColor, keyColor,
+		borderColor, textColor, caretColor);
 
 	jnienv->DeleteLocalRef(jcurrent);
 }
 
 void showComboBox(const std::vector<std::string>& parameters, int selected) {
 	(void)selected;
-	jmethodID showbox = jnienv->GetMethodID(nativeActivity, "showComboBox", JPARAMS(JARRAY(JSTRING))JVOID);
+	jmethodID showbox = jnienv->GetMethodID(nativeActivity, "showComboBox",
+		JPARAMS(JARRAY(JSTRING) JINT JINT JINT JINT)JVOID);
 
 	jsize len = parameters.size();
 	jobjectArray jlist = jnienv->NewObjectArray(len, jnienv->FindClass("java/lang/String"), 0);
@@ -385,7 +403,13 @@ void showComboBox(const std::vector<std::string>& parameters, int selected) {
 		jnienv->DeleteLocalRef(jstring);
 	}
 
-	jnienv->CallVoidMethod(app_global->activity->clazz, showbox, jlist);
+	const jint panelColor = getActiveSkinColor(irr::gui::EGDC_WINDOW, static_cast<jint>(0xFF232933));
+	const jint itemColor = getActiveSkinColor(irr::gui::EGDC_EDITABLE, static_cast<jint>(0xFF262B34));
+	const jint borderColor = getActiveSkinColor(irr::gui::EGDC_3D_HIGH_LIGHT, static_cast<jint>(0xFF525B6A));
+	const jint textColor = getActiveSkinColor(irr::gui::EGDC_BUTTON_TEXT, static_cast<jint>(0xFFFFFFFF));
+
+	jnienv->CallVoidMethod(app_global->activity->clazz, showbox, jlist,
+		panelColor, itemColor, borderColor, textColor);
 
 	jnienv->DeleteLocalRef(jlist);
 }
