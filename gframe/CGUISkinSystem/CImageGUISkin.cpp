@@ -283,9 +283,12 @@ void CImageGUISkin::draw3DSunkenPane(IGUIElement* element,
 			FallbackSkin->draw3DSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip);
 			return;
 		}
-		if(fillBackGround)
-			FallbackSkin->draw2DRectangle(element, bgcolor, rect, clip);
 		const s32 radius = std::max<s32>(1, std::min(rect.getHeight() / 4, rect.getWidth() / 8));
+		if(fillBackGround) {
+			video::SColor background = bgcolor;
+			background.setAlpha(static_cast<u32>(background.getAlpha()) * getElementAlpha(element) / 255);
+			drawRoundedRect(VideoDriver, rect, radius, background, background, clip);
+		}
 		drawElementStyle(Config.SunkenPane, rect, clip, 0, radius);
 	} else if(element->getType() == EGUIET_COMBO_BOX) {
 		if(element->isEnabled()) {
