@@ -297,6 +297,17 @@ bool CGUICustomComboBox::OnEvent(const SEvent& event) {
 				core::position2d<s32> p(event.MouseInput.X, event.MouseInput.Y);
 				MousePressedInside = AbsoluteRect.isPointInside(p);
 
+#if EDOPRO_ANDROID
+				// Touch mode has no visible arrow button. Open the native picker
+				// directly on the press so the whole combo surface is responsive.
+				if(MousePressedInside && TouchWholeArea && !ygo::gGameConfig->native_mouse) {
+					Environment->setFocus(this);
+					openCloseMenu();
+					MousePressedInside = false;
+					return true;
+				}
+#endif
+
 				// send to list box
 				if(ListBox && ListBox->isPointInside(p) && ListBox->OnEvent(event))
 					return true;
@@ -314,6 +325,12 @@ bool CGUICustomComboBox::OnEvent(const SEvent& event) {
 				if(!pressedInside) {
 					if(ListBox && ListBox->getAbsolutePosition().isPointInside(p))
 						return ListBox->OnEvent(event);
+#if EDOPRO_ANDROID
+					// Consume the matching release after opening the native picker on press.
+					if(TouchWholeArea && !ygo::gGameConfig->native_mouse &&
+					   AbsoluteRect.isPointInside(p))
+						return true;
+#endif
 					return false;
 				}
 				if(ArrowOnlyClick && !ListBox)
