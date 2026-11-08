@@ -50,15 +50,15 @@ The Android dropdown and V2 keyboard already have rounded native backgrounds and
 
 ## Renderer notes
 
-The current C++ skin renderer is in `gframe/CGUISkinSystem/CImageGUISkin.cpp`.
+The C++ skin renderer is in `gframe/CGUISkinSystem/CImageGUISkin.cpp`.
 
-- Standard and pressed button panes are routed through `draw3DButtonPaneStandard()` and `draw3DButtonPanePressed()`.
-- The existing `drawElementStyle()` helper implements nine-slice texture rendering.
-- Skin texture styles are loaded by `CGUISkinSystem::ParseGUIElementStyle()` in `gframe/CGUISkinSystem/CGUISkinSystem.cpp`.
-- The current `skin/PrimaNyx/skin.xml` does not define button textures, so the button path falls back to the Irrlicht skin renderer.
+- Standard, pressed, and disabled button panes route through `drawRoundedButtonPane()`.
+- `drawRoundedRect()` constructs the surface from horizontal spans and passes Irrlicht's clip rectangle to every `draw2DRectangle()` call. It avoids unclipped polygon drawing.
+- Button radius is derived from the actual button bounds, with both height and width constraints so narrow controls do not automatically become pill-shaped.
+- The renderer uses the active skin's 3D palette colors for normal, pressed, and disabled states; the geometry itself does not depend on skin textures or skin XML.
+- Button texture styles are currently bypassed by this first procedural renderer. Preserving arbitrary skin button textures while clipping them to rounded corners is a separate compositing improvement; do not reintroduce square corners as a shortcut.
+- Existing `drawElementStyle()` nine-slice rendering and `CGUISkinSystem::ParseGUIElementStyle()` remain available for other controls.
 
-This is the initial implementation entry point, not permission to make the rounded identity dependent on `skin/PrimaNyx/skin.xml`.
+## Validation status
 
-## Next implementation step
-
-Implement the first application-level rounded button renderer while preserving the existing button API, layout, hitboxes, and events. Determine the button radius from the button's actual dimensions and visual role; do not automatically reuse the dropdown or menu radius. Confirm the button's final radius and visual states before applying the same geometry system to other controls.
+The first renderer implementation is committed, but it has **not been compiled or visually tested**. The next check is a targeted Android build and visual inspection of standard, pressed, disabled, and image buttons, including buttons partially clipped by a parent panel. Do not expand to other controls until this passes.
