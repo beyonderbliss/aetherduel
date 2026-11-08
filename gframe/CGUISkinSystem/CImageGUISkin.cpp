@@ -421,7 +421,8 @@ void CImageGUISkin::draw3DTabButton(IGUIElement* element, bool active,
 		drawElementStyle(Config.TabButtonPressed, rect, clip);
 	} else {
 		if(!Config.TabButton.Texture) {
-			drawRoundedButtonPane(element, rect, clip, 0);
+			const s32 radius = std::max<s32>(1, std::min<s32>(6, std::min(rect.getWidth(), rect.getHeight()) / 4));
+			drawRoundedSunkenPane(element, getColor(EGDC_3D_FACE), false, true, rect, clip, radius);
 			return;
 		}
 
