@@ -1220,6 +1220,18 @@ void Game::Initialize() {
 	if(selectedLocale != 0)
 		ApplyLocale(selectedLocale, true);
 
+	// Enforce centered text for every edit box in the completed GUI tree.
+	const auto centerEditBoxes = [](auto&& self, irr::gui::IGUIElement* element) -> void {
+		if(!element)
+			return;
+		if(element->getType() == irr::gui::EGUIET_EDIT_BOX)
+			static_cast<irr::gui::IGUIEditBox*>(element)->setTextAlignment(
+				irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
+		for(auto* child : element->getChildren())
+			self(self, child);
+	};
+	centerEditBoxes(centerEditBoxes, env->getRootGUIElement());
+
 	env->getRootGUIElement()->bringToFront(wBtnSettings);
 	env->getRootGUIElement()->bringToFront(mTopMenu);
 	env->setFocus(wMainMenu);
@@ -1975,17 +1987,6 @@ void Game::PopulateSettingsWindow() {
 #endif
 	}
 
-	// Enforce centered text for every edit box in the completed GUI tree.
-	const auto centerEditBoxes = [](auto&& self, irr::gui::IGUIElement* element) -> void {
-		if(!element)
-			return;
-		if(element->getType() == irr::gui::EGUIET_EDIT_BOX)
-			static_cast<irr::gui::IGUIEditBox*>(element)->setTextAlignment(
-				irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
-		for(auto* child : element->getChildren())
-			self(self, child);
-	};
-	centerEditBoxes(centerEditBoxes, env->getRootGUIElement());
 }
 #undef WStr
 static inline irr::core::matrix4 BuildProjectionMatrix(irr::f32 left, irr::f32 right, irr::f32 ratio = 1.f) {
