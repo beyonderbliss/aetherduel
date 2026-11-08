@@ -82,7 +82,7 @@ OPTION(bool, android_ui_scale_220_migrated, false)
 #else
 OPTION(float, dpi_scale, 1.f)
 #endif
-OPTION(epro::path_string, skin, EPRO_TEXT("none"))
+OPTION(epro::path_string, skin, EPRO_TEXT("PrimaNyx"))
 OPTION(std::string, override_ssl_certificate_path, "")
 OPTION_ALIASED(epro::path_string, locale, language, EPRO_TEXT("English"))
 OPTION(bool, scale_background, true)
