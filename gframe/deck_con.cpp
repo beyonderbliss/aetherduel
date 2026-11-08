@@ -1316,8 +1316,12 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 	return false;
 }
 void DeckBuilder::UpdateMainDeckScroll(uint32_t deltaTime) {
-	if(mainGame->is_siding || !mainGame->is_building)
+	if(mainGame->is_siding || !mainGame->is_building) {
+		main_deck_scroll_auto_active = false;
 		return;
+	}
+	if(active_deck_tab != 0)
+		main_deck_scroll_auto_active = false;
 	const float dt = std::min(0.05f, static_cast<float>(deltaTime) / 1000.0f);
 	if(dt <= 0.0f)
 		return;
