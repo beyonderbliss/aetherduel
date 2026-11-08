@@ -2037,9 +2037,13 @@ bool Game::MainLoop() {
 	const auto centerTextControls = [](auto&& self, irr::gui::IGUIElement* element) -> void {
 		if(!element)
 			return;
-		if(element->getType() == irr::gui::EGUIET_EDIT_BOX)
-			static_cast<irr::gui::IGUIEditBox*>(element)->setTextAlignment(
-				irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
+		if(element->getType() == irr::gui::EGUIET_EDIT_BOX) {
+			auto* editBox = static_cast<irr::gui::IGUIEditBox*>(element);
+			editBox->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
+			if(mainGame->skinSystem)
+				editBox->setOverrideColor(mainGame->skinSystem->getCustomColor(
+					ygo::skin::INPUT_TEXT_COLOR, env->getSkin()->getColor(irr::gui::EGDC_BUTTON_TEXT)));
+		}
 #if EDOPRO_ANDROID || EDOPRO_IOS
 		else if(element->getType() == irr::gui::EGUIET_COMBO_BOX)
 			static_cast<irr::gui::CGUICustomComboBox*>(element)->setTextAlignment(
