@@ -244,9 +244,14 @@ jobs:
           	}"""
           new_show_combo = """
           	@SuppressWarnings({"unused", "deprecation"})
-          	public void showComboBox(String[] parameters) {
+          	public void showComboBox(String[] parameters, int panelColor, int itemColor,
+          								 int borderColor, int textColor) {
           		var intent = new Intent();
           		intent.putExtra("args", parameters);
+          		intent.putExtra("panelColor", panelColor);
+          		intent.putExtra("itemColor", itemColor);
+          		intent.putExtra("borderColor", borderColor);
+          		intent.putExtra("textColor", textColor);
           		intent.setAction("MAKE_CHOICE");
           		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
           	}"""
@@ -260,18 +265,32 @@ jobs:
           \t\tLocalBroadcastManager.getInstance(this).sendBroadcast(intent);
           \t}"""
           new_show_dialog = """
-          \tpublic void showDialog(String current, boolean deckNameInput) {
-          \t\tvar intent = new Intent();
-          \t\tintent.putExtra("current", current);
-          \t\tintent.putExtra("deckNameInput", deckNameInput);
-          \t\tintent.setAction("INPUT_TEXT");
-          \t\tLocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-          \t}"""
+          	public void showDialog(String current, boolean deckNameInput, int panelColor,
+          								int previewColor, int keyColor, int borderColor,
+          								int textColor, int caretColor) {
+          		var intent = new Intent();
+          		intent.putExtra("current", current);
+          		intent.putExtra("deckNameInput", deckNameInput);
+          		intent.putExtra("panelColor", panelColor);
+          		intent.putExtra("previewColor", previewColor);
+          		intent.putExtra("keyColor", keyColor);
+          		intent.putExtra("borderColor", borderColor);
+          		intent.putExtra("textColor", textColor);
+          		intent.putExtra("caretColor", caretColor);
+          		intent.setAction("INPUT_TEXT");
+          		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+          	}"""
           assert text.count(old_show_dialog) == 1, "Could not locate showDialog method"
           text = text.replace(old_show_dialog, new_show_dialog)
           old_text_entry_receiver = "new TextEntry().Show(EpNativeActivity.this, intent.getStringExtra(\"current\"));"
           new_text_entry_receiver = """new TextEntry().Show(EpNativeActivity.this, intent.getStringExtra("current"),
-          \t\t\t\t\t\t\tintent.getBooleanExtra("deckNameInput", false));"""
+          							intent.getBooleanExtra("deckNameInput", false),
+          							intent.getIntExtra("panelColor", android.graphics.Color.rgb(24, 27, 34)),
+          							intent.getIntExtra("previewColor", android.graphics.Color.rgb(38, 43, 52)),
+          							intent.getIntExtra("keyColor", android.graphics.Color.rgb(54, 59, 69)),
+          							intent.getIntExtra("borderColor", android.graphics.Color.rgb(75, 82, 94)),
+          							intent.getIntExtra("textColor", android.graphics.Color.WHITE),
+          							intent.getIntExtra("caretColor", android.graphics.Color.WHITE));"""
           assert text.count(old_text_entry_receiver) == 1, "Could not locate TextEntry receiver"
           text = text.replace(old_text_entry_receiver, new_text_entry_receiver)
           # Carry the explicit native category marker into the MAKE_CHOICE receiver.
@@ -291,7 +310,11 @@ jobs:
               r'\.setItems\(parameters,\s*\(dialog,\s*id\)\s*->\s*putComboBoxResult\(id\)\)\s*'
               r'\.show\(\);'
           )
-          choice_replacement = """if (parameters != null && parameters.length > 0) {
+          choice_replacement = """final int panelColor = intent.getIntExtra("panelColor", android.graphics.Color.rgb(35, 41, 51));
+          final int itemColor = intent.getIntExtra("itemColor", android.graphics.Color.rgb(38, 43, 52));
+          final int borderColor = intent.getIntExtra("borderColor", android.graphics.Color.rgb(82, 91, 106));
+          final int textColor = intent.getIntExtra("textColor", android.graphics.Color.WHITE);
+          if (parameters != null && parameters.length > 0) {
               final float density = getResources().getDisplayMetrics().density;
               final int panelWidth = Math.min(
                       Math.round(getResources().getDisplayMetrics().widthPixels * 0.55f),
@@ -314,10 +337,10 @@ jobs:
 
               android.graphics.drawable.GradientDrawable panelBackground =
                       new android.graphics.drawable.GradientDrawable();
-              panelBackground.setColor(android.graphics.Color.parseColor("#232933"));
+              panelBackground.setColor(panelColor);
               panelBackground.setCornerRadius(14 * density);
               panelBackground.setStroke(Math.max(1, Math.round(density)),
-                      android.graphics.Color.parseColor("#525B6A"));
+                      borderColor);
               dropdownPanel.setBackground(panelBackground);
               dropdownPanel.setElevation(12 * density);
 
@@ -355,13 +378,13 @@ jobs:
                   android.widget.TextView item =
                           new android.widget.TextView(EpNativeActivity.this);
                   item.setText(parameters[i]);
-                  item.setTextColor(android.graphics.Color.parseColor("#E8D58A"));
+                  item.setTextColor(textColor);
                   item.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15);
                   item.setGravity(android.view.Gravity.CENTER);
 
                   android.graphics.drawable.GradientDrawable itemBackground =
                           new android.graphics.drawable.GradientDrawable();
-                  itemBackground.setColor(android.graphics.Color.parseColor("#262B34"));
+                  itemBackground.setColor(itemColor);
                   itemBackground.setCornerRadius(9 * density);
                   itemBackground.setStroke(Math.max(1, Math.round(density)),
                           android.graphics.Color.parseColor("#525B6A"));
@@ -433,10 +456,24 @@ jobs:
               private boolean shifted;
               private boolean symbols;
               private boolean finished;
+              private int panelColor;
+              private int previewColor;
+              private int keyColor;
+              private int borderColor;
+              private int textColor;
+              private int caretColor;
 
-              public void Show(Context context, String current, boolean deckNameInput) {
+              public void Show(Context context, String current, boolean deckNameInput,
+                               int panelColor, int previewColor, int keyColor,
+                               int borderColor, int textColor, int caretColor) {
                   this.context = context;
                   this.deckNameInput = deckNameInput;
+                  this.panelColor = panelColor;
+                  this.previewColor = previewColor;
+                  this.keyColor = keyColor;
+                  this.borderColor = borderColor;
+                  this.textColor = textColor;
+                  this.caretColor = caretColor;
                   this.value = new StringBuilder(current == null ? "" : current);
                   this.shifted = false;
                   this.symbols = false;
@@ -446,12 +483,12 @@ jobs:
                   root.setOrientation(LinearLayout.VERTICAL);
                   root.setPadding(dp(8), dp(8), dp(8), dp(10));
                   GradientDrawable panel = new GradientDrawable();
-                  panel.setColor(Color.rgb(24, 27, 34));
+                  panel.setColor(panelColor);
                   panel.setCornerRadius(dp(12));
                   root.setBackground(panel);
 
                   preview = new EditText(context);
-                  preview.setTextColor(Color.WHITE);
+                  preview.setTextColor(textColor);
                   preview.setTextSize(16);
                   preview.setSingleLine(true);
                   preview.setHorizontallyScrolling(true);
@@ -465,7 +502,7 @@ jobs:
                   if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                       android.graphics.drawable.Drawable cursor = preview.getTextCursorDrawable();
                       if (cursor != null)
-                          cursor.setTint(Color.rgb(241, 199, 91));
+                          cursor.setTint(caretColor);
                   }
                   preview.setFocusable(true);
                   preview.setFocusableInTouchMode(true);
@@ -707,7 +744,6 @@ jobs:
           panel, preview_spec, keys = layout["panel"], layout["preview"], layout["keys"]
           replacements = {
               "root.setPadding(dp(8), dp(8), dp(8), dp(10));": f"root.setPadding(dp({panel['padding']['left']}), dp({panel['padding']['top']}), dp({panel['padding']['right']}), dp({panel['padding']['bottom']}));",
-              "panel.setColor(Color.rgb(24, 27, 34));": f'panel.setColor(Color.parseColor("{panel["color"]}"));',
               "panel.setCornerRadius(dp(12));": f"panel.setCornerRadius(dp({panel['radius']}));",
               "new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(38));": f"new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp({preview_spec['height']}));",
               "previewParams.setMargins(dp(2), dp(2), dp(2), dp(7));": f"previewParams.setMargins(dp({preview_spec['margin']['left']}), dp({preview_spec['margin']['top']}), dp({preview_spec['margin']['right']}), dp({preview_spec['margin']['bottom']}));",
@@ -716,10 +752,10 @@ jobs:
               "LinearLayout.LayoutParams.MATCH_PARENT, dp(45));": f"LinearLayout.LayoutParams.MATCH_PARENT, dp({keys['rowHeight']}));",
               "rowParams.setMargins(0, dp(2), 0, dp(2));": f"rowParams.setMargins(0, dp({keys['rowGap']}), 0, dp({keys['rowGap']}));",
               "params.setMargins(dp(2), 0, dp(2), 0);": f"params.setMargins(dp({keys['horizontalMargin']}), 0, dp({keys['horizontalMargin']}), 0);",
-              "drawable.setColor(key ? Color.rgb(54, 59, 69) : Color.rgb(38, 43, 52));": f'drawable.setColor(Color.parseColor(key ? "{keys["color"]}" : "{preview_spec["color"]}"));',
+              "drawable.setColor(key ? Color.rgb(54, 59, 69) : Color.rgb(38, 43, 52));": "drawable.setColor(key ? keyColor : previewColor);",
               "drawable.setCornerRadius(dp(key ? 6 : 7));": f"drawable.setCornerRadius(dp(key ? {keys['radius']} : {preview_spec['radius']}));",
-              "drawable.setStroke(dp(1), Color.rgb(75, 82, 94));": f'drawable.setStroke(dp(1), Color.parseColor("{keys["stroke"]}"));',
-              "button.setTextColor(Color.WHITE);": f'button.setTextColor(Color.parseColor("{keys["textColor"]}"));',
+              "drawable.setStroke(dp(1), Color.rgb(75, 82, 94));": "drawable.setStroke(dp(1), borderColor);",
+              "button.setTextColor(Color.WHITE);": "button.setTextColor(textColor);",
               "button.setTextSize(key.length() > 1 ? 11 : 15);": f"button.setTextSize(key.length() > 1 ? {keys['actionTextSize']} : {keys['letterTextSize']});"
           }
           for old_value, new_value in replacements.items():
@@ -800,7 +836,7 @@ jobs:
               "    private Button createKeyButton(String key) {",
               "        Button button = new Button(context);",
               "        button.setText(getKeyLabel(key));",
-              "        button.setTextColor(Color.parseColor(key.length() == 1 && Character.isLetter(key.charAt(0)) ? \"" + keys["letterTextColor"] + "\" : \"" + keys["textColor"] + "\"));",
+              "        button.setTextColor(textColor);",
               "        button.setTextSize(key.length() > 1 ? " + str(keys["actionTextSize"]) + " : " + str(keys["letterTextSize"]) + ");",
               "        button.setAllCaps(false);",
               "        button.setMinWidth(0);",
