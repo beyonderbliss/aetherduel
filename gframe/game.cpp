@@ -94,6 +94,22 @@ public:
 			return;
 
 		const auto* skin = EnvironmentRef->getSkin();
+
+		// Soft cast shadow lifts this custom panel from the screen background.
+		auto shadowFar = skin->getColor(irr::gui::EGDC_3D_DARK_SHADOW);
+		shadowFar.setAlpha(static_cast<irr::u32>(shadowFar.getAlpha()) * 28 / 255);
+		auto shadowBounds = bounds;
+		shadowBounds.UpperLeftCorner.Y += 2;
+		shadowBounds.LowerRightCorner.Y += 2;
+		drawRoundedRect(shadowBounds, Radius, shadowFar, clip);
+
+		auto shadowNear = skin->getColor(irr::gui::EGDC_3D_DARK_SHADOW);
+		shadowNear.setAlpha(static_cast<irr::u32>(shadowNear.getAlpha()) * 44 / 255);
+		shadowBounds = bounds;
+		shadowBounds.UpperLeftCorner.Y += 1;
+		shadowBounds.LowerRightCorner.Y += 1;
+		drawRoundedRect(shadowBounds, Radius, shadowNear, clip);
+
 		const auto borderColor = skin->getColor(irr::gui::EGDC_ACTIVE_BORDER);
 		drawRoundedRect(bounds, Radius, borderColor, clip);
 
@@ -104,6 +120,17 @@ public:
 		inner.LowerRightCorner.Y -= 1;
 		if(inner.getWidth() > 0 && inner.getHeight() > 0)
 			drawRoundedRect(inner, std::max<irr::s32>(0, Radius - 1), skin->getColor(BackgroundColor), clip);
+
+		// A narrow top-edge highlight adds a light-facing surface cue.
+		auto topHighlight = skin->getColor(irr::gui::EGDC_3D_HIGH_LIGHT);
+		topHighlight.setAlpha(static_cast<irr::u32>(topHighlight.getAlpha()) * 48 / 255);
+		const irr::s32 highlightInset = std::min<irr::s32>(Radius, std::max<irr::s32>(0, bounds.getWidth() / 2 - 1));
+		if(bounds.getWidth() > highlightInset * 2 + 2 && bounds.getHeight() > 2) {
+			const irr::core::rect<irr::s32> highlightRect(bounds.UpperLeftCorner.X + highlightInset,
+				bounds.UpperLeftCorner.Y + 1, bounds.LowerRightCorner.X - highlightInset,
+				bounds.UpperLeftCorner.Y + 2);
+			VideoDriver->draw2DRectangle(topHighlight, highlightRect, &clip);
+		}
 
 		irr::gui::IGUIElement::draw();
 	}
