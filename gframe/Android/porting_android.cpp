@@ -94,24 +94,23 @@ extern "C" {
 			queued_messages_mutex->lock();
 			events->emplace_back([send_enter, text = JstringtoCW(env, textString)](){
 				auto device = static_cast<irr::IrrlichtDevice*>(porting::app_global->userData);
-				auto irrenv = device->getGUIEnvironment();
 				auto editbox = activeInputEditBox;
 				activeInputEditBox = nullptr;
 				if(editbox) {
 					editbox->setText(text.data());
-					irr::SEvent changeEvent;
+					irr::SEvent changeEvent{};
 					changeEvent.EventType = irr::EET_GUI_EVENT;
 					changeEvent.GUIEvent.Caller = editbox;
 					changeEvent.GUIEvent.Element = 0;
 					changeEvent.GUIEvent.EventType = irr::gui::EGET_EDITBOX_CHANGED;
-					editbox->getParent()->OnEvent(changeEvent);
+					device->postEventFromUser(changeEvent);
 					if(send_enter) {
-						irr::SEvent enterEvent;
+						irr::SEvent enterEvent{};
 						enterEvent.EventType = irr::EET_GUI_EVENT;
 						enterEvent.GUIEvent.Caller = editbox;
 						enterEvent.GUIEvent.Element = 0;
 						enterEvent.GUIEvent.EventType = irr::gui::EGET_EDITBOX_ENTER;
-						editbox->getParent()->OnEvent(enterEvent);
+						device->postEventFromUser(enterEvent);
 					}
 				}
 			});
