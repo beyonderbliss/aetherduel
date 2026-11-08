@@ -949,6 +949,48 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
 			GetHoveredCard();
 			const int targetPos = hovered_pos;
+			// Dropping a local deck card on another deck's header transfers it
+			// through the normal destination validation, then opens that tab.
+			if(drag_source_in_deck && drag_start_seq >= 0 && dragging_pointer) {
+				const auto logicalRelease = mainGame->Resize(event.MouseInput.X, event.MouseInput.Y, true);
+				const int panelLeft = mainGame->GetDeckPanelLeft();
+				if(logicalRelease.X >= panelLeft && logicalRelease.X < 800 &&
+				   logicalRelease.Y >= 140 && logicalRelease.Y <= 172) {
+					const int tabWidth = std::max(1, (800 - panelLeft) / 3);
+					const int destinationTab = std::min(2, (logicalRelease.X - panelLeft) / tabWidth);
+					if(destinationTab != click_pos) {
+						if(click_pos == 1)
+							pop_main(drag_start_seq);
+						else if(click_pos == 2)
+							pop_extra(drag_start_seq);
+						else if(click_pos == 3)
+							pop_side(drag_start_seq);
+						active_deck_tab = destinationTab;
+						bool moved = false;
+						if(destinationTab == 0)
+							moved = push_main(dragging_pointer);
+						else if(destinationTab == 1)
+							moved = push_extra(dragging_pointer);
+						else
+							moved = push_side(dragging_pointer);
+						if(!moved) {
+							active_deck_tab = click_pos - 1;
+						if(click_pos == 1)
+							push_main(dragging_pointer, drag_start_seq, true);
+						else if(click_pos == 2)
+							push_extra(dragging_pointer, drag_start_seq, true);
+						else if(click_pos == 3)
+							push_side(dragging_pointer, drag_start_seq, true);
+					}
+					is_draging = false;
+					drag_pending = false;
+					drag_source_in_deck = false;
+					drag_start_seq = -1;
+					dragging_pointer = nullptr;
+					GetHoveredCard();
+					break;
+				}
+			}
 			// Dropping a card from a deck onto the Search Result area removes it
 			// from its source deck, matching the editor's original removal gesture.
 			if(targetPos == 4 && drag_source_in_deck) {
