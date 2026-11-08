@@ -18,6 +18,7 @@
 #include "../epro_mutex.h"
 #include "../epro_thread.h"
 #include "../utils.h"
+#include "../CGUISkinSystem/CGUISkinSystem.h"
 
 #define JPARAMS(...)  "(" __VA_ARGS__ ")"
 #define JARRAY(...) "[" __VA_ARGS__
@@ -83,6 +84,13 @@ jint getActiveSkinColor(irr::gui::EGUI_DEFAULT_COLOR color, jint fallback) {
 		if(skin)
 			return static_cast<jint>(skin->getColor(color).color);
 	}
+	return fallback;
+}
+
+jint getActiveSkinCustomColor(ygo::skin::CustomSkinElements color, jint fallback) {
+	if(ygo::mainGame && ygo::mainGame->skinSystem)
+		return static_cast<jint>(ygo::mainGame->skinSystem->getCustomColor(
+			color, irr::video::SColor(fallback)).color);
 	return fallback;
 }
 }
@@ -383,7 +391,7 @@ void showInputDialog(epro::path_stringview current, bool deckNameInput) {
 		activeInputEditBox = ygo::mainGame->ebDeckname;
 
 	jmethodID showdialog = jnienv->GetMethodID(nativeActivity, "showDialog",
-		JPARAMS(JSTRING JBOOL JINT JINT JINT JINT JINT JINT)JVOID);
+		JPARAMS(JSTRING JBOOL JINT JINT JINT JINT JINT JINT JINT JINT)JVOID);
 
 	if(showdialog == 0) {
 		assert("porting::showInputDialog unable to find java show dialog method" == 0);
@@ -395,11 +403,14 @@ void showInputDialog(epro::path_stringview current, bool deckNameInput) {
 	const jint keyColor = getActiveSkinColor(irr::gui::EGDC_3D_FACE, static_cast<jint>(0xFF363B45));
 	const jint borderColor = getActiveSkinColor(irr::gui::EGDC_3D_HIGH_LIGHT, static_cast<jint>(0xFF4B525E));
 	const jint textColor = getActiveSkinColor(irr::gui::EGDC_BUTTON_TEXT, static_cast<jint>(0xFFFFFFFF));
-	const jint caretColor = getActiveSkinColor(irr::gui::EGDC_WINDOW_SYMBOL, static_cast<jint>(0xFFFFFFFF));
+	const jint caretColor = getActiveSkinCustomColor(ygo::skin::INPUT_CARET_COLOR,
+		getActiveSkinColor(irr::gui::EGDC_WINDOW_SYMBOL, static_cast<jint>(0xFFFFFFFF)));
+	const jint inputTextColor = getActiveSkinCustomColor(ygo::skin::INPUT_TEXT_COLOR, textColor);
+	const jint letterTextColor = getActiveSkinCustomColor(ygo::skin::KEYBOARD_LETTER_TEXT_COLOR, textColor);
 
 	jnienv->CallVoidMethod(app_global->activity->clazz, showdialog, jcurrent,
 		deckNameInput ? JNI_TRUE : JNI_FALSE, panelColor, previewColor, keyColor,
-		borderColor, textColor, caretColor);
+		borderColor, textColor, caretColor, inputTextColor, letterTextColor);
 
 	jnienv->DeleteLocalRef(jcurrent);
 }
@@ -421,7 +432,8 @@ void showComboBox(const std::vector<std::string>& parameters, int selected) {
 	const jint panelColor = getActiveSkinColor(irr::gui::EGDC_WINDOW, static_cast<jint>(0xFF232933));
 	const jint itemColor = getActiveSkinColor(irr::gui::EGDC_EDITABLE, static_cast<jint>(0xFF262B34));
 	const jint borderColor = getActiveSkinColor(irr::gui::EGDC_3D_HIGH_LIGHT, static_cast<jint>(0xFF525B6A));
-	const jint textColor = getActiveSkinColor(irr::gui::EGDC_BUTTON_TEXT, static_cast<jint>(0xFFFFFFFF));
+	const jint textColor = getActiveSkinCustomColor(ygo::skin::DROPDOWN_TEXT_COLOR,
+		getActiveSkinColor(irr::gui::EGDC_BUTTON_TEXT, static_cast<jint>(0xFFFFFFFF)));
 
 	jnienv->CallVoidMethod(app_global->activity->clazz, showbox, jlist,
 		panelColor, itemColor, borderColor, textColor);
