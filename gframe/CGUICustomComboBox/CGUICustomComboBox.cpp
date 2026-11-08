@@ -443,7 +443,7 @@ void CGUICustomComboBox::draw() {
 	// Drawing a child background here would cover the shell's rounded corners.
 	SelectedText->setDrawBackground(false);
 	if(isEnabled())
-		SelectedText->setOverrideColor(skin->getColor(EGDC_BUTTON_TEXT));
+		SelectedText->setOverrideColor(ygo::mainGame->skinSystem.getCustomColor(ygo::skin::DROPDOWN_TEXT_COLOR, skin->getColor(EGDC_BUTTON_TEXT)));
 	else
 		SelectedText->setOverrideColor(skin->getColor(EGDC_GRAY_TEXT));
 	ListButton->setSprite(EGBS_BUTTON_UP, skin->getIcon(EGDI_CURSOR_DOWN), skin->getColor(isEnabled() ? EGDC_WINDOW_SYMBOL : EGDC_GRAY_WINDOW_SYMBOL));
