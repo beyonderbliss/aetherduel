@@ -314,43 +314,15 @@ void CImageGUISkin::draw3DSunkenPane(IGUIElement* element,
 		}
 		const s32 radius = std::max<s32>(1, std::min(rect.getWidth(), rect.getHeight()) / 4);
 		drawElementStyle(style, rect, clip, 0, radius);
-	} else if(element->getType() == EGUIET_EDIT_BOX) {
-		if(!Config.SunkenPane.Texture) {
-			const s32 radius = std::max<s32>(1, std::min(rect.getHeight() / 4, rect.getWidth() / 8));
-			drawRoundedSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip, radius);
-			return;
-		}
+	} else if(element->getType() == EGUIET_EDIT_BOX || element->getType() == EGUIET_COMBO_BOX) {
+		// Input geometry belongs to the application, not to an individual skin texture.
+		// Keep the active skin's editable palette for normal, focused, and disabled states.
+		const bool focused = element->getEnvironment() && element->getEnvironment()->hasFocus(element);
+		const video::SColor background = !element->isEnabled()
+			? getColor(EGDC_GRAY_EDITABLE)
+			: focused ? getColor(EGDC_FOCUSED_EDITABLE) : getColor(EGDC_EDITABLE);
 		const s32 radius = std::max<s32>(1, std::min(rect.getHeight() / 4, rect.getWidth() / 8));
-		if(fillBackGround) {
-			video::SColor background = bgcolor;
-			background.setAlpha(static_cast<u32>(background.getAlpha()) * getElementAlpha(element) / 255);
-			drawRoundedRect(VideoDriver, rect, radius, background, background, clip);
-		}
-		drawElementStyle(Config.SunkenPane, rect, clip, 0, radius);
-	} else if(element->getType() == EGUIET_COMBO_BOX) {
-		if(element->isEnabled()) {
-			if(!Config.ComboBox.Texture) {
-				const s32 radius = std::max<s32>(1, std::min(rect.getHeight() / 4, rect.getWidth() / 8));
-				drawRoundedSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip, radius);
-				return;
-			}
-
-			if(fillBackGround)
-				FallbackSkin->draw2DRectangle(element, bgcolor, rect, clip);
-
-			drawElementStyle(Config.ComboBox, rect, clip);
-		} else {
-			if(!Config.ComboBoxDisabled.Texture) {
-				const s32 radius = std::max<s32>(1, std::min(rect.getHeight() / 4, rect.getWidth() / 8));
-				drawRoundedSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip, radius);
-				return;
-			}
-
-			if(fillBackGround)
-				FallbackSkin->draw2DRectangle(element, bgcolor, rect, clip);
-
-			drawElementStyle(Config.ComboBoxDisabled, rect, clip);
-		}
+		drawRoundedSunkenPane(element, background, flat, fillBackGround, rect, clip, radius);
 	} else {
 		if(!Config.SunkenPane.Texture) {
 			FallbackSkin->draw3DSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip);
