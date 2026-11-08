@@ -113,6 +113,15 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 			mainGame->wQuery->getParent()->bringToFront(mainGame->wQuery);
 			break;
 		}
+		if(mainGame->wFileSave->isVisible() && caller == mainGame->ebFileSaveName &&
+		   event.GUIEvent.EventType == irr::gui::EGET_EDITBOX_ENTER) {
+			irr::SEvent saveEvent{};
+			saveEvent.EventType = irr::EET_GUI_EVENT;
+			saveEvent.GUIEvent.Caller = mainGame->btnFileSaveYes;
+			saveEvent.GUIEvent.Element = 0;
+			saveEvent.GUIEvent.EventType = irr::gui::EGET_BUTTON_CLICKED;
+			return OnEvent(saveEvent);
+		}
 		if(mainGame->wFileSave->isVisible() && id != BUTTON_FILE_SAVE && id != BUTTON_FILE_CANCEL) {
 			mainGame->wFileSave->getParent()->bringToFront(mainGame->wFileSave);
 			break;
