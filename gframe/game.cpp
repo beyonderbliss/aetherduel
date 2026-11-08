@@ -875,7 +875,7 @@ void Game::Initialize() {
 	wCategories->setDrawBackground(false);
 	auto* categoriesRoundedBackground = new CGUIRoundedPanel(env, wCategories, -1,
 		irr::core::rect<irr::s32>(0, 0, wCategories->getRelativePosition().getWidth(), wCategories->getRelativePosition().getHeight()),
-		driver, Scale(8), irr::gui::EGDC_WINDOW);
+		driver, Scale(8), irr::gui::EGDC_3D_FACE);
 	categoriesRoundedBackground->drop();
 	wCategories->getCloseButton()->setVisible(false);
 	wCategories->setDrawTitlebar(false);
