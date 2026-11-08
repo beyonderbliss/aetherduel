@@ -76,6 +76,8 @@ public:
 		main_deck_scroll_offset = 0.0f;
 		main_deck_scroll_velocity = 0.0f;
 		main_deck_scroll_inertia = false;
+		main_deck_scroll_auto_target = 0.0f;
+		main_deck_scroll_auto_active = false;
 		RefreshLimitationStatus();
 	}
 	void CancelDeckNameInput();
@@ -166,6 +168,8 @@ public:
 	float main_deck_scroll_offset = 0.0f;
 	float main_deck_scroll_velocity = 0.0f;
 	bool main_deck_scroll_inertia = false;
+	float main_deck_scroll_auto_target = 0.0f;
+	bool main_deck_scroll_auto_active = false;
 	int deck_scroll_last_y = 0;
 	uint32_t deck_scroll_last_time = 0;
 	bool deck_scroll_pending = false;
