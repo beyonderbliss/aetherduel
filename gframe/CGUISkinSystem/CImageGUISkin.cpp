@@ -173,6 +173,24 @@ void CImageGUISkin::drawRoundedButtonPane(IGUIElement* element, const core::rect
 	const video::SColor face = faded(getColor(EGDC_3D_FACE));
 	const video::SColor highlight = faded(getColor(EGDC_3D_HIGH_LIGHT));
 
+	// A soft cast shadow separates enabled buttons from the panel beneath them.
+	// Pressed and disabled states intentionally stay flush with the surface.
+	if(state == 0) {
+		video::SColor shadowFar = faded(getColor(EGDC_3D_DARK_SHADOW));
+		shadowFar.setAlpha(static_cast<u32>(shadowFar.getAlpha()) * 30 / 255);
+		core::rect<s32> shadowRect(rect);
+		shadowRect.UpperLeftCorner.Y += 2;
+		shadowRect.LowerRightCorner.Y += 2;
+		drawRoundedRect(VideoDriver, shadowRect, radius, shadowFar, shadowFar, clip);
+
+		video::SColor shadowNear = faded(getColor(EGDC_3D_DARK_SHADOW));
+		shadowNear.setAlpha(static_cast<u32>(shadowNear.getAlpha()) * 48 / 255);
+		shadowRect = rect;
+		shadowRect.UpperLeftCorner.Y += 1;
+		shadowRect.LowerRightCorner.Y += 1;
+		drawRoundedRect(VideoDriver, shadowRect, radius, shadowNear, shadowNear, clip);
+	}
+
 	drawRoundedRect(VideoDriver, rect, radius, dark, dark, clip);
 
 	if(size.Width <= 2 || size.Height <= 2)
@@ -224,6 +242,53 @@ void CImageGUISkin::drawRoundedSunkenPane(IGUIElement* element, video::SColor bg
 	if(fillBackGround && rect.getWidth() > 4 && rect.getHeight() > 4) {
 		const core::rect<s32> faceRect = insetRect(rect, 2);
 		drawRoundedRect(VideoDriver, faceRect, std::max<s32>(0, radius - 2), faded(bgcolor), faded(bgcolor), clip);
+	}
+}
+
+void CImageGUISkin::drawRoundedPanelPane(IGUIElement* element, video::SColor bgcolor, bool fillBackGround,
+										 const core::rect<s32>& rect, const core::rect<s32>* clip, s32 radius) {
+	if(!VideoDriver || !element || rect.getWidth() <= 0 || rect.getHeight() <= 0)
+		return;
+
+	const u8 alpha = getElementAlpha(element);
+	const auto faded = [alpha](video::SColor color) {
+		color.setAlpha(static_cast<u32>(color.getAlpha()) * alpha / 255);
+		return color;
+	};
+	const auto insetRect = [](const core::rect<s32>& source, s32 amount) {
+		return core::rect<s32>(source.UpperLeftCorner.X + amount,
+			source.UpperLeftCorner.Y + amount,
+			source.LowerRightCorner.X - amount,
+			source.LowerRightCorner.Y - amount);
+	};
+	const auto offsetDown = [](const core::rect<s32>& source, s32 amount) {
+		return core::rect<s32>(source.UpperLeftCorner.X, source.UpperLeftCorner.Y + amount,
+			source.LowerRightCorner.X, source.LowerRightCorner.Y + amount);
+	};
+
+	// Two restrained shadow passes create separation without changing panel geometry.
+	video::SColor shadowFar = faded(getColor(EGDC_3D_DARK_SHADOW));
+	shadowFar.setAlpha(static_cast<u32>(shadowFar.getAlpha()) * 28 / 255);
+	drawRoundedRect(VideoDriver, offsetDown(rect, 2), radius, shadowFar, shadowFar, clip);
+
+	video::SColor shadowNear = faded(getColor(EGDC_3D_DARK_SHADOW));
+	shadowNear.setAlpha(static_cast<u32>(shadowNear.getAlpha()) * 44 / 255);
+	drawRoundedRect(VideoDriver, offsetDown(rect, 1), radius, shadowNear, shadowNear, clip);
+
+	const video::SColor outer = faded(getColor(EGDC_3D_DARK_SHADOW));
+	const video::SColor inner = faded(getColor(EGDC_3D_SHADOW));
+	drawRoundedRect(VideoDriver, rect, radius, outer, outer, clip);
+
+	if(rect.getWidth() <= 2 || rect.getHeight() <= 2)
+		return;
+	const core::rect<s32> innerRect = insetRect(rect, 1);
+	drawRoundedRect(VideoDriver, innerRect, std::max<s32>(0, radius - 1), inner, inner, clip);
+
+	if(fillBackGround && rect.getWidth() > 4 && rect.getHeight() > 4) {
+		const core::rect<s32> faceRect = insetRect(rect, 2);
+		const video::SColor faceTop = faded(bgcolor.getInterpolated(getColor(EGDC_3D_HIGH_LIGHT), 0.12f));
+		const video::SColor faceBottom = faded(bgcolor);
+		drawRoundedRect(VideoDriver, faceRect, std::max<s32>(0, radius - 2), faceTop, faceBottom, clip);
 	}
 }
 
@@ -299,7 +364,7 @@ void CImageGUISkin::draw3DSunkenPane(IGUIElement* element,
 	if(element->getType() == EGUIET_MENU) {
 		if(!Config.MenuPressed.Texture) {
 			const s32 radius = std::max<s32>(1, std::min<s32>(6, std::min(rect.getWidth(), rect.getHeight()) / 4));
-			drawRoundedSunkenPane(element, bgcolor, flat, fillBackGround, rect, clip, radius);
+			drawRoundedPanelPane(element, bgcolor, fillBackGround, rect, clip, radius);
 			return;
 		}
 
@@ -353,7 +418,7 @@ core::rect<s32> CImageGUISkin::draw3DWindowBackground(IGUIElement* element,
 			checkClientArea->LowerRightCorner.X -= 2;
 			checkClientArea->LowerRightCorner.Y -= 2;
 		} else {
-			drawRoundedSunkenPane(element, getColor(EGDC_3D_FACE), false, true, rect, clip, radius);
+			drawRoundedPanelPane(element, getColor(EGDC_3D_FACE), true, rect, clip, radius);
 
 			if(drawTitleBar && titleHeight > 0) {
 				core::rect<s32> titleRect(rect.UpperLeftCorner.X + 2, rect.UpperLeftCorner.Y + 2,
@@ -390,7 +455,7 @@ void CImageGUISkin::draw3DMenuPane(IGUIElement* element,
 								   const core::rect<s32>* clip) {
 	if(!Config.MenuPane.Texture) {
 		const s32 radius = std::max<s32>(1, std::min<s32>(8, std::min(rect.getWidth(), rect.getHeight()) / 4));
-		drawRoundedSunkenPane(element, getColor(EGDC_3D_FACE), false, true, rect, clip, radius);
+		drawRoundedPanelPane(element, getColor(EGDC_3D_FACE), true, rect, clip, radius);
 		return;
 	}
 
@@ -402,7 +467,7 @@ void CImageGUISkin::draw3DToolBar(IGUIElement* element,
 								  const core::rect<s32>* clip) {
 	if(!Config.MenuBar.Texture) {
 		const s32 radius = std::max<s32>(1, std::min<s32>(8, std::min(rect.getWidth(), rect.getHeight()) / 4));
-		drawRoundedSunkenPane(element, getColor(EGDC_3D_FACE), false, true, rect, clip, radius);
+		drawRoundedPanelPane(element, getColor(EGDC_3D_FACE), true, rect, clip, radius);
 		return;
 	}
 
@@ -447,7 +512,7 @@ void CImageGUISkin::draw3DTabBody(IGUIElement* element, bool border, bool backgr
 
 		const s32 radius = std::max<s32>(1, std::min<s32>(8, std::min(bodyRect.getWidth(), bodyRect.getHeight()) / 4));
 		if(border)
-			drawRoundedSunkenPane(element, getColor(EGDC_3D_FACE), false, background, bodyRect, clip, radius);
+			drawRoundedPanelPane(element, getColor(EGDC_3D_FACE), background, bodyRect, clip, radius);
 		else
 			drawRoundedRect(VideoDriver, bodyRect, radius, getColor(EGDC_3D_FACE), getColor(EGDC_3D_FACE), clip);
 		return;
