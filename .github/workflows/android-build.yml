@@ -387,7 +387,7 @@ jobs:
                   itemBackground.setColor(itemColor);
                   itemBackground.setCornerRadius(9 * density);
                   itemBackground.setStroke(Math.max(1, Math.round(density)),
-                          android.graphics.Color.parseColor("#525B6A"));
+                          borderColor);
                   item.setBackground(itemBackground);
 
                   android.widget.LinearLayout.LayoutParams itemParams =
