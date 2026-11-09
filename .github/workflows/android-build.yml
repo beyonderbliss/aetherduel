@@ -1002,7 +1002,7 @@ jobs:
             exit 1
           }
 
-          sed -i "s#^distributionUrl=.*#distributionUrl=https\\://mirrors.huaweicloud.com/gradle/gradle-9.3.1-all.zip#" gradle/wrapper/gradle-wrapper.properties
+          sed -i 's#^distributionUrl=.*#distributionUrl=https\\://mirrors.huaweicloud.com/gradle/gradle-9.3.1-all.zip#' gradle/wrapper/gradle-wrapper.properties
           if grep -q '^distributionSha256Sum=' gradle/wrapper/gradle-wrapper.properties; then
             sed -i "s#^distributionSha256Sum=.*#distributionSha256Sum=$GRADLE_SHA256#" gradle/wrapper/gradle-wrapper.properties
           else
