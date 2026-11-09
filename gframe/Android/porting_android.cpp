@@ -405,7 +405,8 @@ void showInputDialog(epro::path_stringview current, bool deckNameInput) {
 	const jint textColor = getActiveSkinColor(irr::gui::EGDC_BUTTON_TEXT, static_cast<jint>(0xFFFFFFFF));
 	const jint caretColor = getActiveSkinCustomColor(ygo::skin::INPUT_CARET_COLOR,
 		getActiveSkinColor(irr::gui::EGDC_WINDOW_SYMBOL, static_cast<jint>(0xFFFFFFFF)));
-	const jint inputTextColor = getActiveSkinCustomColor(ygo::skin::INPUT_TEXT_COLOR, textColor);
+	// The keyboard's editable input uses the default text color; key labels keep their skin accent.
+	const jint inputTextColor = textColor;
 	const jint letterTextColor = getActiveSkinCustomColor(ygo::skin::KEYBOARD_LETTER_TEXT_COLOR, textColor);
 
 	jnienv->CallVoidMethod(app_global->activity->clazz, showdialog, jcurrent,
