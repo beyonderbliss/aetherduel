@@ -356,7 +356,7 @@ jobs:
                       new android.widget.ScrollView(EpNativeActivity.this);
               dropdownScroll.setFillViewport(false);
               dropdownScroll.setClipToPadding(false);
-              dropdownScroll.setVerticalScrollBarEnabled(shouldScroll);
+              dropdownScroll.setVerticalScrollBarEnabled(false);
 
               android.widget.LinearLayout dropdownContent =
                       new android.widget.LinearLayout(EpNativeActivity.this);
