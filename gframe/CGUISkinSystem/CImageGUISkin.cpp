@@ -547,7 +547,7 @@ void CImageGUISkin::drawIcon(IGUIElement* element, EGUI_DEFAULT_ICON icon,
 
 	if(icon == gui::EGDI_CHECK_BOX_CHECKED) {
 		if(Config.CheckBoxIcon.Texture) {
-			const s32 iconSize = std::max<s32>(1, getSize(EGDS_CHECK_BOX_WIDTH) * 36 / 25);
+			const s32 iconSize = std::max<s32>(1, getSize(EGDS_CHECK_BOX_WIDTH) * 46 / 25);
 			const core::rect<s32> destination(
 				position.X - iconSize / 2,
 				position.Y - iconSize / 2,
