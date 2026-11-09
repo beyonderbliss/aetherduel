@@ -958,7 +958,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				   logicalRelease.Y >= 140 && logicalRelease.Y <= 172) {
 					const int tabWidth = std::max(1, (800 - panelLeft) / 3);
 					const int destinationTab = std::min(2, (logicalRelease.X - panelLeft) / tabWidth);
-					if(destinationTab != click_pos) {
+					if(destinationTab != click_pos - 1) {
 						if(click_pos == 1)
 							pop_main(drag_start_seq);
 						else if(click_pos == 2)
