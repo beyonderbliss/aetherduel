@@ -2078,9 +2078,10 @@ bool Game::MainLoop() {
 					const auto background = env->getSkin()->getColor(irr::gui::EGDC_GRAY_EDITABLE);
 					const irr::u32 luminance = (background.getRed() * 299
 						+ background.getGreen() * 587 + background.getBlue() * 114) / 1000;
+					// Keep disabled text neutral while maintaining clear contrast on both dark and light skins.
 					const irr::video::SColor disabledText = luminance < 128
-						? irr::video::SColor(255, 176, 181, 190)
-						: irr::video::SColor(255, 85, 91, 101);
+						? irr::video::SColor(255, 205, 210, 220)
+						: irr::video::SColor(255, 70, 76, 86);
 					editBox->setOverrideColor(disabledText);
 				}
 				editBox->enableOverrideColor(true);
