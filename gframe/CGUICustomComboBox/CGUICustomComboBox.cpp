@@ -520,9 +520,6 @@ void CGUICustomComboBox::openCloseMenu() {
 		ListBox = new CGUIListBox(Environment, this, -1, r, false, true, true);
 		ListBox->setSubElement(true);
 		ListBox->setNotClipped(true);
-		// Hide only the dropdown scrollbar's visual; the listbox keeps its scroll handling.
-		if(auto* scrollBar = ListBox->getVerticalScrollBar())
-			scrollBar->setVisible(false);
 		ListBox->drop();
 
 		// ensure that list box is always completely visible
