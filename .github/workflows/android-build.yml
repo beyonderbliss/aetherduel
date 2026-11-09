@@ -986,12 +986,31 @@ jobs:
           grep -q 'android:theme="@style/AppTheme"' src/main/AndroidManifest.xml
           echo "API 35: edge-to-edge opt-out enabled; API 36+: opt-out omitted."
 
-      - name: Use direct Gradle distribution host
+      - name: Use Huawei Cloud Gradle distribution mirror
         working-directory: android-wrapper
         run: |
           set -euo pipefail
-          sed -i 's#services\.gradle\.org/distributions/#downloads.gradle.org/distributions/#' gradle/wrapper/gradle-wrapper.properties
-          grep -Fq 'distributionUrl=https\://downloads.gradle.org/distributions/gradle-9.3.1-all.zip' gradle/wrapper/gradle-wrapper.properties
+          MIRROR="https://mirrors.huaweicloud.com/gradle"
+          CHECKSUM_FILE="$RUNNER_TEMP/gradle-9.3.1-all.zip.sha256"
+
+          # Load the checksum published alongside this exact mirror distribution.
+          curl --retry 3 --retry-delay 2 --retry-all-errors -fsSL \
+            "$MIRROR/gradle-9.3.1-all.zip.sha256" -o "$CHECKSUM_FILE"
+          GRADLE_SHA256="$(tr -d '[:space:]' < "$CHECKSUM_FILE")"
+          [[ "$GRADLE_SHA256" =~ ^[a-fA-F0-9]{64}$ ]] || {
+            echo "Invalid Gradle 9.3.1 checksum from Huawei Cloud mirror."
+            exit 1
+          }
+
+          sed -i "s#^distributionUrl=.*#distributionUrl=https\\://mirrors.huaweicloud.com/gradle/gradle-9.3.1-all.zip#" gradle/wrapper/gradle-wrapper.properties
+          if grep -q '^distributionSha256Sum=' gradle/wrapper/gradle-wrapper.properties; then
+            sed -i "s#^distributionSha256Sum=.*#distributionSha256Sum=$GRADLE_SHA256#" gradle/wrapper/gradle-wrapper.properties
+          else
+            printf '\\ndistributionSha256Sum=%s\\n' "$GRADLE_SHA256" >> gradle/wrapper/gradle-wrapper.properties
+          fi
+
+          grep -Fq 'distributionUrl=https\\://mirrors.huaweicloud.com/gradle/gradle-9.3.1-all.zip' gradle/wrapper/gradle-wrapper.properties
+          grep -Fq "distributionSha256Sum=$GRADLE_SHA256" gradle/wrapper/gradle-wrapper.properties
           cat gradle/wrapper/gradle-wrapper.properties
 
       - name: Build debug APK
