@@ -56,7 +56,7 @@
     <Custom>
         <INPUT_TEXT_COLOR a="255" r="241" g="199" b="91"/>
         <INPUT_CARET_COLOR a="255" r="241" g="199" b="91"/>
-        <KEYBOARD_LETTER_TEXT_COLOR a="255" r="255" g="255" b="255"/>
+        <KEYBOARD_LETTER_TEXT_COLOR a="255" r="241" g="199" b="91"/>
         <DROPDOWN_TEXT_COLOR a="255" r="241" g="199" b="91"/>
         <CARDINFO_TYPES_COLOR a="255" r="232" g="213" b="138"/>
         <CARDINFO_STATS_COLOR a="255" r="232" g="213" b="138"/>
