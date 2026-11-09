@@ -450,11 +450,16 @@ void CGUICustomComboBox::draw() {
 			? ygo::mainGame->skinSystem->getCustomColor(ygo::skin::DROPDOWN_TEXT_COLOR,
 				skin->getColor(EGDC_BUTTON_TEXT))
 			: skin->getColor(EGDC_BUTTON_TEXT));
-	else
-		SelectedText->setOverrideColor(ygo::mainGame && ygo::mainGame->skinSystem
-			? ygo::mainGame->skinSystem->getCustomColor(ygo::skin::DROPDOWN_TEXT_COLOR,
-				skin->getColor(EGDC_GRAY_TEXT))
-			: skin->getColor(EGDC_GRAY_TEXT));
+	else {
+		// Disabled dropdown text must remain neutral and readable across skin palettes.
+		const video::SColor background = skin->getColor(EGDC_GRAY_EDITABLE);
+		const u32 luminance = (background.getRed() * 299
+				+ background.getGreen() * 587 + background.getBlue() * 114) / 1000;
+		const video::SColor disabledText = luminance < 128
+			? video::SColor(255, 205, 210, 220)
+			: video::SColor(255, 70, 76, 86);
+		SelectedText->setOverrideColor(disabledText);
+	}
 	ListButton->setSprite(EGBS_BUTTON_UP, skin->getIcon(EGDI_CURSOR_DOWN), skin->getColor(isEnabled() ? EGDC_WINDOW_SYMBOL : EGDC_GRAY_WINDOW_SYMBOL));
 	ListButton->setSprite(EGBS_BUTTON_DOWN, skin->getIcon(EGDI_CURSOR_DOWN), skin->getColor(isEnabled() ? EGDC_WINDOW_SYMBOL : EGDC_GRAY_WINDOW_SYMBOL));
 
