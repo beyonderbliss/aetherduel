@@ -550,12 +550,6 @@ void CImageGUISkin::drawIcon(IGUIElement* element, EGUI_DEFAULT_ICON icon,
 		if(Config.CheckBoxIcon.Texture) {
 			const s32 checkboxWidth = getSize(EGDS_CHECK_BOX_WIDTH);
 			const s32 iconSize = std::max<s32>(1, checkboxWidth * 46 / 25);
-			static bool checkboxRenderDiagLogged = false;
-			if(!checkboxRenderDiagLogged) {
-				const core::dimension2du sourceSize = Config.CheckBoxIcon.Texture->getOriginalSize();
-				ygo::ErrorLog("CHECKBOX_RENDER_DIAG custom_texture=1 source={}x{} checkbox_width={} destination={}", sourceSize.Width, sourceSize.Height, checkboxWidth, iconSize);
-				checkboxRenderDiagLogged = true;
-			}
 			const core::rect<s32> destination(
 				position.X - iconSize / 2,
 				position.Y - iconSize / 2,
