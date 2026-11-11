@@ -163,6 +163,71 @@ Materials::Materials() {
 	SetS3DVertex(vSkillZone[1][1][1], 7.7f, -0.1f, 6.9f, -1.3f, 0, 1, 0, 0, 0, 0);
 
 
+
+	// PrimaNyx arena scale: keep board geometry and all zone hit-test vertices
+	// in the same coordinate space, expanding 10% around the field center.
+	constexpr irr::f32 arenaScale = 1.10f;
+	constexpr irr::f32 arenaCenterX = 4.0f;
+	auto scaleArenaVertex = [](irr::video::S3DVertex& vertex) {
+		vertex.Pos.X = arenaCenterX + (vertex.Pos.X - arenaCenterX) * arenaScale;
+		vertex.Pos.Y *= arenaScale;
+	};
+	auto scaleQuadArena = [&](QuadVertex& quad) {
+		for(auto& vertex : quad)
+			scaleArenaVertex(vertex);
+	};
+	auto scaleQuadLocal = [](QuadVertex& quad) {
+		for(auto& vertex : quad) {
+			vertex.Pos.X *= arenaScale;
+			vertex.Pos.Y *= arenaScale;
+		}
+	};
+
+	// Board texture and field-spell artwork.
+	scaleQuadArena(vField);
+	for(int i = 0; i < 2; ++i) {
+		scaleQuadArena(vFieldSpell[i]);
+		scaleQuadArena(vFieldSpell1[i]);
+		scaleQuadArena(vFieldSpell2[i]);
+	}
+
+	// Every duel zone variant is scaled, not only the currently active layout.
+	for(int p = 0; p < 2; ++p) {
+		for(int i = 0; i < 7; ++i)
+			scaleQuadArena(vFieldMzone[p][i]);
+		for(int layout = 0; layout < 2; ++layout) {
+			for(int separation = 0; separation < 2; ++separation) {
+				for(int i = 0; i < 8; ++i)
+					scaleQuadArena(vFieldSzone[p][layout][separation][i]);
+			}
+		}
+		for(int layout = 0; layout < 2; ++layout) {
+			scaleQuadArena(vFieldDeck[layout][p]);
+			scaleQuadArena(vFieldExtra[layout][p]);
+			for(int separation = 0; separation < 2; ++separation) {
+				scaleQuadArena(vFieldGrave[separation][layout][p]);
+				scaleQuadArena(vFieldRemove[separation][layout][p]);
+				scaleQuadArena(vSkillZone[separation][layout][p]);
+			}
+		}
+	}
+	for(int layout = 0; layout < 2; ++layout)
+		for(auto& point : vFieldContiAct[layout]) {
+			point.X = arenaCenterX + (point.X - arenaCenterX) * arenaScale;
+			point.Y *= arenaScale;
+		}
+
+	// Card meshes and card-attached symbols/outlines scale around their own
+	// origins; card transforms and projected hand hitboxes then follow them.
+	scaleQuadLocal(vCardFront);
+	scaleQuadLocal(vCardBack);
+	scaleQuadLocal(vCardOutline);
+	scaleQuadLocal(vCardOutliner);
+	scaleQuadLocal(vSymbol);
+	scaleQuadLocal(vNegate);
+	scaleQuadLocal(vChainNum);
+	scaleQuadLocal(vActivate);
+
 	for(irr::u16 i = 0; i < 40; ++i)
 		iArrow[i] = i;
 
