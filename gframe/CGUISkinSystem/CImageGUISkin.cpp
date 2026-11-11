@@ -553,7 +553,7 @@ void CImageGUISkin::drawIcon(IGUIElement* element, EGUI_DEFAULT_ICON icon,
 			static bool checkboxRenderDiagLogged = false;
 			if(!checkboxRenderDiagLogged) {
 				const core::dimension2du sourceSize = Config.CheckBoxIcon.Texture->getOriginalSize();
-				ErrorLog("CHECKBOX_RENDER_DIAG custom_texture=1 source={}x{} checkbox_width={} destination={}", sourceSize.Width, sourceSize.Height, checkboxWidth, iconSize);
+				ygo::ErrorLog("CHECKBOX_RENDER_DIAG custom_texture=1 source={}x{} checkbox_width={} destination={}", sourceSize.Width, sourceSize.Height, checkboxWidth, iconSize);
 				checkboxRenderDiagLogged = true;
 			}
 			const core::rect<s32> destination(
