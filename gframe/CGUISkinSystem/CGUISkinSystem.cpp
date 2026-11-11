@@ -159,12 +159,12 @@ gui::CImageGUISkin* CGUISkinSystem::loadSkinFromFile(const fschar_t *skinname) {
 		const auto* texture = skinConfig.CheckBoxIcon.Texture;
 		if(texture) {
 			const auto size = texture->getOriginalSize();
-			ErrorLog("CHECKBOX_LOAD_DIAG custom_texture=1 source={}x{}", size.Width, size.Height);
+			ygo::ErrorLog("CHECKBOX_LOAD_DIAG custom_texture=1 source={}x{}", size.Width, size.Height);
 		} else {
-			ErrorLog("CHECKBOX_LOAD_DIAG custom_texture=0");
+			ygo::ErrorLog("CHECKBOX_LOAD_DIAG custom_texture=0");
 		}
 	} else {
-		ErrorLog("CHECKBOX_LOAD_DIAG config_entry=missing");
+		ygo::ErrorLog("CHECKBOX_LOAD_DIAG config_entry=missing");
 	}
 	ParseGUIElementStyle(skinConfig.ComboBox, "ComboBox");
 	ParseGUIElementStyle(skinConfig.ComboBoxDisabled, "ComboBox/ComboBoxDisabled");
