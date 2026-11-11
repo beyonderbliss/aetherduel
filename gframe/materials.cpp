@@ -293,6 +293,11 @@ void Materials::GenArrow(float y) {
 	vArrow[37].Pos.Z = vArrow[35].Pos.Z - 0.01f;
 	vArrow[38] = irr::video::S3DVertex(irr::core::vector3df(0.0f, -1.0f * y, 0.0f), irr::core::vector3df(0.0f, -1.0f, -1.0f), 0xc0ffffff, irr::core::vector2df(0, 0));
 	vArrow[39] = vArrow[38];
+	for(auto& vertex : vArrow) {
+		vertex.Pos.X *= 1.10f;
+		vertex.Pos.Y *= 1.10f;
+		vertex.Pos.Z *= 1.10f;
+	}
 }
 
 void Materials::SetActiveVertices(int three_columns, int not_separate_pzones) {
