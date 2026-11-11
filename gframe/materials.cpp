@@ -168,7 +168,7 @@ Materials::Materials() {
 	// in the same coordinate space, expanding 10% around the field center.
 	constexpr irr::f32 arenaScale = 1.10f;
 	constexpr irr::f32 arenaCenterX = 4.0f;
-	auto scaleArenaVertex = [](irr::video::S3DVertex& vertex) {
+	auto scaleArenaVertex = [=](irr::video::S3DVertex& vertex) {
 		vertex.Pos.X = arenaCenterX + (vertex.Pos.X - arenaCenterX) * arenaScale;
 		vertex.Pos.Y *= arenaScale;
 	};
@@ -176,7 +176,7 @@ Materials::Materials() {
 		for(auto& vertex : quad)
 			scaleArenaVertex(vertex);
 	};
-	auto scaleQuadLocal = [](QuadVertex& quad) {
+	auto scaleQuadLocal = [=](QuadVertex& quad) {
 		for(auto& vertex : quad) {
 			vertex.Pos.X *= arenaScale;
 			vertex.Pos.Y *= arenaScale;
