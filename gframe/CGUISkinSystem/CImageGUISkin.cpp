@@ -4,6 +4,7 @@
 #include <IGUIElement.h>
 #include <IGUISpriteBank.h>
 #include "clipRects.h"
+#include "../logging.h"
 #include <algorithm>
 #include <cmath>
 
@@ -547,7 +548,14 @@ void CImageGUISkin::drawIcon(IGUIElement* element, EGUI_DEFAULT_ICON icon,
 
 	if(icon == gui::EGDI_CHECK_BOX_CHECKED) {
 		if(Config.CheckBoxIcon.Texture) {
-			const s32 iconSize = std::max<s32>(1, getSize(EGDS_CHECK_BOX_WIDTH) * 46 / 25);
+			const s32 checkboxWidth = getSize(EGDS_CHECK_BOX_WIDTH);
+			const s32 iconSize = std::max<s32>(1, checkboxWidth * 46 / 25);
+			static bool checkboxRenderDiagLogged = false;
+			if(!checkboxRenderDiagLogged) {
+				const core::dimension2du sourceSize = Config.CheckBoxIcon.Texture->getOriginalSize();
+				ErrorLog("CHECKBOX_RENDER_DIAG custom_texture=1 source={}x{} checkbox_width={} destination={}", sourceSize.Width, sourceSize.Height, checkboxWidth, iconSize);
+				checkboxRenderDiagLogged = true;
+			}
 			const core::rect<s32> destination(
 				position.X - iconSize / 2,
 				position.Y - iconSize / 2,
