@@ -205,7 +205,6 @@ Game::~Game() {
 
 void Game::Initialize() {
 	dpi_scale = gGameConfig->dpi_scale;
-	ErrorLog("CHECKBOX_DIAG dpi_scale={} source=Game::Initialize", dpi_scale);
 	duel_param = gGameConfig->lastDuelParam;
 	if(!device)
 		device = GUIUtils::CreateDevice(gGameConfig);
@@ -2556,12 +2555,9 @@ bool Game::ApplySkin(const epro::path_string& skinname, bool reload, bool firstr
 		if(sprite_texture) {
 			auto* sprites = skin->getSpriteBank();
 			auto sprite_id = sprites->addTextureAsSprite(sprite_texture);
-			ErrorLog("CHECKBOX_DIAG sprite_id={} dpi_scale={}", sprite_id, dpi_scale);
 			if(sprite_id != -1) {
 				skin->setIcon(irr::gui::EGDI_CHECK_BOX_CHECKED, sprite_id);
-				ErrorLog("CHECKBOX_DIAG checked_icon_set=1 sprite_id={}", sprite_id);
 			} else {
-				ErrorLog("CHECKBOX_DIAG checked_icon_set=0 sprite_id={}", sprite_id);
 			}
 		}
 	}
