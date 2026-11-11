@@ -8,6 +8,7 @@
 #include <string>
 #include <set>
 #include "../utils.h"
+#include "../logging.h"
 #include "../fmt.h"
 
 using namespace irr;
@@ -153,8 +154,18 @@ gui::CImageGUISkin* CGUISkinSystem::loadSkinFromFile(const fschar_t *skinname) {
 	ParseGUIElementStyle(skinConfig.CheckBoxDisabled, "CheckBox/CheckBoxDisabled");
 	// Optional custom checked-state icon; skins without it retain the fallback sprite.
 	const wchar_t* checkBoxIcon = registry->getValueAsCStr(L"texture", L"Skin/CheckBox/CheckBoxIcon");
-	if(checkBoxIcon && checkBoxIcon[0] != L'\0')
+	if(checkBoxIcon && checkBoxIcon[0] != L'\0') {
 		ParseGUIElementStyle(skinConfig.CheckBoxIcon, "CheckBox/CheckBoxIcon");
+		const auto* texture = skinConfig.CheckBoxIcon.Texture;
+		if(texture) {
+			const auto size = texture->getOriginalSize();
+			ErrorLog("CHECKBOX_LOAD_DIAG custom_texture=1 source={}x{}", size.Width, size.Height);
+		} else {
+			ErrorLog("CHECKBOX_LOAD_DIAG custom_texture=0");
+		}
+	} else {
+		ErrorLog("CHECKBOX_LOAD_DIAG config_entry=missing");
+	}
 	ParseGUIElementStyle(skinConfig.ComboBox, "ComboBox");
 	ParseGUIElementStyle(skinConfig.ComboBoxDisabled, "ComboBox/ComboBoxDisabled");
 
