@@ -896,6 +896,9 @@ jobs:
             "src/main/assets/update/skin/PrimaNyx"
 
           cp "$SKIN_SOURCE" "$A/skin/PrimaNyx/skin.xml"
+          # Package the checkbox texture referenced by PrimaNyx/skin.xml.
+          cp deps/edopro/textures/primanyx-check.png "$A/textures/primanyx-check.png"
+          test -s "$A/textures/primanyx-check.png"
           cp "$SKIN_SOURCE" "src/main/assets/update/skin/PrimaNyx/skin.xml"
           test -d deps/edopro/deck
           cp -a deps/edopro/deck/. "$A/deck/"
