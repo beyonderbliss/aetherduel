@@ -775,7 +775,7 @@ irr::video::ITexture* ImageManager::GetTextureField(uint32_t code) {
 irr::video::ITexture* ImageManager::GetCheckboxScaledTexture(float scale) {
 	auto log_selection = [scale](const char* name, irr::video::ITexture* texture) {
 		if(texture) {
-			const auto& dim = texture->getDimension();
+			const auto& dim = texture->getSize();
 			ErrorLog("CHECKBOX_DIAG selected={} scale={} texture={}x{}", name, scale, dim.Width, dim.Height);
 		} else {
 			ErrorLog("CHECKBOX_DIAG selected={} scale={} texture=missing", name, scale);
