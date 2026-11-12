@@ -702,6 +702,7 @@ void ClientField::GetChainDrawCoordinates(uint8_t controler, uint8_t location, u
 	if ((location & (~LOCATION_OVERLAY)) == LOCATION_HAND) {
 		t->X = 2.95f;
 		t->Y = (controler == 0) ? 3.15f : (-3.15f);
+		t->Y += solveHandYOffset(controler);
 		t->Z = 0.03f;
 		return;
 	}
@@ -789,6 +790,71 @@ static irr::core::rect<irr::s32> projectCardBounds(const irr::core::matrix4& car
 static void getCardScreenCoordinates(ClientCard* pcard) {
 	const auto& cardmat = (pcard->code && (!mainGame->dInfo.isReplay || !gGameConfig->hideHandsInReplays || pcard->is_public || pcard->is_hovered)) ? matManager.vCardFront : matManager.vCardBack;
 	pcard->hand_collision = projectCardBounds(pcard->mTransform, cardmat);
+}
+
+// Prevent recursive layout solving while the solver asks for each card's
+// unadjusted hand transform.
+static bool solvingHandOffset = false;
+
+static float solveHandYOffset(uint8_t controler) {
+	if(solvingHandOffset || controler > 1 || mainGame->dField.hand[controler].empty())
+		return 0.0f;
+
+	const auto renderSize = mainGame->driver->getCurrentRenderTargetSize();
+	const irr::s32 targetY = controler == 0
+		? static_cast<irr::s32>(renderSize.Height) - mainGame->Scale<irr::s32>(10)
+		: projectCardBounds(irr::core::matrix4{}, matManager.vField).UpperLeftCorner.Y;
+
+	auto getHandEdge = [&](float offset) -> irr::s32 {
+		irr::s32 edge = controler == 0 ? -10000 : 10000;
+		solvingHandOffset = true;
+		for(auto* card : mainGame->dField.hand[controler]) {
+			if(!card)
+				continue;
+			const bool wasHovered = card->is_hovered;
+			card->is_hovered = false;
+			irr::core::vector3df position, rotation;
+			mainGame->dField.GetCardDrawCoordinates(card, &position, &rotation, false);
+			card->is_hovered = wasHovered;
+			position.Y += offset;
+
+			irr::core::matrix4 candidate;
+			candidate.setRotationRadians(rotation);
+			candidate.setTranslation(position);
+			const auto& cardmat = (card->code && (!mainGame->dInfo.isReplay || !gGameConfig->hideHandsInReplays || card->is_public)) ? matManager.vCardFront : matManager.vCardBack;
+			const auto bounds = projectCardBounds(candidate, cardmat);
+			if(controler == 0)
+				edge = std::max(edge, bounds.LowerRightCorner.Y);
+			else
+				edge = std::min(edge, bounds.UpperLeftCorner.Y);
+		}
+		solvingHandOffset = false;
+		return edge;
+	};
+
+	// Search a shared world-space Y translation. A missing bracket means the
+	// requested screen edge is outside the safe reachable range for this view.
+	float low = -8.0f;
+	float high = 8.0f;
+	irr::s32 lowError = getHandEdge(low) - targetY;
+	irr::s32 highError = getHandEdge(high) - targetY;
+	if((lowError < 0 && highError < 0) || (lowError > 0 && highError > 0))
+		return 0.0f;
+
+	for(int i = 0; i < 24; ++i) {
+		const float mid = (low + high) * 0.5f;
+		const irr::s32 midError = getHandEdge(mid) - targetY;
+		if(midError == 0)
+			return mid;
+		if((lowError <= 0 && midError >= 0) || (lowError >= 0 && midError <= 0)) {
+			high = mid;
+			highError = midError;
+		} else {
+			low = mid;
+			lowError = midError;
+		}
+	}
+	return (low + high) * 0.5f;
 }
 void ClientField::RefreshHandHitboxes() {
 	for(const auto& _hand : hand)
@@ -938,6 +1004,8 @@ void ClientField::GetCardDrawCoordinates(ClientCard* pcard, irr::core::vector3df
 		SetYCoord();
 		t->Z = zoff1 + zoff2;
 		SetHoverState();
+		if(!solvingHandOffset)
+			t->Y += solveHandYOffset(static_cast<uint8_t>(controler));
 		if(gGameConfig->topdown_view) {
 			if(controler == 0)
 				*r = selfATK;
