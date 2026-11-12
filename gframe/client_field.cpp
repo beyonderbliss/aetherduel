@@ -836,7 +836,9 @@ static float solveHandYOffset(uint8_t controler) {
 			if(controler == 0)
 				edge = std::max(edge, bounds.LowerRightCorner.Y);
 			else
-				edge = std::min(edge, bounds.UpperLeftCorner.Y);
+				// The opponent hand edge facing the playmat is the lower screen
+				// edge of the cards, not the outer/top edge.
+				edge = std::max(edge, bounds.LowerRightCorner.Y);
 		}
 		solvingHandOffset = false;
 		return edge;
