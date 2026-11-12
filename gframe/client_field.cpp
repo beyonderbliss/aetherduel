@@ -772,7 +772,7 @@ static void getCardScreenCoordinates(ClientCard* pcard) {
 
 	auto corner = project(cardmat[0].Pos);
 	irr::core::rect<irr::s32> bounds(corner, corner);
-	for(size_t i = 1; i < cardmat.size(); ++i) {
+	for(size_t i = 1; i < 4; ++i) {
 		corner = project(cardmat[i].Pos);
 		if(corner.X < bounds.UpperLeftCorner.X)
 			bounds.UpperLeftCorner.X = corner.X;
