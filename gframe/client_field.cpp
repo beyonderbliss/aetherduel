@@ -751,32 +751,41 @@ void ClientField::GetChainDrawCoordinates(uint8_t controler, uint8_t location, u
 	t->Y = (loc[0].Pos.Y + loc[2].Pos.Y) / 2;
 }
 static void getCardScreenCoordinates(ClientCard* pcard) {
+	// Always derive the hitbox from the card's final world transform. Project all
+	// four mesh corners so rotated/perspective cards use the same visual bounds.
 	irr::core::matrix4 trans = mainGame->camera->getProjectionMatrix();
 	trans *= mainGame->camera->getViewMatrix();
 	trans *= pcard->mTransform;
-	auto transform = [&trans, dim = (mainGame->driver->getCurrentRenderTargetSize() / 2)](irr::core::vector3df vec) {
+	const auto dim = mainGame->driver->getCurrentRenderTargetSize() / 2;
+	const auto& cardmat = (pcard->code && (!mainGame->dInfo.isReplay || !gGameConfig->hideHandsInReplays || pcard->is_public || pcard->is_hovered)) ? matManager.vCardFront : matManager.vCardBack;
+
+	auto project = [&trans, dim](irr::core::vector3df vec) {
 		irr::f32 transformedPos[4] = { vec.X, vec.Y, vec.Z, 1.0f };
-
 		trans.multiplyWith1x4Matrix(transformedPos);
-
-		if(transformedPos[3] < 0)
+		if(transformedPos[3] <= 0.0f)
 			return irr::core::vector2d<irr::s32>(-10000, -10000);
-
-		const irr::f32 zDiv = transformedPos[3] == 0.0f ? 1.0f :
-			irr::core::reciprocal(transformedPos[3]);
-
+		const irr::f32 zDiv = irr::core::reciprocal(transformedPos[3]);
 		return irr::core::vector2d<irr::s32>(
-			dim.Width + irr::core::round32(dim.Width * (transformedPos[0] * zDiv)),
-			dim.Height - irr::core::round32(dim.Height * (transformedPos[1] * zDiv)));
+			dim.Width + irr::core::round32(dim.Width * transformedPos[0] * zDiv),
+			dim.Height - irr::core::round32(dim.Height * transformedPos[1] * zDiv));
 	};
 
-	const auto& frontmat = (pcard->code && (!mainGame->dInfo.isReplay || !gGameConfig->hideHandsInReplays || pcard->is_public || pcard->is_hovered)) ? matManager.vCardFront : matManager.vCardBack;
-	const auto upperleft = transform(frontmat[0].Pos);
-	const auto lowerright = transform(frontmat[3].Pos);
-	auto& collision = pcard->hand_collision;
-	collision = { upperleft, lowerright };
-	if(!collision.isValid())
-		collision.repair();
+	auto corner = project(cardmat[0].Pos);
+	irr::core::rect<irr::s32> bounds(corner, corner);
+	for(size_t i = 1; i < cardmat.size(); ++i) {
+		corner = project(cardmat[i].Pos);
+		if(corner.X < bounds.UpperLeftCorner.X)
+			bounds.UpperLeftCorner.X = corner.X;
+		if(corner.Y < bounds.UpperLeftCorner.Y)
+			bounds.UpperLeftCorner.Y = corner.Y;
+		if(corner.X > bounds.LowerRightCorner.X)
+			bounds.LowerRightCorner.X = corner.X;
+		if(corner.Y > bounds.LowerRightCorner.Y)
+			bounds.LowerRightCorner.Y = corner.Y;
+	}
+	if(!bounds.isValid())
+		bounds.repair();
+	pcard->hand_collision = bounds;
 }
 void ClientField::RefreshHandHitboxes() {
 	for(const auto& _hand : hand)
