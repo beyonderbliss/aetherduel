@@ -750,14 +750,13 @@ void ClientField::GetChainDrawCoordinates(uint8_t controler, uint8_t location, u
 	t->X = (loc[0].Pos.X + loc[1].Pos.X) / 2;
 	t->Y = (loc[0].Pos.Y + loc[2].Pos.Y) / 2;
 }
-static void getCardScreenCoordinates(ClientCard* pcard) {
-	// Always derive the hitbox from the card's final world transform. Project all
-	// four mesh corners so rotated/perspective cards use the same visual bounds.
+static irr::core::rect<irr::s32> projectCardBounds(const irr::core::matrix4& cardTransform, const Materials::QuadVertex& cardmat) {
+	// This is the shared world-to-screen projection used by both layout solving
+	// and the final interaction hitbox.
 	irr::core::matrix4 trans = mainGame->camera->getProjectionMatrix();
 	trans *= mainGame->camera->getViewMatrix();
-	trans *= pcard->mTransform;
+	trans *= cardTransform;
 	const auto dim = mainGame->driver->getCurrentRenderTargetSize() / 2;
-	const auto& cardmat = (pcard->code && (!mainGame->dInfo.isReplay || !gGameConfig->hideHandsInReplays || pcard->is_public || pcard->is_hovered)) ? matManager.vCardFront : matManager.vCardBack;
 
 	auto project = [&trans, dim](irr::core::vector3df vec) {
 		irr::f32 transformedPos[4] = { vec.X, vec.Y, vec.Z, 1.0f };
@@ -785,7 +784,11 @@ static void getCardScreenCoordinates(ClientCard* pcard) {
 	}
 	if(!bounds.isValid())
 		bounds.repair();
-	pcard->hand_collision = bounds;
+	return bounds;
+}
+static void getCardScreenCoordinates(ClientCard* pcard) {
+	const auto& cardmat = (pcard->code && (!mainGame->dInfo.isReplay || !gGameConfig->hideHandsInReplays || pcard->is_public || pcard->is_hovered)) ? matManager.vCardFront : matManager.vCardBack;
+	pcard->hand_collision = projectCardBounds(pcard->mTransform, cardmat);
 }
 void ClientField::RefreshHandHitboxes() {
 	for(const auto& _hand : hand)
