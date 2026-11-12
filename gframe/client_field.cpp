@@ -997,12 +997,17 @@ void ClientField::GetCardDrawCoordinates(ClientCard* pcard, irr::core::vector3df
 		};
 		const auto count = hand[controler].size();
 		const size_t max = (6 - gGameConfig->topdown_view - three_columns * 2);
-		const float xoff1 = (5.5f - 0.8f * count) / 2.0f + sequence * (gGameConfig->topdown_view ? 0.73f : 0.8f);
+		// Match the 10% card-mesh enlargement in materials.cpp so the visible
+		// gaps between hand cards remain comparable to upstream EDOPro.
+		static constexpr float handSpacingScale = 1.10f;
+		const float xoff1 = (5.5f - 0.8f * handSpacingScale * count) / 2.0f
+			+ sequence * (gGameConfig->topdown_view ? 0.73f : 0.8f) * handSpacingScale;
 		float val = three_columns ? 2.4f : 4.0f;
 		if(gGameConfig->topdown_view)
 			val -= 0.35f;
+		val *= handSpacingScale;
 		float xoff2 = (sequence * val) / (count - 1);
-		if(three_columns) xoff2 += 0.8f;
+		if(three_columns) xoff2 += 0.8f * handSpacingScale;
 		auto SetXCoord = [&] {
 			if(controler == 0) {
 				if(count <= max)
