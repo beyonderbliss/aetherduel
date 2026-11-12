@@ -24,6 +24,8 @@
 
 namespace ygo {
 
+static float solveHandYOffset(uint8_t controler);
+
 ClientField::ClientField() {
 	panel = nullptr;
 	hovered_card = nullptr;
