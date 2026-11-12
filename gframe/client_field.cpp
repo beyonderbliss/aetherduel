@@ -572,7 +572,12 @@ void ClientField::ShowLocationCard() {
 		mainGame->scrDisplayList->setPos(0);
 		mainGame->scrDisplayList->setVisible(false);
 	} else {
+#if EDOPRO_ANDROID || EDOPRO_IOS
+		// Mobile pile navigation is handled by swiping the card row itself.
+		mainGame->scrDisplayList->setVisible(false);
+#else
 		mainGame->scrDisplayList->setVisible(true);
+#endif
 		mainGame->scrDisplayList->setMin(0);
 		mainGame->scrDisplayList->setMax(static_cast<irr::s32>(display_cards.size() - 5) * 10 + 9);
 		mainGame->scrDisplayList->setPos(0);
