@@ -21,6 +21,7 @@
 #include "CGUITTFont/CGUITTFont.h"
 #include "custom_skin_enum.h"
 #include "fmt.h"
+#include "logging.h"
 
 namespace ygo {
 
@@ -797,6 +798,7 @@ static void getCardScreenCoordinates(ClientCard* pcard) {
 // Prevent recursive layout solving while the solver asks for each card's
 // unadjusted hand transform.
 static bool solvingHandOffset = false;
+static bool handOffsetDiagnosticLogged[2] = { false, false };
 
 static float solveHandYOffset(uint8_t controler) {
 	if(solvingHandOffset || controler > 1 || mainGame->dField.hand[controler].empty())
@@ -853,16 +855,27 @@ static float solveHandYOffset(uint8_t controler) {
 	// requested screen edge is outside the safe reachable range for this view.
 	float low = -8.0f;
 	float high = 8.0f;
-	irr::s32 lowError = getHandEdge(low) - targetY;
-	irr::s32 highError = getHandEdge(high) - targetY;
-	if((lowError < 0 && highError < 0) || (lowError > 0 && highError > 0))
+	const irr::s32 lowEdge = getHandEdge(low);
+	const irr::s32 highEdge = getHandEdge(high);
+	irr::s32 lowError = lowEdge - targetY;
+	irr::s32 highError = highEdge - targetY;
+	if((lowError < 0 && highError < 0) || (lowError > 0 && highError > 0)) {
+		if(!handOffsetDiagnosticLogged[controler]) {
+			ErrorLog("HAND_OFFSET_DIAG controller={} targetY={} lowEdge={} highEdge={} lowError={} highError={} scale5={} bracket=missing",
+				controler, targetY, lowEdge, highEdge, lowError, highError, mainGame->Scale<irr::s32>(5));
+			handOffsetDiagnosticLogged[controler] = true;
+		}
 		return 0.0f;
+	}
 
+	float solvedOffset = (low + high) * 0.5f;
 	for(int i = 0; i < 24; ++i) {
 		const float mid = (low + high) * 0.5f;
 		const irr::s32 midError = getHandEdge(mid) - targetY;
-		if(midError == 0)
-			return mid;
+		if(midError == 0) {
+			solvedOffset = mid;
+			break;
+		}
 		if((lowError <= 0 && midError >= 0) || (lowError >= 0 && midError <= 0)) {
 			high = mid;
 			highError = midError;
@@ -870,8 +883,15 @@ static float solveHandYOffset(uint8_t controler) {
 			low = mid;
 			lowError = midError;
 		}
+		solvedOffset = (low + high) * 0.5f;
 	}
-	return (low + high) * 0.5f;
+	if(!handOffsetDiagnosticLogged[controler]) {
+		const irr::s32 solvedEdge = getHandEdge(solvedOffset);
+		ErrorLog("HAND_OFFSET_DIAG controller={} targetY={} lowEdge={} highEdge={} solvedOffset={} solvedEdge={} residual={} scale5={} bracket=ok",
+			controler, targetY, lowEdge, highEdge, solvedOffset, solvedEdge, solvedEdge - targetY, mainGame->Scale<irr::s32>(5));
+		handOffsetDiagnosticLogged[controler] = true;
+	}
+	return solvedOffset;
 }
 void ClientField::RefreshHandHitboxes() {
 	for(const auto& _hand : hand)
