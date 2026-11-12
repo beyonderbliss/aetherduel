@@ -1092,6 +1092,54 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 		break;
 	}
 	case irr::EET_MOUSE_INPUT_EVENT: {
+		// Android touch input is delivered through Irrlicht's left-mouse events.
+		// Capture horizontal drags over the pile cards without changing card-button taps.
+		static bool pileSwipeActive = false;
+		static bool pileSwipeMoved = false;
+		static irr::s32 pileSwipeStartX = 0;
+		static irr::s32 pileSwipeStartPos = 0;
+		if(event.MouseInput.Event == irr::EMIE_LMOUSE_PRESSED_DOWN) {
+			pileSwipeActive = false;
+			pileSwipeMoved = false;
+			if(mainGame->wCardDisplay->isVisible() && mainGame->scrDisplayList->getMax() > 0) {
+				const auto first = mainGame->btnCardDisplay[0]->getAbsolutePosition();
+				const auto last = mainGame->btnCardDisplay[4]->getAbsolutePosition();
+				const irr::core::recti cardArea(first.UpperLeftCorner.X, first.UpperLeftCorner.Y,
+					last.LowerRightCorner.X, last.LowerRightCorner.Y);
+				if(cardArea.isPointInside({ event.MouseInput.X, event.MouseInput.Y })) {
+					pileSwipeActive = true;
+					pileSwipeStartX = event.MouseInput.X;
+					pileSwipeStartPos = mainGame->scrDisplayList->getPos();
+				}
+			}
+		} else if(event.MouseInput.Event == irr::EMIE_MOUSE_MOVED && pileSwipeActive &&
+			  event.MouseInput.isLeftPressed()) {
+			const irr::s32 deltaX = event.MouseInput.X - pileSwipeStartX;
+			const irr::s32 dragThreshold = mainGame->Scale(8);
+			if(!pileSwipeMoved && (deltaX >= dragThreshold || deltaX <= -dragThreshold))
+				pileSwipeMoved = true;
+			if(pileSwipeMoved) {
+				const irr::s32 cardStepWidth = std::max<irr::s32>(1, mainGame->Scale(125));
+				const irr::s32 steps = (deltaX * 10) / cardStepWidth;
+				const irr::s32 maxPos = mainGame->scrDisplayList->getMax();
+				const irr::s32 nextPos = std::clamp(pileSwipeStartPos - steps * 10, 0, maxPos);
+				if(mainGame->scrDisplayList->getPos() != nextPos) {
+					mainGame->scrDisplayList->setPos(nextPos);
+					irr::SEvent scrollEvent{};
+					scrollEvent.EventType = irr::EET_GUI_EVENT;
+					scrollEvent.GUIEvent.Caller = mainGame->scrDisplayList;
+					scrollEvent.GUIEvent.EventType = irr::gui::EGET_SCROLL_BAR_CHANGED;
+					OnEvent(scrollEvent);
+				}
+				return true;
+			}
+		} else if(event.MouseInput.Event == irr::EMIE_LMOUSE_LEFT_UP && pileSwipeActive) {
+			const bool consumedSwipe = pileSwipeMoved;
+			pileSwipeActive = false;
+			pileSwipeMoved = false;
+			if(consumedSwipe)
+				return true;
+		}
 		bool isroot = [&event,root=mainGame->env->getRootGUIElement()] {
 			const auto elem = root->getElementFromPoint({ event.MouseInput.X, event.MouseInput.Y });
 			return elem == root || elem == mainGame->wPhase;
