@@ -806,8 +806,13 @@ static float solveHandYOffset(uint8_t controler) {
 	irr::core::matrix4 fieldTransform;
 	fieldTransform.makeIdentity();
 	const irr::s32 targetY = controler == 0
-		? static_cast<irr::s32>(renderSize.Height) - mainGame->Scale<irr::s32>(10)
-		: projectCardBounds(fieldTransform, matManager.vField).UpperLeftCorner.Y;
+		// Player hand: keep the card's bottom edge 5 logical EDOPro units
+		// above the bottom of the active render surface.
+		? static_cast<irr::s32>(renderSize.Height) - mainGame->Scale<irr::s32>(5)
+		// Opponent hand: move its playmat-facing edge 5 logical units
+		// down-screen from the far playmat boundary, toward the field.
+		: projectCardBounds(fieldTransform, matManager.vField).UpperLeftCorner.Y
+			+ mainGame->Scale<irr::s32>(5);
 
 	auto getHandEdge = [&](float offset) -> irr::s32 {
 		irr::s32 edge = -10000;
