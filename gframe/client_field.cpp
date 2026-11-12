@@ -801,9 +801,11 @@ static float solveHandYOffset(uint8_t controler) {
 		return 0.0f;
 
 	const auto renderSize = mainGame->driver->getCurrentRenderTargetSize();
+	irr::core::matrix4 fieldTransform;
+	fieldTransform.makeIdentity();
 	const irr::s32 targetY = controler == 0
 		? static_cast<irr::s32>(renderSize.Height) - mainGame->Scale<irr::s32>(10)
-		: projectCardBounds(irr::core::matrix4{}, matManager.vField).UpperLeftCorner.Y;
+		: projectCardBounds(fieldTransform, matManager.vField).UpperLeftCorner.Y;
 
 	auto getHandEdge = [&](float offset) -> irr::s32 {
 		irr::s32 edge = controler == 0 ? -10000 : 10000;
@@ -811,17 +813,23 @@ static float solveHandYOffset(uint8_t controler) {
 		for(auto* card : mainGame->dField.hand[controler]) {
 			if(!card)
 				continue;
-			const bool wasHovered = card->is_hovered;
-			card->is_hovered = false;
 			irr::core::vector3df position, rotation;
 			mainGame->dField.GetCardDrawCoordinates(card, &position, &rotation, false);
-			card->is_hovered = wasHovered;
+			// Solve against the resting hand layout, not a temporary hover lift.
+			if(card->is_hovered) {
+				if(gGameConfig->topdown_view)
+					position.Y += controler == 0 ? 0.2f : -0.2f;
+				else {
+					position.Y += 0.16f;
+					position.Z -= 0.156f;
+				}
+			}
 			position.Y += offset;
 
 			irr::core::matrix4 candidate;
 			candidate.setRotationRadians(rotation);
 			candidate.setTranslation(position);
-			const auto& cardmat = (card->code && (!mainGame->dInfo.isReplay || !gGameConfig->hideHandsInReplays || card->is_public)) ? matManager.vCardFront : matManager.vCardBack;
+			const auto& cardmat = (card->code && (!mainGame->dInfo.isReplay || !gGameConfig->hideHandsInReplays || card->is_public || card->is_hovered)) ? matManager.vCardFront : matManager.vCardBack;
 			const auto bounds = projectCardBounds(candidate, cardmat);
 			if(controler == 0)
 				edge = std::max(edge, bounds.LowerRightCorner.Y);
