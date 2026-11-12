@@ -810,7 +810,7 @@ static float solveHandYOffset(uint8_t controler) {
 		: projectCardBounds(fieldTransform, matManager.vField).UpperLeftCorner.Y;
 
 	auto getHandEdge = [&](float offset) -> irr::s32 {
-		irr::s32 edge = controler == 0 ? -10000 : 10000;
+		irr::s32 edge = -10000;
 		solvingHandOffset = true;
 		for(auto* card : mainGame->dField.hand[controler]) {
 			if(!card)
