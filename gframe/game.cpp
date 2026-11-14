@@ -3575,10 +3575,18 @@ void Game::UpdateDeckMenuLayout() {
 	btnDeleteDeck->setText(L"Delete");
 }
 void Game::ResizeCardinfoWindow(bool keep_ratio) {
+	static bool hasSavedInfoVisibility = false;
+	static bool savedInfoVisibility = false;
 	if(!dInfo.isInDuel && !is_building)
 		cardViewFullscreen = false;
 
 	if(cardViewFullscreen) {
+		if(!hasSavedInfoVisibility) {
+			savedInfoVisibility = wInfos->isVisible();
+			hasSavedInfoVisibility = true;
+		}
+		wInfos->setVisible(false);
+
 		const float aspect = static_cast<float>(layout::kFullscreenAspectWidth) / layout::kFullscreenAspectHeight;
 		// Use one logical card rectangle for every viewport ratio.
 		const irr::s32 left = Resize(kUiEdgeMargin, 0).X;
@@ -3589,7 +3597,14 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 		wCardImg->setRelativePosition(irr::core::recti(left, top, left + cardWidth, top + cardHeight));
 		imgCard->setRelativePosition(irr::core::recti(0, 0, cardWidth, cardHeight));
 		wCardImg->getParent()->bringToFront(wCardImg);
+		UpdateVerticalButtonLayout();
 		return;
+	}
+
+	if(hasSavedInfoVisibility) {
+		wInfos->setVisible(savedInfoVisibility);
+		hasSavedInfoVisibility = false;
+		savedInfoVisibility = false;
 	}
 
 	const irr::s32 wrapperWidth = layout::kStandardArtworkWidth + layout::kStandardWrapperPaddingX * 2;
@@ -3623,6 +3638,7 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 		Scale(layout::kStandardArtworkOriginX) + rect.getWidth(),
 		Scale(layout::kStandardArtworkOriginY) + rect.getHeight()));
 	wCardImg->getParent()->sendToBack(wCardImg);
+	UpdateVerticalButtonLayout();
 }
 bool Game::HasFocus(irr::gui::EGUI_ELEMENT_TYPE type) const {
 	irr::gui::IGUIElement* focus = env->getFocus();
@@ -3933,12 +3949,67 @@ void Game::UpdateVerticalButtonLayout() {
 	if(!wInfos || !btnPanelCycle)
 		return;
 
+	const bool deckEditorLayout = is_building;
+	if(cardViewFullscreen) {
+		// The exposed strip below the fullscreen card becomes a shared 3x2
+		// control grid. Both modes use identical cell geometry; unused cells
+		// remain empty and controls retain their normal visibility state.
+		const auto cardRect = wCardImg->getRelativePosition();
+		const irr::s32 edgeMargin = Scale(kUiEdgeMargin);
+		const irr::s32 gridLeft = cardRect.UpperLeftCorner.X + edgeMargin;
+		const irr::s32 gridRight = cardRect.LowerRightCorner.X - edgeMargin;
+		const irr::s32 gridTop = cardRect.LowerRightCorner.Y + edgeMargin;
+		const irr::s32 screenBottom = Resize(0, static_cast<irr::s32>(window_size.Height), true).Y;
+		const irr::s32 gridBottom = screenBottom - edgeMargin;
+		const irr::s32 gridWidth = gridRight - gridLeft;
+		const irr::s32 availableHeight = gridBottom - gridTop;
+		const irr::s32 gap = Resize(211, 0, 301, 3).getHeight();
+		const irr::s32 maxButtonHeight = Resize(211, 0, 301, 35).getHeight();
+		if(gridWidth <= 2 * gap || availableHeight <= gap)
+			return;
+
+		const irr::s32 buttonHeight = std::min(maxButtonHeight, (availableHeight - gap) / 2);
+		if(buttonHeight <= 0)
+			return;
+		const irr::s32 gridHeight = buttonHeight * 2 + gap;
+		const irr::s32 firstRowY = gridTop + (availableHeight - gridHeight) / 2;
+		const irr::s32 usableWidth = gridWidth - 2 * gap;
+		const irr::s32 baseButtonWidth = usableWidth / 3;
+		const irr::s32 extraPixels = usableWidth % 3;
+		auto setGridSlot = [&](irr::gui::IGUIButton* button, irr::s32 slot) {
+			if(!button)
+				return;
+			const irr::s32 row = slot / 3;
+			const irr::s32 column = slot % 3;
+			const irr::s32 left = gridLeft + column * baseButtonWidth
+				+ std::min(column, extraPixels) + column * gap;
+			const irr::s32 width = baseButtonWidth + (column < extraPixels ? 1 : 0);
+			const irr::s32 top = firstRowY + row * (buttonHeight + gap);
+			button->setRelativePosition(irr::core::recti(left, top, left + width, top + buttonHeight));
+		};
+
+		if(deckEditorLayout) {
+			setGridSlot(btnLeaveGame, 0);
+			setGridSlot(btnHandTest, 1);
+			setGridSlot(btnHandTestSettings, 2);
+			setGridSlot(btnSettingsMenu, 3);
+			setGridSlot(btnYdkeManage, 4);
+		} else {
+			setGridSlot(btnLeaveGame, 0);
+			setGridSlot(btnRestartSingle, 1);
+			setGridSlot(btnSettingsMenu, 1);
+			setGridSlot(btnSpectatorSwap, 2);
+			setGridSlot(btnCancelOrFinish, 2);
+			setGridSlot(btnChainIgnore, 3);
+			setGridSlot(btnChainAlways, 4);
+			setGridSlot(btnChainWhenAvail, 5);
+		}
+		return;
+	}
+
 	const auto panelRect = wInfos->getRelativePosition();
 	const auto marginRect = Resize(211, 0, 301, kUiEdgeMargin);
 	const irr::s32 top = marginRect.LowerRightCorner.Y;
-
-	// Keep the shared eight-slot grid unchanged. The Switch uses the actual
-	// tab-page viewport top, which remains below the hidden tab header.
 	const auto* infoTabs = static_cast<irr::gui::CGUICustomTabControl*>(wInfos);
 	const irr::s32 gridBottom = panelRect.UpperLeftCorner.Y - Scale(kUiEdgeMargin);
 	const irr::s32 contentTop = panelRect.UpperLeftCorner.Y + infoTabs->getTabHeight() + 2;
@@ -3947,13 +4018,9 @@ void Game::UpdateVerticalButtonLayout() {
 	if(available <= 0)
 		return;
 
-	const bool deckEditorLayout = is_building;
 	constexpr irr::s32 slotCount = 8;
 	const irr::s32 maxButtonHeight = Resize(211, 0, 301, 35).getHeight();
 	const irr::s32 minGap = Resize(211, 0, 301, 3).getHeight();
-
-	// Both modes share the same eight-slot grid and button dimensions.
-	// Unused Deck Editor slots remain empty instead of redistributing buttons.
 	const irr::s32 buttonHeight = std::min(maxButtonHeight,
 		(available - (slotCount - 1) * minGap) / slotCount);
 	if(buttonHeight <= 0)
@@ -3966,8 +4033,6 @@ void Game::UpdateVerticalButtonLayout() {
 	auto setSlot = [&](irr::gui::IGUIButton* button, irr::s32 slot, bool alignToPanel = false) {
 		if(!button)
 			return;
-		// Anchor Switch directly to the information panel, independent of
-		// the number of slots used by the current mode.
 		const irr::s32 y = alignToPanel
 			? switchBottom - buttonHeight
 			: top + static_cast<irr::s32>(std::lround(slotStep * slot));
