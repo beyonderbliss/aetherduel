@@ -3589,11 +3589,21 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 	if(cardViewFullscreen) {
 		const float aspect = static_cast<float>(layout::kFullscreenAspectWidth) / layout::kFullscreenAspectHeight;
 		const auto viewport = driver->getScreenSize();
-		// Keep the card just inside the physical screen corners without changing its aspect ratio.
+		// Keep the phone's calibrated fullscreen geometry unchanged.
+		const bool isPhone16x9 = std::abs(
+			static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height) - (16.0f / 9.0f)) < 0.02f;
 		const irr::s32 inset = std::max<irr::s32>(4, static_cast<irr::s32>(std::min(viewport.Width, viewport.Height) * 0.0075f));
-		const irr::s32 availableWidth = static_cast<irr::s32>(viewport.Width) - inset * 2;
 		const irr::s32 availableHeight = static_cast<irr::s32>(viewport.Height) - inset * 2;
-		const irr::s32 cardWidth = std::min<irr::s32>(availableWidth, static_cast<irr::s32>(availableHeight * aspect));
+		irr::s32 cardWidth = 0;
+		if(isPhone16x9) {
+			const irr::s32 availableWidth = static_cast<irr::s32>(viewport.Width) - inset * 2;
+			cardWidth = std::min<irr::s32>(availableWidth, static_cast<irr::s32>(availableHeight * aspect));
+		} else {
+			// LP frame begins at logical X=330; keep exactly 5 logical units between it and the card.
+			const irr::s32 tabletCardRight = Resize(325, 0).X;
+			const irr::s32 availableWidth = std::max<irr::s32>(0, tabletCardRight - inset);
+			cardWidth = std::min<irr::s32>(availableWidth, static_cast<irr::s32>(availableHeight * aspect));
+		}
 		const irr::s32 cardHeight = static_cast<irr::s32>(cardWidth / aspect);
 		const irr::s32 left = inset;
 		const irr::s32 top = (static_cast<irr::s32>(viewport.Height) - cardHeight) / 2;
