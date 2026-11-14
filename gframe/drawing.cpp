@@ -529,32 +529,57 @@ void Game::DrawMisc() {
 		driver->drawVertexPrimitiveList(matManager.vChainNum, 4, matManager.iRectangle, 2);
 	}
 	//lp bar
+	const float fullscreenAspect = static_cast<float>(layout::kFullscreenAspectWidth) / layout::kFullscreenAspectHeight;
+	const auto viewport = driver->getScreenSize();
+	const irr::s32 fullscreenInset = std::max<irr::s32>(4,
+		static_cast<irr::s32>(std::min(viewport.Width, viewport.Height) * 0.0075f));
+	const irr::s32 fullscreenAvailableWidth = static_cast<irr::s32>(viewport.Width) - fullscreenInset * 2;
+	const irr::s32 fullscreenAvailableHeight = static_cast<irr::s32>(viewport.Height) - fullscreenInset * 2;
+	const irr::s32 fullscreenCardWidth = std::min<irr::s32>(fullscreenAvailableWidth,
+		static_cast<irr::s32>(fullscreenAvailableHeight * fullscreenAspect));
+	// Match the fullscreen card's actual right edge, then preserve the shared 5-unit edge margin.
+	const irr::s32 leftFrameStart = Resize(fullscreenInset + fullscreenCardWidth, 0, true).X + kUiEdgeMargin;
+	constexpr irr::s32 lpCenterAxis = 660;
+	constexpr irr::s32 leftFrameEnd = 629;
+	constexpr irr::s32 rightFrameStart = 691;
+	constexpr irr::s32 leftFillEnd = 625;
+	constexpr irr::s32 rightFillStart = 695;
+	const irr::s32 rightFrameEnd = 2 * lpCenterAxis - leftFrameStart;
+	const irr::s32 leftFillStart = leftFrameStart + 5;
+	const irr::s32 rightFillEnd = 2 * lpCenterAxis - leftFillStart;
+	const irr::s32 fillWidth = std::max<irr::s32>(0, leftFillEnd - leftFillStart);
+	const irr::s32 timerWidth = std::min<irr::s32>(100, fillWidth);
+	const irr::s32 leftTimerStart = leftFillEnd - timerWidth;
+	const irr::s32 rightTimerEnd = rightFillStart + timerWidth;
+
 	const auto& self = dInfo.isTeam1 ? dInfo.selfnames : dInfo.opponames;
 	const auto& oppo = dInfo.isTeam1 ? dInfo.opponames : dInfo.selfnames;
 	const auto lpframe_pos = ((dInfo.turn % 2 && dInfo.isFirst) || (!(dInfo.turn % 2) && !dInfo.isFirst)) ?
-						Resize(327, 8, 630, 51 + static_cast<irr::s32>(23 * (self.size() - 1))) :
-						Resize(689, 8, 991, 51 + static_cast<irr::s32>(23 * (oppo.size() - 1)));
+						Resize(leftFrameStart - 3, 8, leftFrameEnd + 1, 51 + static_cast<irr::s32>(23 * (self.size() - 1))) :
+						Resize(rightFrameStart - 2, 8, rightFrameEnd + 1, 51 + static_cast<irr::s32>(23 * (oppo.size() - 1)));
 	driver->draw2DRectangle(skin::DUELFIELD_TURNPLAYER_COLOR_VAL, lpframe_pos);
 	driver->draw2DRectangleOutline(lpframe_pos, skin::DUELFIELD_TURNPLAYER_OUTLINE_COLOR_VAL);
-	driver->draw2DImage(imageManager.tLPFrame, Resize(330, 10, 629, 30), irr::core::recti(0, 0, 200, 20), 0, 0, true);
-	driver->draw2DImage(imageManager.tLPFrame, Resize(691, 10, 990, 30), irr::core::recti(0, 0, 200, 20), 0, 0, true);
+	driver->draw2DImage(imageManager.tLPFrame, Resize(leftFrameStart, 10, leftFrameEnd, 30), irr::core::recti(0, 0, 200, 20), 0, 0, true);
+	driver->draw2DImage(imageManager.tLPFrame, Resize(rightFrameStart, 10, rightFrameEnd, 30), irr::core::recti(0, 0, 200, 20), 0, 0, true);
 
 #define SKCOLOR(what) skin::LPBAR_##what##_VAL
 #define RECTCOLOR(what) SKCOLOR(what##_TOP_LEFT), SKCOLOR(what##_TOP_RIGHT), SKCOLOR(what##_BOTTOM_LEFT), SKCOLOR(what##_BOTTOM_RIGHT)
 #define	DRAWRECT(rect_pos,what,clip) do { driver->draw2DRectangleClip(rect_pos, RECTCOLOR(what),nullptr,clip); } while(0)
 	if(dInfo.lp[0]) {
-		const auto lpbar_pos = Resize(335, 12, 625, 28);
+		const auto lpbar_pos = Resize(leftFillStart, 12, leftFillEnd, 28);
 		if(dInfo.lp[0] < dInfo.startlp) {
-			auto cliprect = Resize(335, 12, 335 + 290 * (dInfo.lp[0] / static_cast<double>(dInfo.startlp)), 28);
+			auto cliprect = Resize(leftFillStart, 12,
+				leftFillStart + fillWidth * (dInfo.lp[0] / static_cast<double>(dInfo.startlp)), 28);
 			DRAWRECT(lpbar_pos, 1, &cliprect);
 		} else {
 			DRAWRECT(lpbar_pos, 1, nullptr);
 		}
 	}
 	if(dInfo.lp[1] > 0) {
-		const auto lpbar_pos = Resize(696, 12, 986, 28);
+		const auto lpbar_pos = Resize(rightFillStart, 12, rightFillEnd, 28);
 		if(dInfo.lp[1] < dInfo.startlp) {
-			auto cliprect = Resize(986 - 290 * (dInfo.lp[1] / static_cast<double>(dInfo.startlp)), 12, 986, 28);
+			auto cliprect = Resize(rightFillEnd - fillWidth * (dInfo.lp[1] / static_cast<double>(dInfo.startlp)),
+				12, rightFillEnd, 28);
 			DRAWRECT(lpbar_pos, 2, &cliprect);
 		} else {
 			DRAWRECT(lpbar_pos, 2, nullptr);
@@ -573,26 +598,27 @@ void Game::DrawMisc() {
 		else
 			DrawShadowText(lpcFont, lpcstring, Resize(400, 160, 920, 210), Resize(0, 2, 2, 0), (lpcalpha << 24) | lpccolor, (lpcalpha << 24) | 0x00ffffff, true);
 	}
-
 #undef SKCOLOR
 #define SKCOLOR(what) skin::TIMEBAR_##what##_VAL
 
-	if(!dInfo.isReplay && !dInfo.isSingleMode && dInfo.player_type < 7 && dInfo.time_limit) {
-		auto rectpos = Resize(525, 34, 625, 44);
-		auto cliprect = Resize(525, 34, 525 + dInfo.time_left[0] * 100 / dInfo.time_limit, 44);
+	if(!dInfo.isReplay && !dInfo.isSingleMode && dInfo.player_type < 7 && dInfo.time_limit && timerWidth > 0) {
+		auto rectpos = Resize(leftTimerStart, 34, leftFillEnd, 44);
+		auto cliprect = Resize(leftTimerStart, 34,
+			leftTimerStart + timerWidth * dInfo.time_left[0] / dInfo.time_limit, 44);
 		DRAWRECT(rectpos, 1, &cliprect);
 		driver->draw2DRectangleOutline(rectpos, skin::TIMEBAR_1_OUTLINE_VAL);
-		rectpos = Resize(695, 34, 795, 44);
-		cliprect = Resize(795 - dInfo.time_left[1] * 100 / dInfo.time_limit, 34, 795, 44);
+		rectpos = Resize(rightFillStart, 34, rightTimerEnd, 44);
+		cliprect = Resize(rightFillStart + timerWidth - timerWidth * dInfo.time_left[1] / dInfo.time_limit,
+			34, rightTimerEnd, 44);
 		DRAWRECT(rectpos, 2, &cliprect);
 		driver->draw2DRectangleOutline(rectpos, skin::TIMEBAR_2_OUTLINE_VAL);
 	}
 
-	DrawShadowText(numFont, dInfo.strLP[0], Resize(330, 11, 629, 29), Resize(0, 1, 2, 0), skin::DUELFIELD_LP_1_VAL, 0xff000000, true, true);
-	DrawShadowText(numFont, dInfo.strLP[1], Resize(691, 11, 990, 29), Resize(0, 1, 2, 0), skin::DUELFIELD_LP_2_VAL, 0xff000000, true, true);
+	DrawShadowText(numFont, dInfo.strLP[0], Resize(leftFrameStart, 11, leftFrameEnd, 29), Resize(0, 1, 2, 0), skin::DUELFIELD_LP_1_VAL, 0xff000000, true, true);
+	DrawShadowText(numFont, dInfo.strLP[1], Resize(rightFrameStart, 11, rightFrameEnd, 29), Resize(0, 1, 2, 0), skin::DUELFIELD_LP_2_VAL, 0xff000000, true, true);
 
-	irr::core::recti p1size = Resize(335, 31, 629, 50);
-	irr::core::recti p2size = Resize(986, 31, 986, 50);
+	irr::core::recti p1size = Resize(leftFillStart, 31, leftFrameEnd, 50);
+	irr::core::recti p2size = Resize(rightFillEnd, 31, rightFillEnd, 50);
 	{
 		int i = 0;
 		for (const auto& player : self) {
@@ -618,6 +644,7 @@ void Game::DrawMisc() {
 	/*driver->draw2DRectangle(Resize(632, 10, 688, 30), 0x00000000, 0x00000000, 0xffffffff, 0xffffffff);
 	driver->draw2DRectangle(Resize(632, 30, 688, 50), 0xffffffff, 0xffffffff, 0x00000000, 0x00000000);*/
 	DrawShadowText(lpcFont, gDataManager->GetNumString(dInfo.turn), Resize(635, 5, 685, 40), Resize(0, 0, 2, 0), skin::DUELFIELD_TURN_COUNT_VAL, 0x80000000, true);
+#undef DRAWRECT
 #undef DRAWRECT
 #undef LPCOLOR
 #undef SKCOLOR
