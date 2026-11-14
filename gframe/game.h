@@ -64,8 +64,11 @@ namespace irr {
 }
 namespace ygo {
 
-// Shared logical inset for screen-edge-aligned Duel and Deck Editor UI.
+// Shared logical geometry for screen-edge-aligned Duel and Deck Editor UI.
 constexpr int kUiEdgeMargin = 5;
+constexpr int kDuelLayoutCenterX = 660;
+constexpr int kLpBarLeftOuterX = 330;
+constexpr int kFullscreenCardRightX = kLpBarLeftOuterX - kUiEdgeMargin;
 constexpr int kDeckSearchResultRowHeight = 79;
 constexpr int kDeckSearchResultViewportHeight = 474;
 constexpr int kDeckSearchResultThumbWidth = 50;
