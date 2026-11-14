@@ -530,28 +530,20 @@ void Game::DrawMisc() {
 		driver->drawVertexPrimitiveList(matManager.vChainNum, 4, matManager.iRectangle, 2);
 	}
 	//lp bar
-	const float fullscreenAspect = static_cast<float>(layout::kFullscreenAspectWidth) / layout::kFullscreenAspectHeight;
-	const auto viewport = driver->getScreenSize();
-	const irr::s32 fullscreenInset = std::max<irr::s32>(4,
-		static_cast<irr::s32>(std::min(viewport.Width, viewport.Height) * 0.0075f));
-	const irr::s32 fullscreenAvailableWidth = static_cast<irr::s32>(viewport.Width) - fullscreenInset * 2;
-	const irr::s32 fullscreenAvailableHeight = static_cast<irr::s32>(viewport.Height) - fullscreenInset * 2;
-	const irr::s32 fullscreenCardWidth = std::min<irr::s32>(fullscreenAvailableWidth,
-		static_cast<irr::s32>(fullscreenAvailableHeight * fullscreenAspect));
-	// Match the fullscreen card's actual right edge, then preserve the shared 5-unit edge margin.
-	const irr::s32 leftFrameStart = Resize(fullscreenInset + fullscreenCardWidth, 0, true).X + kUiEdgeMargin;
-	constexpr irr::s32 lpCenterAxis = 660;
+	// Keep the LP bars on their original fixed reference geometry.
+	// The fullscreen card is sized separately to maintain the 5-unit gap to this frame.
+	constexpr irr::s32 leftFrameStart = 330;
 	constexpr irr::s32 leftFrameEnd = 629;
 	constexpr irr::s32 rightFrameStart = 691;
+	constexpr irr::s32 rightFrameEnd = 990;
+	constexpr irr::s32 leftFillStart = 335;
 	constexpr irr::s32 leftFillEnd = 625;
 	constexpr irr::s32 rightFillStart = 695;
-	const irr::s32 rightFrameEnd = 2 * lpCenterAxis - leftFrameStart;
-	const irr::s32 leftFillStart = leftFrameStart + 5;
-	const irr::s32 rightFillEnd = 2 * lpCenterAxis - leftFillStart;
-	const irr::s32 fillWidth = std::max<irr::s32>(0, leftFillEnd - leftFillStart);
-	const irr::s32 timerWidth = std::min<irr::s32>(100, fillWidth);
-	const irr::s32 leftTimerStart = leftFillEnd - timerWidth;
-	const irr::s32 rightTimerEnd = rightFillStart + timerWidth;
+	constexpr irr::s32 rightFillEnd = 985; // mirrored around X=660
+	constexpr irr::s32 fillWidth = 290;
+	constexpr irr::s32 timerWidth = 100;
+	constexpr irr::s32 leftTimerStart = 525;
+	constexpr irr::s32 rightTimerEnd = 795;
 
 	const auto& self = dInfo.isTeam1 ? dInfo.selfnames : dInfo.opponames;
 	const auto& oppo = dInfo.isTeam1 ? dInfo.opponames : dInfo.selfnames;
