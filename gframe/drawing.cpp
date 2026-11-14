@@ -556,7 +556,7 @@ void Game::DrawMisc() {
 	const auto& oppo = dInfo.isTeam1 ? dInfo.opponames : dInfo.selfnames;
 	const auto lpframe_pos = ((dInfo.turn % 2 && dInfo.isFirst) || (!(dInfo.turn % 2) && !dInfo.isFirst)) ?
 						Resize(leftFrameStart - 3, 8, leftFrameEnd + 1, 51 + static_cast<irr::s32>(23 * (self.size() - 1))) :
-						Resize(rightFrameStart - 2, 8, rightFrameEnd + 1, 51 + static_cast<irr::s32>(23 * (oppo.size() - 1)));
+						Resize(rightFrameStart - 1, 8, rightFrameEnd + 3, 51 + static_cast<irr::s32>(23 * (oppo.size() - 1)));
 	driver->draw2DRectangle(skin::DUELFIELD_TURNPLAYER_COLOR_VAL, lpframe_pos);
 	driver->draw2DRectangleOutline(lpframe_pos, skin::DUELFIELD_TURNPLAYER_OUTLINE_COLOR_VAL);
 	driver->draw2DImage(imageManager.tLPFrame, Resize(leftFrameStart, 10, leftFrameEnd, 30), irr::core::recti(0, 0, 200, 20), 0, 0, true);
