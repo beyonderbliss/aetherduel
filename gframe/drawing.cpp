@@ -530,20 +530,32 @@ void Game::DrawMisc() {
 		driver->drawVertexPrimitiveList(matManager.vChainNum, 4, matManager.iRectangle, 2);
 	}
 	//lp bar
-	// Keep the LP bars on their original fixed reference geometry.
-	// The fullscreen card is sized separately to maintain the 5-unit gap to this frame.
-	constexpr irr::s32 leftFrameStart = 330;
+	const auto viewport = driver->getScreenSize();
+	const bool isPhone16x9 = std::abs(
+		static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height) - (16.0f / 9.0f)) < 0.02f;
+	irr::s32 leftFrameStart = 330;
+	if(isPhone16x9) {
+		const float fullscreenAspect = static_cast<float>(layout::kFullscreenAspectWidth) / layout::kFullscreenAspectHeight;
+		const irr::s32 fullscreenInset = std::max<irr::s32>(4,
+			static_cast<irr::s32>(std::min(viewport.Width, viewport.Height) * 0.0075f));
+		const irr::s32 fullscreenAvailableWidth = static_cast<irr::s32>(viewport.Width) - fullscreenInset * 2;
+		const irr::s32 fullscreenAvailableHeight = static_cast<irr::s32>(viewport.Height) - fullscreenInset * 2;
+		const irr::s32 fullscreenCardWidth = std::min<irr::s32>(fullscreenAvailableWidth,
+			static_cast<irr::s32>(fullscreenAvailableHeight * fullscreenAspect));
+		// Preserve the already-calibrated phone profile exactly.
+		leftFrameStart = Resize(fullscreenInset + fullscreenCardWidth, 0, true).X + kUiEdgeMargin;
+	}
 	constexpr irr::s32 leftFrameEnd = 629;
 	constexpr irr::s32 rightFrameStart = 691;
-	constexpr irr::s32 rightFrameEnd = 990;
-	constexpr irr::s32 leftFillStart = 335;
+	const irr::s32 rightFrameEnd = isPhone16x9 ? 1320 - leftFrameStart : 990;
+	const irr::s32 leftFillStart = isPhone16x9 ? leftFrameStart + 5 : 335;
 	constexpr irr::s32 leftFillEnd = 625;
 	constexpr irr::s32 rightFillStart = 695;
-	constexpr irr::s32 rightFillEnd = 985; // mirrored around X=660
-	constexpr irr::s32 fillWidth = 290;
-	constexpr irr::s32 timerWidth = 100;
-	constexpr irr::s32 leftTimerStart = 525;
-	constexpr irr::s32 rightTimerEnd = 795;
+	const irr::s32 rightFillEnd = isPhone16x9 ? 1320 - leftFillStart : 985;
+	const irr::s32 fillWidth = std::max<irr::s32>(0, leftFillEnd - leftFillStart);
+	const irr::s32 timerWidth = std::min<irr::s32>(100, fillWidth);
+	const irr::s32 leftTimerStart = leftFillEnd - timerWidth;
+	const irr::s32 rightTimerEnd = rightFillStart + timerWidth;
 
 	const auto& self = dInfo.isTeam1 ? dInfo.selfnames : dInfo.opponames;
 	const auto& oppo = dInfo.isTeam1 ? dInfo.opponames : dInfo.selfnames;
