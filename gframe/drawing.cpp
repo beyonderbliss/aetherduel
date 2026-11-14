@@ -3,6 +3,7 @@
 #include <cmath>
 #include <irrlicht.h>
 #include "game.h"
+#include "card_view_layout.generated.h"
 #include "materials.h"
 #include "client_card.h"
 #include "deck_manager.h"
