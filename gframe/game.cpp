@@ -3470,9 +3470,15 @@ void Game::SetMessageWindow() {
 	}
 }
 int Game::GetDeckPanelLeft() const {
-	// Use fullscreen-card geometry as the permanent deck-panel anchor.
-	const float aspect = static_cast<float>(layout::kFullscreenAspectWidth) / layout::kFullscreenAspectHeight;
+	// Keep the tablet deck panels 5 logical units beyond the fixed fullscreen-card edge.
 	const auto viewport = driver->getScreenSize();
+	const bool isPhone16x9 = std::abs(
+		static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height) - (16.0f / 9.0f)) < 0.02f;
+	if(!isPhone16x9)
+		return 325 + kUiEdgeMargin;
+
+	// Preserve the phone's calibrated fullscreen geometry unchanged.
+	const float aspect = static_cast<float>(layout::kFullscreenAspectWidth) / layout::kFullscreenAspectHeight;
 	const irr::s32 inset = std::max<irr::s32>(4,
 		static_cast<irr::s32>(std::min(viewport.Width, viewport.Height) * 0.0075f));
 	const irr::s32 availableWidth = static_cast<irr::s32>(viewport.Width) - inset * 2;
@@ -3592,21 +3598,26 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 		// Keep the phone's calibrated fullscreen geometry unchanged.
 		const bool isPhone16x9 = std::abs(
 			static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height) - (16.0f / 9.0f)) < 0.02f;
-		const irr::s32 inset = std::max<irr::s32>(4, static_cast<irr::s32>(std::min(viewport.Width, viewport.Height) * 0.0075f));
-		const irr::s32 availableHeight = static_cast<irr::s32>(viewport.Height) - inset * 2;
 		irr::s32 cardWidth = 0;
+		irr::s32 left = 0;
+		irr::s32 top = 0;
 		if(isPhone16x9) {
+			// Preserve the phone's calibrated fullscreen geometry unchanged.
+			const irr::s32 inset = std::max<irr::s32>(4,
+				static_cast<irr::s32>(std::min(viewport.Width, viewport.Height) * 0.0075f));
 			const irr::s32 availableWidth = static_cast<irr::s32>(viewport.Width) - inset * 2;
+			const irr::s32 availableHeight = static_cast<irr::s32>(viewport.Height) - inset * 2;
 			cardWidth = std::min<irr::s32>(availableWidth, static_cast<irr::s32>(availableHeight * aspect));
+			left = inset;
+			top = (static_cast<irr::s32>(viewport.Height) - static_cast<irr::s32>(cardWidth / aspect)) / 2;
 		} else {
-			// LP frame begins at logical X=330; keep exactly 5 logical units between it and the card.
+			// Tablet: fixed card right edge at X=325, with 5 logical units at top and left.
+			left = Resize(kUiEdgeMargin, 0).X;
+			top = Resize(0, kUiEdgeMargin).Y;
 			const irr::s32 tabletCardRight = Resize(325, 0).X;
-			const irr::s32 availableWidth = std::max<irr::s32>(0, tabletCardRight - inset);
-			cardWidth = std::min<irr::s32>(availableWidth, static_cast<irr::s32>(availableHeight * aspect));
+			cardWidth = std::max<irr::s32>(0, tabletCardRight - left);
 		}
 		const irr::s32 cardHeight = static_cast<irr::s32>(cardWidth / aspect);
-		const irr::s32 left = inset;
-		const irr::s32 top = (static_cast<irr::s32>(viewport.Height) - cardHeight) / 2;
 		wCardImg->setRelativePosition(irr::core::recti(left, top, left + cardWidth, top + cardHeight));
 		imgCard->setRelativePosition(irr::core::recti(0, 0, cardWidth, cardHeight));
 		wCardImg->getParent()->bringToFront(wCardImg);
