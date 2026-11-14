@@ -174,9 +174,6 @@ private:
 
 namespace ygo {
 
-// Fixed logical right edge shared by fullscreen card geometry and Deck Editor anchoring.
-constexpr int kFullscreenCardRightX = 400;
-
 #define AddEditBox(env, ...) ([&]() { auto* editBox = (env)->addEditBox(__VA_ARGS__); if(editBox) editBox->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER); return editBox; }())
 
 #if EDOPRO_ANDROID || EDOPRO_IOS
@@ -3473,8 +3470,16 @@ void Game::SetMessageWindow() {
 	}
 }
 int Game::GetDeckPanelLeft() const {
-	// Keep the deck-panel anchor tied to the fixed logical fullscreen-card right edge.
-	return kFullscreenCardRightX + kUiEdgeMargin;
+	// Use fullscreen-card geometry as the permanent deck-panel anchor.
+	const float aspect = static_cast<float>(layout::kFullscreenAspectWidth) / layout::kFullscreenAspectHeight;
+	const auto viewport = driver->getScreenSize();
+	const irr::s32 inset = std::max<irr::s32>(4,
+		static_cast<irr::s32>(std::min(viewport.Width, viewport.Height) * 0.0075f));
+	const irr::s32 availableWidth = static_cast<irr::s32>(viewport.Width) - inset * 2;
+	const irr::s32 availableHeight = static_cast<irr::s32>(viewport.Height) - inset * 2;
+	const irr::s32 cardWidth = std::min<irr::s32>(availableWidth,
+		static_cast<irr::s32>(availableHeight * aspect));
+	return Resize(inset + cardWidth, 0, true).X + kUiEdgeMargin;
 }
 DeckGridLayout Game::GetDeckGridLayout() const {
 	constexpr int panelRight = 800;
@@ -3588,12 +3593,7 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 		const irr::s32 inset = std::max<irr::s32>(4, static_cast<irr::s32>(std::min(viewport.Width, viewport.Height) * 0.0075f));
 		const irr::s32 availableWidth = static_cast<irr::s32>(viewport.Width) - inset * 2;
 		const irr::s32 availableHeight = static_cast<irr::s32>(viewport.Height) - inset * 2;
-		// Cap the fullscreen card at a fixed logical X so wider/taller viewports
-		// do not move the Deck Editor anchor or stretch the card to screen height.
-		const irr::s32 fixedRight = Resize(kFullscreenCardRightX, 0, false).X;
-		const irr::s32 maxWidthByLogicalX = std::max<irr::s32>(1, fixedRight - inset);
-		const irr::s32 cardWidth = std::min<irr::s32>(
-			std::min(availableWidth, static_cast<irr::s32>(availableHeight * aspect)), maxWidthByLogicalX);
+		const irr::s32 cardWidth = std::min<irr::s32>(availableWidth, static_cast<irr::s32>(availableHeight * aspect));
 		const irr::s32 cardHeight = static_cast<irr::s32>(cardWidth / aspect);
 		const irr::s32 left = inset;
 		const irr::s32 top = (static_cast<irr::s32>(viewport.Height) - cardHeight) / 2;
