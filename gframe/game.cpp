@@ -3951,9 +3951,9 @@ void Game::UpdateVerticalButtonLayout() {
 
 	const bool deckEditorLayout = is_building;
 	if(cardViewFullscreen) {
-		// The exposed strip below the fullscreen card becomes a shared 3x2
-		// control grid. Both modes use identical cell geometry; unused cells
-		// remain empty and controls retain their normal visibility state.
+		// Both modes use the same three-column grid. Deck Editor needs two
+		// rows; Duel Mode reserves three rows so every control keeps a stable
+		// slot even when some controls are currently inactive.
 		const auto cardRect = wCardImg->getRelativePosition();
 		const irr::s32 edgeMargin = Scale(kUiEdgeMargin);
 		const irr::s32 gridLeft = cardRect.UpperLeftCorner.X + edgeMargin;
@@ -3964,14 +3964,17 @@ void Game::UpdateVerticalButtonLayout() {
 		const irr::s32 gridWidth = gridRight - gridLeft;
 		const irr::s32 availableHeight = gridBottom - gridTop;
 		const irr::s32 gap = Resize(211, 0, 301, 3).getHeight();
-		const irr::s32 maxButtonHeight = Resize(211, 0, 301, 35).getHeight();
-		if(gridWidth <= 2 * gap || availableHeight <= gap)
+		const irr::s32 buttonHeight = Resize(211, 0, 301, 35).getHeight();
+		const irr::s32 rowCount = deckEditorLayout ? 2 : 3;
+		if(gridWidth <= 2 * gap || availableHeight <= 0 || buttonHeight <= 0)
 			return;
 
-		const irr::s32 buttonHeight = std::min(maxButtonHeight, (availableHeight - gap) / 2);
-		if(buttonHeight <= 0)
+		// Keep the normal-mode button height. If the exposed strip is too
+		// short, leave the existing layout untouched rather than shrinking
+		// controls or moving them over the fullscreen card.
+		const irr::s32 gridHeight = rowCount * buttonHeight + (rowCount - 1) * gap;
+		if(availableHeight < gridHeight)
 			return;
-		const irr::s32 gridHeight = buttonHeight * 2 + gap;
 		const irr::s32 firstRowY = gridTop + (availableHeight - gridHeight) / 2;
 		const irr::s32 usableWidth = gridWidth - 2 * gap;
 		const irr::s32 baseButtonWidth = usableWidth / 3;
@@ -3997,12 +4000,12 @@ void Game::UpdateVerticalButtonLayout() {
 		} else {
 			setGridSlot(btnLeaveGame, 0);
 			setGridSlot(btnRestartSingle, 1);
-			setGridSlot(btnSettingsMenu, 1);
-			setGridSlot(btnSpectatorSwap, 2);
-			setGridSlot(btnCancelOrFinish, 2);
+			setGridSlot(btnSettingsMenu, 2);
 			setGridSlot(btnChainIgnore, 3);
 			setGridSlot(btnChainAlways, 4);
 			setGridSlot(btnChainWhenAvail, 5);
+			setGridSlot(btnCancelOrFinish, 6);
+			setGridSlot(btnSpectatorSwap, 7);
 		}
 		return;
 	}
