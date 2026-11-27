@@ -628,7 +628,7 @@ void Game::DrawMisc() {
 		float progress = 1.0f;
 		int direction = -1;
 	};
-	static LpDigitState digitState[2][7]{};
+	static LpDigitState digitState[2][10]{};
 	static std::wstring acceptedLp[2];
 	static bool lpDisplayInitialized = false;
 	if(!dInfo.isInDuel) {
@@ -643,11 +643,14 @@ void Game::DrawMisc() {
 			for(int side = 0; side < 2; ++side) {
 				acceptedLp[side] = dInfo.strLP[side];
 				const auto& value = acceptedLp[side];
-				const int offset = side == 0 ? 0 : std::max(0, 7 - static_cast<int>(value.size()));
-				for(size_t i = 0; i < value.size() && i < 7; ++i) {
-					const int slot = offset + static_cast<int>(i);
-					if(value[i] >= L'0' && value[i] <= L'9')
-						digitState[side][slot].from = digitState[side][slot].to = static_cast<int>(value[i] - L'0');
+				const int visibleDigits = std::min(10, static_cast<int>(value.size()));
+				const int offset = side == 0 ? 0 : 10 - visibleDigits;
+				const int firstChar = side == 0 ? 0 : static_cast<int>(value.size()) - visibleDigits;
+				for(int i = 0; i < visibleDigits; ++i) {
+					const int slot = offset + i;
+					const wchar_t ch = value[firstChar + i];
+					if(ch >= L'0' && ch <= L'9')
+						digitState[side][slot].from = digitState[side][slot].to = static_cast<int>(ch - L'0');
 				}
 			}
 			lpDisplayInitialized = true;
@@ -669,7 +672,7 @@ void Game::DrawMisc() {
 				return aa == bb ? 0 : (aa > bb ? 1 : -1);
 			};
 			const int direction = compareNumeric(target, previous) >= 0 ? -1 : 1;
-			for(int slot = 0; slot < 7; ++slot) {
+			for(int slot = 0; slot < 10; ++slot) {
 				auto digitAt = [](const std::wstring& value, int index, int sideIndex) {
 					const int offset = sideIndex == 0 ? 0 : std::max(0, 7 - static_cast<int>(value.size()));
 					const int charIndex = index - offset;
@@ -693,16 +696,22 @@ void Game::DrawMisc() {
 	}
 
 	const irr::s32 displayTop = Resize(0, 8, 0, 8).UpperLeftCorner.Y;
-	const irr::s32 displayHeight = Resize(0, 0, 0, 42).getHeight();
-	const irr::s32 cellWidth = std::max<irr::s32>(1, static_cast<irr::s32>(displayHeight * 0.62f));
-	const irr::s32 digitGap = std::max<irr::s32>(1, static_cast<irr::s32>(displayHeight * 0.13f));
-	const irr::s32 totalWidth = 7 * cellWidth + 6 * digitGap;
+	const irr::s32 maxDisplayHeight = Resize(0, 0, 0, 48).getHeight();
 	const irr::s32 leftStart = Resize(leftFrameStart + 8, 0).X;
 	const irr::s32 rightEnd = Resize(rightFrameEnd - 8, 0).X;
+	const irr::s32 availableWidth = std::max<irr::s32>(1, rightEnd - leftStart);
+	int slotCount = 7;
+	for(int side = 0; side < 2; ++side)
+		slotCount = std::max(slotCount, std::min(10, static_cast<int>(dInfo.strLP[side].size())));
+	const float widthFactor = slotCount * 0.62f + (slotCount - 1) * 0.13f;
+	const irr::s32 displayHeight = std::max<irr::s32>(1, std::min(maxDisplayHeight, static_cast<irr::s32>(availableWidth / widthFactor)));
+	const irr::s32 cellWidth = std::max<irr::s32>(1, static_cast<irr::s32>(displayHeight * 0.62f));
+	const irr::s32 digitGap = std::max<irr::s32>(1, static_cast<irr::s32>(displayHeight * 0.13f));
+	const irr::s32 totalWidth = slotCount * cellWidth + (slotCount - 1) * digitGap;
 	const irr::video::SColor lpDigitColor(255, 226, 171, 78);
 	for(int side = 0; side < 2; ++side) {
 		const irr::s32 startX = side == 0 ? leftStart : rightEnd - totalWidth;
-		for(int slot = 0; slot < 7; ++slot) {
+		for(int slot = 0; slot < slotCount; ++slot) {
 			auto& state = digitState[side][slot];
 			const irr::s32 x = startX + slot * (cellWidth + digitGap);
 			const irr::core::recti cell(x, displayTop, x + cellWidth, displayTop + displayHeight);
