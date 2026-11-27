@@ -448,6 +448,43 @@ ForceInline void DrawShadowText(irr::gui::CGUITTFont* font, const T& text, const
 									shadowposition.LowerRightCorner.X + padding.LowerRightCorner.X, shadowposition.LowerRightCorner.Y + padding.LowerRightCorner.Y);
 	DrawShadowTextPos(font, text, shadowposition, position, std::forward<Args>(args)...);
 }
+
+// PrimaNyx LP display: a small, self-contained seven-segment renderer.
+// The geometry is generated at runtime; no font or bitmap digit assets are needed.
+namespace {
+constexpr irr::u8 kLpDigitSegments[10] = {
+	0b0111111, 0b0000110, 0b1011011, 0b1001111, 0b1100110,
+	0b1101101, 0b1111101, 0b0000111, 0b1111111, 0b1101111
+};
+
+void DrawLpDigit(irr::video::IVideoDriver* driver, irr::core::recti cell, int digit,
+				 irr::video::SColor color, const irr::core::recti& clip) {
+	if(digit < 0 || digit > 9 || cell.getWidth() <= 0 || cell.getHeight() <= 0)
+		return;
+	const irr::s32 w = cell.getWidth();
+	const irr::s32 h = cell.getHeight();
+	const irr::s32 t = std::max<irr::s32>(1, std::min(w / 4, h / 8));
+	const irr::s32 inset = std::max<irr::s32>(1, t / 2);
+	const irr::s32 mid = cell.UpperLeftCorner.Y + h / 2;
+	const irr::s32 x = cell.UpperLeftCorner.X;
+	const irr::s32 y = cell.UpperLeftCorner.Y;
+	const irr::core::recti segments[7] = {
+		{ x + inset, y, x + w - inset, y + t },
+		{ x + w - t, y + inset, x + w, mid },
+		{ x + w - t, mid, x + w, y + h - inset },
+		{ x + inset, y + h - t, x + w - inset, y + h },
+		{ x, mid, x + t, y + h - inset },
+		{ x, y + inset, x + t, mid },
+		{ x + inset, mid - t / 2, x + w - inset, mid + (t + 1) / 2 }
+	};
+	const irr::u8 mask = kLpDigitSegments[digit];
+	for(irr::u32 i = 0; i < 7; ++i) {
+		if(mask & (1u << i))
+			driver->draw2DRectangleClip(segments[i], color, nullptr, &clip);
+	}
+}
+}
+
 void Game::DrawMisc() {
 	const float twoPI = 2.0f * irr::core::PI;
 	static float act_rot = 0.0f;
@@ -550,32 +587,10 @@ void Game::DrawMisc() {
 						Resize(rightFrameStart - 1, 8, rightFrameEnd + 3, 51 + static_cast<irr::s32>(23 * (oppo.size() - 1)));
 	driver->draw2DRectangle(skin::DUELFIELD_TURNPLAYER_COLOR_VAL, lpframe_pos);
 	driver->draw2DRectangleOutline(lpframe_pos, skin::DUELFIELD_TURNPLAYER_OUTLINE_COLOR_VAL);
-	driver->draw2DImage(imageManager.tLPFrame, Resize(leftFrameStart, 10, leftFrameEnd, 30), irr::core::recti(0, 0, 200, 20), 0, 0, true);
-	driver->draw2DImage(imageManager.tLPFrame, Resize(rightFrameStart, 10, rightFrameEnd, 30), irr::core::recti(0, 0, 200, 20), 0, 0, true);
 
 #define SKCOLOR(what) skin::LPBAR_##what##_VAL
 #define RECTCOLOR(what) SKCOLOR(what##_TOP_LEFT), SKCOLOR(what##_TOP_RIGHT), SKCOLOR(what##_BOTTOM_LEFT), SKCOLOR(what##_BOTTOM_RIGHT)
 #define	DRAWRECT(rect_pos,what,clip) do { driver->draw2DRectangleClip(rect_pos, RECTCOLOR(what),nullptr,clip); } while(0)
-	if(dInfo.lp[0]) {
-		const auto lpbar_pos = Resize(leftFillStart, 12, leftFillEnd, 28);
-		if(dInfo.lp[0] < dInfo.startlp) {
-			auto cliprect = Resize(leftFillStart, 12,
-				leftFillStart + fillWidth * (dInfo.lp[0] / static_cast<double>(dInfo.startlp)), 28);
-			DRAWRECT(lpbar_pos, 1, &cliprect);
-		} else {
-			DRAWRECT(lpbar_pos, 1, nullptr);
-		}
-	}
-	if(dInfo.lp[1] > 0) {
-		const auto lpbar_pos = Resize(rightFillStart, 12, rightFillEnd, 28);
-		if(dInfo.lp[1] < dInfo.startlp) {
-			auto cliprect = Resize(rightFillEnd - fillWidth * (dInfo.lp[1] / static_cast<double>(dInfo.startlp)),
-				12, rightFillEnd, 28);
-			DRAWRECT(lpbar_pos, 2, &cliprect);
-		} else {
-			DRAWRECT(lpbar_pos, 2, nullptr);
-		}
-	}
 
 	if(lpframe > 0 && delta_frames) {
 		dInfo.lp[lpplayer] -= lpd * delta_frames;
@@ -593,20 +608,127 @@ void Game::DrawMisc() {
 #define SKCOLOR(what) skin::TIMEBAR_##what##_VAL
 
 	if(!dInfo.isReplay && !dInfo.isSingleMode && dInfo.player_type < 7 && dInfo.time_limit && timerWidth > 0) {
-		auto rectpos = Resize(leftTimerStart, 34, leftFillEnd, 44);
-		auto cliprect = Resize(leftTimerStart, 34,
-			leftTimerStart + timerWidth * dInfo.time_left[0] / dInfo.time_limit, 44);
+		auto rectpos = Resize(leftTimerStart, 54, leftFillEnd, 64);
+		auto cliprect = Resize(leftTimerStart, 54,
+			leftTimerStart + timerWidth * dInfo.time_left[0] / dInfo.time_limit, 64);
 		DRAWRECT(rectpos, 1, &cliprect);
 		driver->draw2DRectangleOutline(rectpos, skin::TIMEBAR_1_OUTLINE_VAL);
-		rectpos = Resize(rightFillStart, 34, rightTimerEnd, 44);
+		rectpos = Resize(rightFillStart, 54, rightTimerEnd, 64);
 		cliprect = Resize(rightFillStart + timerWidth - timerWidth * dInfo.time_left[1] / dInfo.time_limit,
-			34, rightTimerEnd, 44);
+			54, rightTimerEnd, 64);
 		DRAWRECT(rectpos, 2, &cliprect);
 		driver->draw2DRectangleOutline(rectpos, skin::TIMEBAR_2_OUTLINE_VAL);
 	}
 
-	DrawShadowText(numFont, dInfo.strLP[0], Resize(leftFrameStart, 11, leftFrameEnd, 29), Resize(0, 1, 2, 0), skin::DUELFIELD_LP_1_VAL, 0xff000000, true, true);
-	DrawShadowText(numFont, dInfo.strLP[1], Resize(rightFrameStart, 11, rightFrameEnd, 29), Resize(0, 1, 2, 0), skin::DUELFIELD_LP_2_VAL, 0xff000000, true, true);
+	// Keep the existing 10-step LP transition intact, then roll each changed
+	// digit once when the engine has reached its final value.
+	struct LpDigitState {
+		int from = -1;
+		int to = -1;
+		float progress = 1.0f;
+		int direction = -1;
+	};
+	static LpDigitState digitState[2][7]{};
+	static std::wstring acceptedLp[2];
+	static bool lpDisplayInitialized = false;
+	if(!dInfo.isInDuel) {
+		lpDisplayInitialized = false;
+		acceptedLp[0].clear();
+		acceptedLp[1].clear();
+		for(auto& side : digitState)
+			for(auto& digit : side)
+				digit = LpDigitState{};
+	} else {
+		if(!lpDisplayInitialized) {
+			for(int side = 0; side < 2; ++side) {
+				acceptedLp[side] = dInfo.strLP[side];
+				const auto& value = acceptedLp[side];
+				const int offset = side == 0 ? 0 : std::max(0, 7 - static_cast<int>(value.size()));
+				for(size_t i = 0; i < value.size() && i < 7; ++i) {
+					const int slot = offset + static_cast<int>(i);
+					if(value[i] >= L'0' && value[i] <= L'9')
+						digitState[side][slot].from = digitState[side][slot].to = static_cast<int>(value[i] - L'0');
+				}
+			}
+			lpDisplayInitialized = true;
+		}
+		for(int side = 0; side < 2; ++side) {
+			if(lpframe > 0 && lpplayer == side)
+				continue;
+			const std::wstring target = dInfo.strLP[side];
+			if(target == acceptedLp[side])
+				continue;
+			const std::wstring previous = acceptedLp[side];
+			auto compareNumeric = [](const std::wstring& a, const std::wstring& b) {
+				const auto firstA = a.find_first_not_of(L'0');
+				const auto firstB = b.find_first_not_of(L'0');
+				const std::wstring aa = firstA == std::wstring::npos ? L"0" : a.substr(firstA);
+				const std::wstring bb = firstB == std::wstring::npos ? L"0" : b.substr(firstB);
+				if(aa.size() != bb.size())
+					return aa.size() > bb.size() ? 1 : -1;
+				return aa == bb ? 0 : (aa > bb ? 1 : -1);
+			};
+			const int direction = compareNumeric(target, previous) >= 0 ? -1 : 1;
+			for(int slot = 0; slot < 7; ++slot) {
+				auto digitAt = [](const std::wstring& value, int index, int sideIndex) {
+					const int offset = sideIndex == 0 ? 0 : std::max(0, 7 - static_cast<int>(value.size()));
+					const int charIndex = index - offset;
+					if(charIndex < 0 || charIndex >= static_cast<int>(value.size()))
+						return -1;
+					const wchar_t ch = value[charIndex];
+					return ch >= L'0' && ch <= L'9' ? static_cast<int>(ch - L'0') : -1;
+				};
+				const int oldDigit = digitAt(previous, slot, side);
+				const int newDigit = digitAt(target, slot, side);
+				if(oldDigit == newDigit)
+					continue;
+				auto& state = digitState[side][slot];
+				state.from = oldDigit;
+				state.to = newDigit;
+				state.progress = 0.0f;
+				state.direction = direction;
+			}
+			acceptedLp[side] = target;
+		}
+	}
+
+	const irr::s32 displayTop = Resize(0, 8, 0, 8).UpperLeftCorner.Y;
+	const irr::s32 displayHeight = Resize(0, 0, 0, 42).getHeight();
+	const irr::s32 cellWidth = std::max<irr::s32>(1, static_cast<irr::s32>(displayHeight * 0.62f));
+	const irr::s32 digitGap = std::max<irr::s32>(1, static_cast<irr::s32>(displayHeight * 0.13f));
+	const irr::s32 totalWidth = 7 * cellWidth + 6 * digitGap;
+	const irr::s32 leftStart = Resize(leftFrameStart + 8, 0).X;
+	const irr::s32 rightEnd = Resize(rightFrameEnd - 8, 0).X;
+	const irr::video::SColor lpDigitColor(255, 226, 171, 78);
+	for(int side = 0; side < 2; ++side) {
+		const irr::s32 startX = side == 0 ? leftStart : rightEnd - totalWidth;
+		for(int slot = 0; slot < 7; ++slot) {
+			auto& state = digitState[side][slot];
+			const irr::s32 x = startX + slot * (cellWidth + digitGap);
+			const irr::core::recti cell(x, displayTop, x + cellWidth, displayTop + displayHeight);
+			if(state.progress < 1.0f) {
+				state.progress = std::min(1.0f, state.progress + std::max(0.0f, delta_time) / 145.0f);
+				const irr::s32 travel = static_cast<irr::s32>(displayHeight * state.progress);
+				if(state.from >= 0) {
+					auto oldCell = cell;
+					oldCell.UpperLeftCorner.Y += state.direction * travel;
+					oldCell.LowerRightCorner.Y += state.direction * travel;
+					DrawLpDigit(driver, oldCell, state.from, lpDigitColor, cell);
+				}
+				if(state.to >= 0) {
+					auto newCell = cell;
+					const irr::s32 incoming = static_cast<irr::s32>(displayHeight * (1.0f - state.progress));
+					newCell.UpperLeftCorner.Y -= state.direction * incoming;
+					newCell.LowerRightCorner.Y -= state.direction * incoming;
+					DrawLpDigit(driver, newCell, state.to, lpDigitColor, cell);
+				}
+				if(state.progress >= 1.0f)
+					state.from = state.to;
+			} else if(state.to >= 0) {
+				DrawLpDigit(driver, cell, state.to, lpDigitColor, cell);
+			}
+		}
+	}
 
 	irr::core::recti p1size = Resize(leftFillStart, 31, leftFrameEnd, 50);
 	irr::core::recti p2size = Resize(rightFillEnd, 31, rightFillEnd, 50);
