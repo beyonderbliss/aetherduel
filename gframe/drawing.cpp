@@ -640,12 +640,13 @@ void Game::DrawMisc() {
 				digit = LpDigitState{};
 	} else {
 		if(!lpDisplayInitialized) {
-			for(int side = 0; side < 2; ++side) {
+			for(int side = 0; side < 2; ++side)
 				acceptedLp[side] = dInfo.strLP[side];
+			const int initialSlots = std::max(7, std::min(10, std::max(static_cast<int>(acceptedLp[0].size()), static_cast<int>(acceptedLp[1].size()))));
+			for(int side = 0; side < 2; ++side) {
 				const auto& value = acceptedLp[side];
-				const int slotCount = std::max(7, std::min(10, static_cast<int>(value.size())));
-				const int visibleDigits = std::min(slotCount, static_cast<int>(value.size()));
-				const int offset = side == 0 ? 0 : slotCount - visibleDigits;
+				const int visibleDigits = std::min(initialSlots, static_cast<int>(value.size()));
+				const int offset = side == 0 ? 0 : initialSlots - visibleDigits;
 				const int firstChar = side == 0 ? 0 : static_cast<int>(value.size()) - visibleDigits;
 				for(int i = 0; i < visibleDigits; ++i) {
 					const int slot = offset + i;
@@ -673,7 +674,11 @@ void Game::DrawMisc() {
 				return aa == bb ? 0 : (aa > bb ? 1 : -1);
 			};
 			const int direction = compareNumeric(target, previous) >= 0 ? -1 : 1;
-			const int slotCount = std::max(7, std::min(10, std::max(static_cast<int>(previous.size()), static_cast<int>(target.size()))));
+			int slotCount = std::max(7, std::min(10, static_cast<int>(target.size())));
+			for(int other = 0; other < 2; ++other) {
+				const auto& otherValue = other == side ? target : acceptedLp[other];
+				slotCount = std::max(slotCount, std::min(10, static_cast<int>(otherValue.size())));
+			}
 			for(int slot = 0; slot < slotCount; ++slot) {
 				auto digitAt = [&](const std::wstring& value, int index, int sideIndex) {
 					const int visibleDigits = std::min(slotCount, static_cast<int>(value.size()));
