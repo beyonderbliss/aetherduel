@@ -63,28 +63,49 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 #if EDOPRO_ANDROID || EDOPRO_IOS
 	static bool pileSwipeActive = false;
 	static bool pileSwipeMoved = false;
+	static bool pileSwipeMoveLogged = false;
 	static irr::s32 pileSwipeStartX = 0;
 	static size_t pileSwipeStartOffset = 0;
+	if(event.EventType == irr::EET_TOUCH_INPUT_EVENT && mainGame->wCardDisplay->isVisible()) {
+		mainGame->AddLog(epro::format(L"[PILE-DIAG] raw-touch type={} fingers={} x={} y={}",
+			static_cast<int>(event.TouchInput.Event), event.TouchInput.touchedCount,
+			event.TouchInput.X, event.TouchInput.Y));
+	}
 	if(event.EventType == irr::EET_MOUSE_INPUT_EVENT) {
 		if(event.MouseInput.Event == irr::EMIE_LMOUSE_PRESSED_DOWN) {
 			pileSwipeActive = false;
 			pileSwipeMoved = false;
-			if(mainGame->wCardDisplay->isVisible() && display_cards.size() > 5) {
-				const auto first = mainGame->btnCardDisplay[0]->getAbsolutePosition();
-				const auto last = mainGame->btnCardDisplay[4]->getAbsolutePosition();
-				const irr::core::recti cardArea(first.UpperLeftCorner.X, first.UpperLeftCorner.Y,
-					last.LowerRightCorner.X, last.LowerRightCorner.Y);
-				if(cardArea.isPointInside({ event.MouseInput.X, event.MouseInput.Y })) {
-					pileSwipeActive = true;
-					pileSwipeStartX = event.MouseInput.X;
-					pileSwipeStartOffset = display_cards_offset;
+			pileSwipeMoveLogged = false;
+			if(mainGame->wCardDisplay->isVisible()) {
+				bool insideCardArea = false;
+				if(display_cards.size() > 5) {
+					const auto first = mainGame->btnCardDisplay[0]->getAbsolutePosition();
+					const auto last = mainGame->btnCardDisplay[4]->getAbsolutePosition();
+					const irr::core::recti cardArea(first.UpperLeftCorner.X, first.UpperLeftCorner.Y,
+						last.LowerRightCorner.X, last.LowerRightCorner.Y);
+					insideCardArea = cardArea.isPointInside({ event.MouseInput.X, event.MouseInput.Y });
+					if(insideCardArea) {
+						pileSwipeActive = true;
+						pileSwipeStartX = event.MouseInput.X;
+						pileSwipeStartOffset = display_cards_offset;
+					}
 				}
+				mainGame->AddLog(epro::format(L"[PILE-DIAG] mouse-down x={} y={} buttons={} card-area={} swipe-active={} offset={}",
+					event.MouseInput.X, event.MouseInput.Y, event.MouseInput.ButtonStates,
+					insideCardArea, pileSwipeActive, display_cards_offset));
 			}
 		} else if(event.MouseInput.Event == irr::EMIE_MOUSE_MOVED && pileSwipeActive) {
+			if(!pileSwipeMoveLogged) {
+				mainGame->AddLog(epro::format(L"[PILE-DIAG] first-move x={} y={} buttons={} start-x={}",
+					event.MouseInput.X, event.MouseInput.Y, event.MouseInput.ButtonStates, pileSwipeStartX));
+				pileSwipeMoveLogged = true;
+			}
 			const irr::s32 deltaX = event.MouseInput.X - pileSwipeStartX;
 			const irr::s32 dragThreshold = mainGame->Scale(16);
 			if(!pileSwipeMoved && (deltaX >= dragThreshold || deltaX <= -dragThreshold)) {
 				pileSwipeMoved = true;
+				mainGame->AddLog(epro::format(L"[PILE-DIAG] swipe-threshold delta-x={} threshold={} passed=true",
+					deltaX, dragThreshold));
 				for(int i = 0; i < 5; ++i)
 					mainGame->btnCardDisplay[i]->setPressed(false);
 			}
@@ -98,15 +119,21 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 					static_cast<irr::s32>(pileSwipeStartOffset) + direction * static_cast<irr::s32>(steps),
 					0, static_cast<irr::s32>(maxOffset));
 				if(display_cards_offset != static_cast<size_t>(nextOffset)) {
+					const size_t previousOffset = display_cards_offset;
 					display_cards_offset = static_cast<size_t>(nextOffset);
+					mainGame->AddLog(epro::format(L"[PILE-DIAG] offset {} -> {} delta-x={}",
+						previousOffset, display_cards_offset, deltaX));
 					UpdateLocationCardDisplay();
 				}
 				return true;
 			}
 		} else if(event.MouseInput.Event == irr::EMIE_LMOUSE_LEFT_UP && pileSwipeActive) {
 			const bool consumedSwipe = pileSwipeMoved;
+			mainGame->AddLog(epro::format(L"[PILE-DIAG] mouse-up x={} y={} buttons={} swipe-consumed={} final-offset={}",
+				event.MouseInput.X, event.MouseInput.Y, event.MouseInput.ButtonStates, consumedSwipe, display_cards_offset));
 			pileSwipeActive = false;
 			pileSwipeMoved = false;
+			pileSwipeMoveLogged = false;
 			if(consumedSwipe)
 				return true;
 		}
