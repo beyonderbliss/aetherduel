@@ -583,8 +583,8 @@ void Game::DrawMisc() {
 	const auto& self = dInfo.isTeam1 ? dInfo.selfnames : dInfo.opponames;
 	const auto& oppo = dInfo.isTeam1 ? dInfo.opponames : dInfo.selfnames;
 	const auto lpframe_pos = ((dInfo.turn % 2 && dInfo.isFirst) || (!(dInfo.turn % 2) && !dInfo.isFirst)) ?
-						Resize(leftFrameStart - 3, 8, leftFrameEnd + 1, 51 + static_cast<irr::s32>(23 * (self.size() - 1))) :
-						Resize(rightFrameStart - 1, 8, rightFrameEnd + 3, 51 + static_cast<irr::s32>(23 * (oppo.size() - 1)));
+						Resize(leftFrameStart - 3, 8, leftFrameEnd + 1, 76 + static_cast<irr::s32>(23 * (self.size() - 1))) :
+						Resize(rightFrameStart - 1, 8, rightFrameEnd + 3, 76 + static_cast<irr::s32>(23 * (oppo.size() - 1)));
 	driver->draw2DRectangle(skin::DUELFIELD_TURNPLAYER_COLOR_VAL, lpframe_pos);
 	driver->draw2DRectangleOutline(lpframe_pos, skin::DUELFIELD_TURNPLAYER_OUTLINE_COLOR_VAL);
 
@@ -608,14 +608,14 @@ void Game::DrawMisc() {
 #define SKCOLOR(what) skin::TIMEBAR_##what##_VAL
 
 	if(!dInfo.isReplay && !dInfo.isSingleMode && dInfo.player_type < 7 && dInfo.time_limit && timerWidth > 0) {
-		auto rectpos = Resize(leftTimerStart, 54, leftFillEnd, 64);
-		auto cliprect = Resize(leftTimerStart, 54,
+		auto rectpos = Resize(leftTimerStart, 80, leftFillEnd, 90);
+		auto cliprect = Resize(leftTimerStart, 80,
 			leftTimerStart + timerWidth * dInfo.time_left[0] / dInfo.time_limit, 64);
 		DRAWRECT(rectpos, 1, &cliprect);
 		driver->draw2DRectangleOutline(rectpos, skin::TIMEBAR_1_OUTLINE_VAL);
-		rectpos = Resize(rightFillStart, 54, rightTimerEnd, 64);
+		rectpos = Resize(rightFillStart, 80, rightTimerEnd, 90);
 		cliprect = Resize(rightFillStart + timerWidth - timerWidth * dInfo.time_left[1] / dInfo.time_limit,
-			54, rightTimerEnd, 64);
+			80, rightTimerEnd, 90);
 		DRAWRECT(rectpos, 2, &cliprect);
 		driver->draw2DRectangleOutline(rectpos, skin::TIMEBAR_2_OUTLINE_VAL);
 	}
@@ -643,8 +643,9 @@ void Game::DrawMisc() {
 			for(int side = 0; side < 2; ++side) {
 				acceptedLp[side] = dInfo.strLP[side];
 				const auto& value = acceptedLp[side];
-				const int visibleDigits = std::min(10, static_cast<int>(value.size()));
-				const int offset = side == 0 ? 0 : 10 - visibleDigits;
+				const int slotCount = std::max(7, std::min(10, static_cast<int>(value.size())));
+				const int visibleDigits = std::min(slotCount, static_cast<int>(value.size()));
+				const int offset = side == 0 ? 0 : slotCount - visibleDigits;
 				const int firstChar = side == 0 ? 0 : static_cast<int>(value.size()) - visibleDigits;
 				for(int i = 0; i < visibleDigits; ++i) {
 					const int slot = offset + i;
@@ -672,13 +673,16 @@ void Game::DrawMisc() {
 				return aa == bb ? 0 : (aa > bb ? 1 : -1);
 			};
 			const int direction = compareNumeric(target, previous) >= 0 ? -1 : 1;
-			for(int slot = 0; slot < 10; ++slot) {
-				auto digitAt = [](const std::wstring& value, int index, int sideIndex) {
-					const int offset = sideIndex == 0 ? 0 : std::max(0, 7 - static_cast<int>(value.size()));
+			const int slotCount = std::max(7, std::min(10, std::max(static_cast<int>(previous.size()), static_cast<int>(target.size()))));
+			for(int slot = 0; slot < slotCount; ++slot) {
+				auto digitAt = [&](const std::wstring& value, int index, int sideIndex) {
+					const int visibleDigits = std::min(slotCount, static_cast<int>(value.size()));
+					const int offset = sideIndex == 0 ? 0 : slotCount - visibleDigits;
+					const int firstChar = sideIndex == 0 ? 0 : static_cast<int>(value.size()) - visibleDigits;
 					const int charIndex = index - offset;
-					if(charIndex < 0 || charIndex >= static_cast<int>(value.size()))
+					if(charIndex < 0 || charIndex >= visibleDigits)
 						return -1;
-					const wchar_t ch = value[charIndex];
+					const wchar_t ch = value[firstChar + charIndex];
 					return ch >= L'0' && ch <= L'9' ? static_cast<int>(ch - L'0') : -1;
 				};
 				const int oldDigit = digitAt(previous, slot, side);
@@ -698,11 +702,12 @@ void Game::DrawMisc() {
 	const irr::s32 displayTop = Resize(0, 8, 0, 8).UpperLeftCorner.Y;
 	const irr::s32 maxDisplayHeight = Resize(0, 0, 0, 48).getHeight();
 	const irr::s32 leftStart = Resize(leftFrameStart + 8, 0).X;
+	const irr::s32 leftEnd = Resize(leftFrameEnd - 8, 0).X;
 	const irr::s32 rightEnd = Resize(rightFrameEnd - 8, 0).X;
-	const irr::s32 availableWidth = std::max<irr::s32>(1, rightEnd - leftStart);
+	const irr::s32 availableWidth = std::max<irr::s32>(1, leftEnd - leftStart);
 	int slotCount = 7;
 	for(int side = 0; side < 2; ++side)
-		slotCount = std::max(slotCount, std::min(10, static_cast<int>(dInfo.strLP[side].size())));
+		slotCount = std::max(slotCount, std::min(10, static_cast<int>(acceptedLp[side].size())));
 	const float widthFactor = slotCount * 0.62f + (slotCount - 1) * 0.13f;
 	const irr::s32 displayHeight = std::max<irr::s32>(1, std::min(maxDisplayHeight, static_cast<irr::s32>(availableWidth / widthFactor)));
 	const irr::s32 cellWidth = std::max<irr::s32>(1, static_cast<irr::s32>(displayHeight * 0.62f));
@@ -739,8 +744,8 @@ void Game::DrawMisc() {
 		}
 	}
 
-	irr::core::recti p1size = Resize(leftFillStart, 31, leftFrameEnd, 50);
-	irr::core::recti p2size = Resize(rightFillEnd, 31, rightFillEnd, 50);
+	irr::core::recti p1size = Resize(leftFillStart, 56, leftFrameEnd, 75);
+	irr::core::recti p2size = Resize(rightFillEnd, 56, rightFillEnd, 75);
 	{
 		int i = 0;
 		for (const auto& player : self) {
