@@ -702,7 +702,11 @@ void Game::DrawMisc() {
 			const long long displayedValue = displayedLp[side].empty() ? 0 : std::stoll(displayedLp[side]);
 			auto& animation = lpAnimation[side];
 
-			if(!animation.active && targetValue != displayedValue) {
+			if(targetValue == displayedValue) {
+				animation.active = false;
+				continue;
+			}
+			if(!animation.active) {
 				animation.from = displayedValue;
 				animation.target = targetValue;
 				animation.elapsedMs = 0.0f;
