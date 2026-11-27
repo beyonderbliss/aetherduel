@@ -803,6 +803,9 @@ void Game::DrawMisc() {
 					if(activeRollSlot[side] == slot)
 						activeRollSlot[side] = -1;
 				}
+			} else if(state.from >= 0) {
+				// Queued digits keep their old value until their turn in the roll sequence.
+				DrawLpDigit(driver, cell, state.from, lpDigitColor, cell);
 			} else if(state.to >= 0) {
 				DrawLpDigit(driver, cell, state.to, lpDigitColor, cell);
 			}
