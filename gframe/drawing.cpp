@@ -756,7 +756,7 @@ void Game::DrawMisc() {
 			const irr::s32 x = startX + slot * (cellWidth + digitGap);
 			const irr::core::recti cell(x, displayTop, x + cellWidth, displayTop + displayHeight);
 			if(state.progress < 1.0f) {
-				state.progress = std::min(1.0f, state.progress + std::max(0.0f, delta_time) / 145.0f);
+				state.progress = std::min(1.0f, state.progress + static_cast<float>(delta_time) / 145.0f);
 				const irr::s32 travel = static_cast<irr::s32>(displayHeight * state.progress);
 				if(state.from >= 0) {
 					auto oldCell = cell;
