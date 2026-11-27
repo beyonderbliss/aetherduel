@@ -627,11 +627,11 @@ void Game::DrawMisc() {
 	}
 
 	// Keep LP digits and timer bars in the inner half of each HUD wing.
-	const irr::s32 leftLpStart = hasAvatarAnchor
+	const irr::s32 leftLpStart = (hasAvatarAnchor || fullscreenDuelHud)
 		? leftAvatar.LowerRightCorner.X + avatarGap : leftOuter + avatarGap;
 	const irr::s32 leftLpEnd = Resize(leftFrameEnd - 8, 0).X;
 	const irr::s32 rightLpStart = Resize(rightFrameStart + 8, 0).X;
-	const irr::s32 rightLpEnd = hasAvatarAnchor
+	const irr::s32 rightLpEnd = (hasAvatarAnchor || fullscreenDuelHud)
 		? rightAvatar.UpperLeftCorner.X - avatarGap : rightOuter - avatarGap;
 	const irr::s32 availableWidth = std::max<irr::s32>(0,
 		std::min(leftLpEnd - leftLpStart, rightLpEnd - rightLpStart));
