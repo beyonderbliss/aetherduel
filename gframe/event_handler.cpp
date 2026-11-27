@@ -64,12 +64,22 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 	static bool pileSwipeActive = false;
 	static bool pileSwipeMoved = false;
 	static bool pileSwipeMoveLogged = false;
+	static bool rawTouchMoveLogged = false;
 	static irr::s32 pileSwipeStartX = 0;
 	static size_t pileSwipeStartOffset = 0;
 	if(event.EventType == irr::EET_TOUCH_INPUT_EVENT && mainGame->wCardDisplay->isVisible()) {
-		mainGame->AddLog(epro::format(L"[PILE-DIAG] raw-touch type={} fingers={} x={} y={}",
-			static_cast<int>(event.TouchInput.Event), event.TouchInput.touchedCount,
-			event.TouchInput.X, event.TouchInput.Y));
+		const bool shouldLogTouch = event.TouchInput.Event != irr::ETIE_MOVED || !rawTouchMoveLogged;
+		if(shouldLogTouch) {
+			mainGame->AddLog(epro::format(L"[PILE-DIAG] raw-touch type={} fingers={} x={} y={}",
+				static_cast<int>(event.TouchInput.Event), event.TouchInput.touchedCount,
+				event.TouchInput.X, event.TouchInput.Y));
+		}
+		if(event.TouchInput.Event == irr::ETIE_PRESSED_DOWN)
+			rawTouchMoveLogged = false;
+		else if(event.TouchInput.Event == irr::ETIE_MOVED)
+			rawTouchMoveLogged = true;
+		else if(event.TouchInput.Event == irr::ETIE_LEFT_UP)
+			rawTouchMoveLogged = false;
 	}
 	if(event.EventType == irr::EET_MOUSE_INPUT_EVENT) {
 		if(event.MouseInput.Event == irr::EMIE_LMOUSE_PRESSED_DOWN) {
