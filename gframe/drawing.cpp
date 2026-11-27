@@ -480,7 +480,7 @@ void DrawLpDigit(irr::video::IVideoDriver* driver, irr::core::recti cell, int di
 	const irr::u8 mask = kLpDigitSegments[digit];
 	for(irr::u32 i = 0; i < 7; ++i) {
 		if(mask & (1u << i))
-			driver->draw2DRectangle(segments[i], color, &clip);
+			driver->draw2DRectangle(color, segments[i], &clip);
 	}
 }
 }
