@@ -613,6 +613,7 @@ public:
 	void SetPhaseButtons(bool visibility = false);
 	void SetMessageWindow();
 	void ResizeCardinfoWindow(bool keep_ratio);
+	irr::core::recti GetFullscreenCardRect() const;
 	int GetDeckPanelLeft() const;
 	DeckGridLayout GetDeckGridLayout() const;
 	void UpdateDeckMenuLayout();
