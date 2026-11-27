@@ -608,7 +608,7 @@ void Game::DrawMisc() {
 	const irr::s32 leftLpEnd = Resize(leftFrameEnd - 8, 0).X;
 	const irr::s32 rightLpStart = Resize(rightFrameStart + 8, 0).X;
 	const irr::s32 rightLpEnd = rightAvatar.UpperLeftCorner.X - avatarGap;
-	const irr::s32 availableWidth = std::max<irr::s32>(1,
+	const irr::s32 availableWidth = std::max<irr::s32>(0,
 		std::min(leftLpEnd - leftLpStart, rightLpEnd - rightLpStart));
 	const irr::s32 timerWidth = std::min<irr::s32>(100, availableWidth);
 	const irr::s32 leftTimerStart = leftLpEnd - timerWidth;
@@ -740,12 +740,16 @@ void Game::DrawMisc() {
 	for(int side = 0; side < 2; ++side)
 		slotCount = std::max(slotCount, std::min(10, static_cast<int>(acceptedLp[side].size())));
 	const float widthFactor = slotCount * 0.62f + (slotCount - 1) * 0.13f;
-	const irr::s32 displayHeight = std::max<irr::s32>(1, std::min(maxDisplayHeight, static_cast<irr::s32>(availableWidth / widthFactor)));
-	const irr::s32 cellWidth = std::max<irr::s32>(1, static_cast<irr::s32>(displayHeight * 0.62f));
-	const irr::s32 digitGap = std::max<irr::s32>(1, static_cast<irr::s32>(displayHeight * 0.13f));
+	const irr::s32 displayHeight = availableWidth > 0
+		? std::max<irr::s32>(1, std::min(maxDisplayHeight, static_cast<irr::s32>(availableWidth / widthFactor)))
+		: 0;
+	const irr::s32 cellWidth = displayHeight > 0
+		? std::max<irr::s32>(1, static_cast<irr::s32>(displayHeight * 0.62f)) : 0;
+	const irr::s32 digitGap = displayHeight > 0
+		? std::max<irr::s32>(1, static_cast<irr::s32>(displayHeight * 0.13f)) : 0;
 	const irr::s32 totalWidth = slotCount * cellWidth + (slotCount - 1) * digitGap;
 	const irr::video::SColor lpDigitColor(255, 210, 157, 66);
-	for(int side = 0; side < 2; ++side) {
+	for(int side = 0; side < 2 && displayHeight > 0 && totalWidth <= availableWidth; ++side) {
 		const irr::s32 startX = side == 0 ? leftStart : rightEnd - totalWidth;
 		for(int slot = 0; slot < slotCount; ++slot) {
 			auto& state = digitState[side][slot];
