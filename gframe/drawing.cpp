@@ -803,7 +803,7 @@ void Game::DrawMisc() {
 			y += lineHeight + lineGap;
 		}
 	};
-	ifshowDuelHud {
+	if(showDuelHud) {
 		drawPlayerNames(self, leftAvatar, dInfo.current_player[0], false);
 		drawPlayerNames(oppo, rightAvatar, dInfo.current_player[1], true);
 	}
