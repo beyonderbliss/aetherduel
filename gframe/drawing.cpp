@@ -610,7 +610,7 @@ void Game::DrawMisc() {
 	if(!dInfo.isReplay && !dInfo.isSingleMode && dInfo.player_type < 7 && dInfo.time_limit && timerWidth > 0) {
 		auto rectpos = Resize(leftTimerStart, 80, leftFillEnd, 90);
 		auto cliprect = Resize(leftTimerStart, 80,
-			leftTimerStart + timerWidth * dInfo.time_left[0] / dInfo.time_limit, 64);
+			leftTimerStart + timerWidth * dInfo.time_left[0] / dInfo.time_limit, 90);
 		DRAWRECT(rectpos, 1, &cliprect);
 		driver->draw2DRectangleOutline(rectpos, skin::TIMEBAR_1_OUTLINE_VAL);
 		rectpos = Resize(rightFillStart, 80, rightTimerEnd, 90);
