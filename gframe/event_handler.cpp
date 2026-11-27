@@ -1116,8 +1116,12 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 			  event.MouseInput.isLeftPressed()) {
 			const irr::s32 deltaX = event.MouseInput.X - pileSwipeStartX;
 			const irr::s32 dragThreshold = mainGame->Scale(8);
-			if(!pileSwipeMoved && (deltaX >= dragThreshold || deltaX <= -dragThreshold))
+			if(!pileSwipeMoved && (deltaX >= dragThreshold || deltaX <= -dragThreshold)) {
 				pileSwipeMoved = true;
+				// A drag is navigation, not a card tap. Clear the button's pressed visual state.
+				for(int i = 0; i < 5; ++i)
+					mainGame->btnCardDisplay[i]->setPressed(false);
+			}
 			if(pileSwipeMoved) {
 				const irr::s32 cardStepWidth = std::max<irr::s32>(1, mainGame->Scale(125));
 				const irr::s32 steps = (deltaX * 10) / cardStepWidth;
@@ -1137,8 +1141,21 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 			const bool consumedSwipe = pileSwipeMoved;
 			pileSwipeActive = false;
 			pileSwipeMoved = false;
-			if(consumedSwipe)
+			if(consumedSwipe) {
+				// Keep the final offset aligned to a complete card slot.
+				const irr::s32 maxPos = mainGame->scrDisplayList->getMax();
+				const irr::s32 snappedPos = std::clamp(
+					((mainGame->scrDisplayList->getPos() + 5) / 10) * 10, 0, maxPos);
+				if(mainGame->scrDisplayList->getPos() != snappedPos) {
+					mainGame->scrDisplayList->setPos(snappedPos);
+					irr::SEvent scrollEvent{};
+					scrollEvent.EventType = irr::EET_GUI_EVENT;
+					scrollEvent.GUIEvent.Caller = mainGame->scrDisplayList;
+					scrollEvent.GUIEvent.EventType = irr::gui::EGET_SCROLL_BAR_CHANGED;
+					OnEvent(scrollEvent);
+				}
 				return true;
+			}
 		}
 		bool isroot = [&event,root=mainGame->env->getRootGUIElement()] {
 			const auto elem = root->getElementFromPoint({ event.MouseInput.X, event.MouseInput.Y });
