@@ -575,17 +575,30 @@ void Game::DrawMisc() {
 	const auto& oppo = dInfo.isTeam1 ? dInfo.opponames : dInfo.selfnames;
 
 	const irr::s32 avatarTop = Resize(0, kUiEdgeMargin).Y;
-	// Fullscreen card view replaces the vertical stack with a bottom grid, so
-	// there is no fifth vertical button to anchor an avatar frame to.
+	// Fullscreen card view replaces the vertical stack with a bottom grid.
+	// Recalculate the normal fifth-button bottom so avatar dimensions stay identical.
 	const bool fullscreenDuelHud = cardViewFullscreen && dInfo.isInDuel;
 	const bool hasAvatarAnchor = btnChainWhenAvail && !cardViewFullscreen;
-	const auto chainButtonRect = hasAvatarAnchor ? btnChainWhenAvail->getAbsolutePosition() : irr::core::recti();
-	// In fullscreen-card mode the vertical stack is replaced by a grid.
-	// Reuse the normal 35-unit button height so the tested avatar geometry stays unchanged.
-	const irr::s32 avatarSize = hasAvatarAnchor
-		? std::max<irr::s32>(1, chainButtonRect.getHeight())
-		: (fullscreenDuelHud ? std::max<irr::s32>(1, Resize(0, 35).Y) : 0);
-	const irr::s32 avatarBottom = avatarTop + avatarSize;
+	irr::s32 avatarBottom = avatarTop;
+	if(hasAvatarAnchor) {
+		avatarBottom = btnChainWhenAvail->getAbsolutePosition().LowerRightCorner.Y;
+	} else if(fullscreenDuelHud) {
+		const auto panelRect = wInfos->getRelativePosition();
+		const auto marginRect = Resize(211, 0, 301, kUiEdgeMargin);
+		const irr::s32 stackTop = marginRect.LowerRightCorner.Y;
+		const irr::s32 gridBottom = panelRect.UpperLeftCorner.Y - Scale(kUiEdgeMargin);
+		const irr::s32 available = gridBottom - stackTop;
+		const irr::s32 maxButtonHeight = Resize(211, 0, 301, 35).getHeight();
+		const irr::s32 minGap = Resize(211, 0, 301, 3).getHeight();
+		const irr::s32 buttonHeight = available > 0
+			? std::min(maxButtonHeight, (available - 7 * minGap) / 8) : 0;
+		if(buttonHeight > 0) {
+			const float slotStep = static_cast<float>(available - buttonHeight) / 7.0f;
+			avatarBottom = stackTop + static_cast<irr::s32>(std::lround(slotStep * 4.0f)) + buttonHeight;
+		}
+	}
+	avatarBottom = std::max(avatarTop + 1, avatarBottom);
+	const irr::s32 avatarSize = avatarBottom - avatarTop;
 	const irr::s32 leftOuter = fullscreenDuelHud
 		? Resize(kFullscreenCardRightX + kUiEdgeMargin, 0).X
 		: Resize(leftFrameStart, 0).X;
@@ -594,7 +607,7 @@ void Game::DrawMisc() {
 	const irr::core::recti leftAvatar(leftOuter, avatarTop, leftOuter + avatarSize, avatarBottom);
 	const irr::core::recti rightAvatar(rightOuter - avatarSize, avatarTop, rightOuter, avatarBottom);
 
-	const irr::video::SColor avatarFill(235, 19, 22, 30);
+		const irr::video::SColor avatarFill(235, 19, 22, 30);
 	const irr::video::SColor activeAvatarTint(70, 117, 91, 54);
 	const irr::video::SColor avatarOutline(255, 117, 91, 54);
 	const irr::video::SColor avatarInnerOutline(210, 65, 70, 82);
@@ -669,93 +682,84 @@ void Game::DrawMisc() {
 		int direction = -1;
 	};
 	static LpDigitState digitState[2][10]{};
-	static std::wstring acceptedLp[2];
-	static std::vector<int> pendingRollSlots[2];
-	static int activeRollSlot[2] = { -1, -1 };
+	static std::wstring displayedLp[2];
+	static std::wstring targetLp[2];
+	static float lpStepRemainder[2] = { 0.0f, 0.0f };
 	static bool lpDisplayInitialized = false;
 	if(!dInfo.isInDuel) {
 		lpDisplayInitialized = false;
-		acceptedLp[0].clear();
-		acceptedLp[1].clear();
-		for(auto& side : digitState)
-			for(auto& digit : side)
-				digit = LpDigitState{};
 		for(int side = 0; side < 2; ++side) {
-			pendingRollSlots[side].clear();
-			activeRollSlot[side] = -1;
+			displayedLp[side].clear();
+			targetLp[side].clear();
+			lpStepRemainder[side] = 0.0f;
 		}
 	} else {
-		if(!lpDisplayInitialized) {
-			for(int side = 0; side < 2; ++side)
-				acceptedLp[side] = dInfo.strLP[side];
-			const int initialSlots = std::max(7, std::min(10, std::max(static_cast<int>(acceptedLp[0].size()), static_cast<int>(acceptedLp[1].size()))));
-			for(int side = 0; side < 2; ++side) {
-				const auto& value = acceptedLp[side];
-				const int visibleDigits = std::min(initialSlots, static_cast<int>(value.size()));
-				const int offset = side == 0 ? 0 : initialSlots - visibleDigits;
-				const int firstChar = side == 0 ? 0 : static_cast<int>(value.size()) - visibleDigits;
-				for(int i = 0; i < visibleDigits; ++i) {
-					const int slot = offset + i;
-					const wchar_t ch = value[firstChar + i];
-					if(ch >= L'0' && ch <= L'9')
-						digitState[side][slot].from = digitState[side][slot].to = static_cast<int>(ch - L'0');
+		auto compareNumeric = [](const std::wstring& a, const std::wstring& b) {
+			const auto firstA = a.find_first_not_of(L'0');
+			const auto firstB = b.find_first_not_of(L'0');
+			const std::wstring aa = firstA == std::wstring::npos ? L"0" : a.substr(firstA);
+			const std::wstring bb = firstB == std::wstring::npos ? L"0" : b.substr(firstB);
+			if(aa.size() != bb.size())
+				return aa.size() > bb.size() ? 1 : -1;
+			return aa == bb ? 0 : (aa > bb ? 1 : -1);
+		};
+		auto stepDecimal = [](std::wstring value, bool increase) {
+			if(value.empty())
+				return std::wstring(L"0");
+			int index = static_cast<int>(value.size()) - 1;
+			int carry = 1;
+			while(index >= 0 && carry) {
+				if(increase) {
+					if(value[index] == L'9') {
+						value[index] = L'0';
+					} else {
+						++value[index];
+						carry = 0;
+					}
+				} else {
+					if(value[index] == L'0') {
+						value[index] = L'9';
+					} else {
+						--value[index];
+						carry = 0;
+					}
 				}
+				--index;
+			}
+			if(increase && carry)
+				value.insert(value.begin(), L'1');
+			if(!increase) {
+				const auto first = value.find_first_not_of(L'0');
+				value = first == std::wstring::npos ? L"0" : value.substr(first);
+			}
+			return value;
+		};
+		if(!lpDisplayInitialized) {
+			for(int side = 0; side < 2; ++side) {
+				displayedLp[side] = targetLp[side] = dInfo.strLP[side];
+				lpStepRemainder[side] = 0.0f;
 			}
 			lpDisplayInitialized = true;
 		}
 		for(int side = 0; side < 2; ++side) {
 			if(lpframe > 0 && lpplayer == side)
 				continue;
-			const std::wstring target = dInfo.strLP[side];
-			if(target == acceptedLp[side])
+			targetLp[side] = dInfo.strLP[side];
+			const int direction = compareNumeric(targetLp[side], displayedLp[side]);
+			if(direction == 0) {
+				lpStepRemainder[side] = 0.0f;
 				continue;
-			const std::wstring previous = acceptedLp[side];
-			auto compareNumeric = [](const std::wstring& a, const std::wstring& b) {
-				const auto firstA = a.find_first_not_of(L'0');
-				const auto firstB = b.find_first_not_of(L'0');
-				const std::wstring aa = firstA == std::wstring::npos ? L"0" : a.substr(firstA);
-				const std::wstring bb = firstB == std::wstring::npos ? L"0" : b.substr(firstB);
-				if(aa.size() != bb.size())
-					return aa.size() > bb.size() ? 1 : -1;
-				return aa == bb ? 0 : (aa > bb ? 1 : -1);
-			};
-			const int direction = compareNumeric(target, previous) >= 0 ? -1 : 1;
-			pendingRollSlots[side].clear();
-			activeRollSlot[side] = -1;
-			int slotCount = std::max(7, std::min(10, static_cast<int>(target.size())));
-			for(int other = 0; other < 2; ++other) {
-				const auto& otherValue = other == side ? target : acceptedLp[other];
-				slotCount = std::max(slotCount, std::min(10, static_cast<int>(otherValue.size())));
 			}
-			for(int slot = 0; slot < slotCount; ++slot) {
-				auto digitAt = [&](const std::wstring& value, int index, int sideIndex) {
-					const int visibleDigits = std::min(slotCount, static_cast<int>(value.size()));
-					const int offset = sideIndex == 0 ? 0 : slotCount - visibleDigits;
-					const int firstChar = sideIndex == 0 ? 0 : static_cast<int>(value.size()) - visibleDigits;
-					const int charIndex = index - offset;
-					if(charIndex < 0 || charIndex >= visibleDigits)
-						return -1;
-					const wchar_t ch = value[firstChar + charIndex];
-					return ch >= L'0' && ch <= L'9' ? static_cast<int>(ch - L'0') : -1;
-				};
-				const int oldDigit = digitAt(previous, slot, side);
-				const int newDigit = digitAt(target, slot, side);
-				if(oldDigit == newDigit)
-					continue;
-				auto& state = digitState[side][slot];
-				state.from = oldDigit;
-				state.to = newDigit;
-				state.progress = 1.0f;
-				state.direction = direction;
-				pendingRollSlots[side].push_back(slot);
-			}
-			// Pop from the rightmost changed place first (ones, tens, hundreds...).
-			if(!pendingRollSlots[side].empty()) {
-				activeRollSlot[side] = pendingRollSlots[side].back();
-				pendingRollSlots[side].pop_back();
-				digitState[side][activeRollSlot[side]].progress = 0.0f;
-			}
-			acceptedLp[side] = target;
+			// Count every LP point in order. 2400 points/second makes a 2000-LP
+			// change complete in under a second while retaining every integer step.
+			constexpr float kLpStepsPerMillisecond = 2.4f;
+			lpStepRemainder[side] += static_cast<float>(delta_time) * kLpStepsPerMillisecond;
+			int steps = static_cast<int>(lpStepRemainder[side]);
+			lpStepRemainder[side] -= static_cast<float>(steps);
+			// Bound work per frame; any remaining distance continues next frame.
+			steps = std::min(steps, 500);
+			for(int step = 0; step < steps && compareNumeric(displayedLp[side], targetLp[side]) != 0; ++step)
+				displayedLp[side] = stepDecimal(displayedLp[side], direction < 0);
 		}
 	}
 
@@ -765,7 +769,7 @@ void Game::DrawMisc() {
 	const irr::s32 rightEnd = rightLpEnd;
 	int slotCount = 7;
 	for(int side = 0; side < 2; ++side)
-		slotCount = std::max(slotCount, std::min(10, static_cast<int>(acceptedLp[side].size())));
+		slotCount = std::max(slotCount, std::min(10, static_cast<int>(displayedLp[side].size())));
 	const float widthFactor = slotCount * 0.62f + (slotCount - 1) * 0.13f;
 	const irr::s32 displayHeight = availableWidth > 0
 		? std::max<irr::s32>(1, std::min(maxDisplayHeight, static_cast<irr::s32>(availableWidth / widthFactor)))
@@ -777,44 +781,21 @@ void Game::DrawMisc() {
 	const irr::s32 totalWidth = slotCount * cellWidth + (slotCount - 1) * digitGap;
 	const irr::video::SColor lpDigitColor(255, 210, 157, 66);
 	for(int side = 0; side < 2 && displayHeight > 0 && totalWidth <= availableWidth; ++side) {
+		const auto& value = displayedLp[side];
 		const irr::s32 startX = side == 0 ? leftStart : rightEnd - totalWidth;
+		const int visibleDigits = std::min(slotCount, static_cast<int>(value.size()));
+		const int offset = side == 0 ? 0 : slotCount - visibleDigits;
+		const int firstChar = side == 0 ? 0 : static_cast<int>(value.size()) - visibleDigits;
 		for(int slot = 0; slot < slotCount; ++slot) {
-			auto& state = digitState[side][slot];
+			const int charIndex = slot - offset;
+			if(charIndex < 0 || charIndex >= visibleDigits)
+				continue;
+			const wchar_t ch = value[firstChar + charIndex];
+			if(ch < L'0' || ch > L'9')
+				continue;
 			const irr::s32 x = startX + slot * (cellWidth + digitGap);
 			const irr::core::recti cell(x, displayTop, x + cellWidth, displayTop + displayHeight);
-			if(state.progress < 1.0f) {
-				state.progress = std::min(1.0f, state.progress + static_cast<float>(delta_time) / 145.0f);
-				const irr::s32 travel = static_cast<irr::s32>(displayHeight * state.progress);
-				if(state.from >= 0) {
-					auto oldCell = cell;
-					oldCell.UpperLeftCorner.Y += state.direction * travel;
-					oldCell.LowerRightCorner.Y += state.direction * travel;
-					DrawLpDigit(driver, oldCell, state.from, lpDigitColor, cell);
-				}
-				if(state.to >= 0) {
-					auto newCell = cell;
-					const irr::s32 incoming = static_cast<irr::s32>(displayHeight * (1.0f - state.progress));
-					newCell.UpperLeftCorner.Y -= state.direction * incoming;
-					newCell.LowerRightCorner.Y -= state.direction * incoming;
-					DrawLpDigit(driver, newCell, state.to, lpDigitColor, cell);
-				}
-				if(state.progress >= 1.0f) {
-					state.from = state.to;
-					if(activeRollSlot[side] == slot)
-						activeRollSlot[side] = -1;
-				}
-			} else if(state.from >= 0) {
-				// Queued digits keep their old value until their turn in the roll sequence.
-				DrawLpDigit(driver, cell, state.from, lpDigitColor, cell);
-			} else if(state.to >= 0) {
-				DrawLpDigit(driver, cell, state.to, lpDigitColor, cell);
-			}
-		}
-		// Start the next more-significant digit only after the current one settles.
-		if(activeRollSlot[side] < 0 && !pendingRollSlots[side].empty()) {
-			activeRollSlot[side] = pendingRollSlots[side].back();
-			pendingRollSlots[side].pop_back();
-			digitState[side][activeRollSlot[side]].progress = 0.0f;
+			DrawLpDigit(driver, cell, static_cast<int>(ch - L'0'), lpDigitColor, cell);
 		}
 	}
 
