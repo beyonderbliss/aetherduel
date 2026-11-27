@@ -480,7 +480,7 @@ void DrawLpDigit(irr::video::IVideoDriver* driver, irr::core::recti cell, int di
 	const irr::u8 mask = kLpDigitSegments[digit];
 	for(irr::u32 i = 0; i < 7; ++i) {
 		if(mask & (1u << i))
-			driver->draw2DRectangleClip(segments[i], color, nullptr, &clip);
+			driver->draw2DRectangle(segments[i], color, &clip);
 	}
 }
 }
@@ -718,7 +718,7 @@ void Game::DrawMisc() {
 	const irr::s32 cellWidth = std::max<irr::s32>(1, static_cast<irr::s32>(displayHeight * 0.62f));
 	const irr::s32 digitGap = std::max<irr::s32>(1, static_cast<irr::s32>(displayHeight * 0.13f));
 	const irr::s32 totalWidth = slotCount * cellWidth + (slotCount - 1) * digitGap;
-	const irr::video::SColor lpDigitColor(255, 226, 171, 78);
+	const irr::video::SColor lpDigitColor(255, 210, 157, 66);
 	for(int side = 0; side < 2; ++side) {
 		const irr::s32 startX = side == 0 ? leftStart : rightEnd - totalWidth;
 		for(int slot = 0; slot < slotCount; ++slot) {
