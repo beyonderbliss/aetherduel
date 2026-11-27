@@ -3578,8 +3578,10 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 			event_string = epro::sprintf(gDataManager->GetSysString(1613 + player), val);
 			mainGame->lpccolor = 0xff0000;
 			mainGame->lpcalpha = 0xff;
+			mainGame->lpplayer = player;
 			mainGame->lpcstring = epro::format(L"-{}", val);
 			mainGame->WaitFrameSignal(30, lock);
+			mainGame->lpframe = 10;
 			mainGame->WaitFrameSignal(11, lock);
 			mainGame->lpcstring = L"";
 		}
@@ -3597,8 +3599,10 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 			event_string = epro::sprintf(gDataManager->GetSysString(1615 + player), val);
 			mainGame->lpccolor = 0x00ff00;
 			mainGame->lpcalpha = 0xff;
+			mainGame->lpplayer = player;
 			mainGame->lpcstring = epro::format(L"+{}", val);
 			mainGame->WaitFrameSignal(30, lock);
+			mainGame->lpframe = 10;
 			mainGame->WaitFrameSignal(11, lock);
 			mainGame->lpcstring = L"";
 		}
@@ -3696,8 +3700,10 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		if(!mainGame->dInfo.isCatchingUp) {
 			mainGame->lpccolor = 0x0000ff;
 			mainGame->lpcalpha = 0xff;
+			mainGame->lpplayer = player;
 			mainGame->lpcstring = epro::format(L"-{}", cost);
 			mainGame->WaitFrameSignal(30, lock);
+			mainGame->lpframe = 10;
 			mainGame->WaitFrameSignal(11, lock);
 			mainGame->lpcstring = L"";
 		}
