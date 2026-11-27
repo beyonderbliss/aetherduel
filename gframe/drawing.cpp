@@ -599,8 +599,11 @@ void Game::DrawMisc() {
 	}
 	avatarBottom = std::max(avatarTop + 1, avatarBottom);
 	const irr::s32 avatarSize = avatarBottom - avatarTop;
+	const irr::s32 fullscreenCardRight = wCardImg
+		? wCardImg->getAbsolutePosition().LowerRightCorner.X
+		: Resize(kFullscreenCardRightX, 0).X;
 	const irr::s32 leftOuter = fullscreenDuelHud
-		? Resize(kFullscreenCardRightX + kUiEdgeMargin, 0).X
+		? fullscreenCardRight + Resize(kUiEdgeMargin, 0).X
 		: Resize(leftFrameStart, 0).X;
 	const irr::s32 rightOuter = Resize(rightFrameEnd, 0).X;
 	const irr::s32 avatarGap = std::max<irr::s32>(1, ResizeX(8));
