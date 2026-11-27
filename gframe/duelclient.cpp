@@ -3572,20 +3572,17 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		if (final < 0)
 			final = 0;
 		auto lock = LockIf();
+		mainGame->dInfo.lp[player] = final;
+		mainGame->dInfo.strLP[player] = epro::to_wstring(final);
 		if(!mainGame->dInfo.isCatchingUp) {
-			mainGame->lpd = (mainGame->dInfo.lp[player] - final) / 10;
 			event_string = epro::sprintf(gDataManager->GetSysString(1613 + player), val);
 			mainGame->lpccolor = 0xff0000;
 			mainGame->lpcalpha = 0xff;
-			mainGame->lpplayer = player;
 			mainGame->lpcstring = epro::format(L"-{}", val);
 			mainGame->WaitFrameSignal(30, lock);
-			mainGame->lpframe = 10;
 			mainGame->WaitFrameSignal(11, lock);
 			mainGame->lpcstring = L"";
 		}
-		mainGame->dInfo.lp[player] = final;
-		mainGame->dInfo.strLP[player] = epro::to_wstring(mainGame->dInfo.lp[player]);
 		return true;
 	}
 	case MSG_RECOVER: {
@@ -3594,20 +3591,17 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		const auto val = BufferIO::Read<uint32_t>(pbuf);
 		const int final = mainGame->dInfo.lp[player] + val;
 		auto lock = LockIf();
+		mainGame->dInfo.lp[player] = final;
+		mainGame->dInfo.strLP[player] = epro::to_wstring(final);
 		if(!mainGame->dInfo.isCatchingUp) {
-			mainGame->lpd = (mainGame->dInfo.lp[player] - final) / 10;
 			event_string = epro::sprintf(gDataManager->GetSysString(1615 + player), val);
 			mainGame->lpccolor = 0x00ff00;
 			mainGame->lpcalpha = 0xff;
-			mainGame->lpplayer = player;
 			mainGame->lpcstring = epro::format(L"+{}", val);
 			mainGame->WaitFrameSignal(30, lock);
-			mainGame->lpframe = 10;
 			mainGame->WaitFrameSignal(11, lock);
 			mainGame->lpcstring = L"";
 		}
-		mainGame->dInfo.lp[player] = final;
-		mainGame->dInfo.strLP[player] = epro::to_wstring(mainGame->dInfo.lp[player]);
 		return true;
 	}
 	case MSG_EQUIP: {
@@ -3637,14 +3631,10 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		const auto player = mainGame->LocalPlayer(BufferIO::Read<uint8_t>(pbuf));
 		const auto val = BufferIO::Read<uint32_t>(pbuf);
 		auto lock = LockIf();
-		if(!mainGame->dInfo.isCatchingUp) {
-			mainGame->lpd = (mainGame->dInfo.lp[player] - val) / 10;
-			mainGame->lpplayer = player;
-			mainGame->lpframe = 10;
-			mainGame->WaitFrameSignal(11, lock);
-		}
 		mainGame->dInfo.lp[player] = val;
-		mainGame->dInfo.strLP[player] = epro::to_wstring(mainGame->dInfo.lp[player]);
+		mainGame->dInfo.strLP[player] = epro::to_wstring(val);
+		if(!mainGame->dInfo.isCatchingUp)
+			mainGame->WaitFrameSignal(11, lock);
 		return true;
 	}
 	case MSG_UNEQUIP: {
@@ -3701,19 +3691,16 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		if (final < 0)
 			final = 0;
 		auto lock = LockIf();
+		mainGame->dInfo.lp[player] = final;
+		mainGame->dInfo.strLP[player] = epro::to_wstring(final);
 		if(!mainGame->dInfo.isCatchingUp) {
-			mainGame->lpd = (mainGame->dInfo.lp[player] - final) / 10;
 			mainGame->lpccolor = 0x0000ff;
 			mainGame->lpcalpha = 0xff;
-			mainGame->lpplayer = player;
 			mainGame->lpcstring = epro::format(L"-{}", cost);
 			mainGame->WaitFrameSignal(30, lock);
-			mainGame->lpframe = 10;
 			mainGame->WaitFrameSignal(11, lock);
 			mainGame->lpcstring = L"";
 		}
-		mainGame->dInfo.lp[player] = final;
-		mainGame->dInfo.strLP[player] = epro::to_wstring(mainGame->dInfo.lp[player]);
 		return true;
 	}
 	case MSG_ADD_COUNTER: {
