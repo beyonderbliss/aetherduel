@@ -577,12 +577,18 @@ void Game::DrawMisc() {
 	const irr::s32 avatarTop = Resize(0, kUiEdgeMargin).Y;
 	// Fullscreen card view replaces the vertical stack with a bottom grid, so
 	// there is no fifth vertical button to anchor an avatar frame to.
-	const bool hasAvatarAnchor = !cardViewFullscreen && btnChainWhenAvail;
+	const bool fullscreenDuelHud = cardViewFullscreen && dInfo.isInDuel;
+	const bool hasAvatarAnchor = btnChainWhenAvail && !cardViewFullscreen;
 	const auto chainButtonRect = hasAvatarAnchor ? btnChainWhenAvail->getAbsolutePosition() : irr::core::recti();
-	const irr::s32 avatarBottom = hasAvatarAnchor
-		? std::max(avatarTop + 1, chainButtonRect.LowerRightCorner.Y) : avatarTop;
-	const irr::s32 avatarSize = avatarBottom - avatarTop;
-	const irr::s32 leftOuter = Resize(leftFrameStart, 0).X;
+	// In fullscreen-card mode the vertical stack is replaced by a grid.
+	// Reuse the normal 35-unit button height so the tested avatar geometry stays unchanged.
+	const irr::s32 avatarSize = hasAvatarAnchor
+		? std::max<irr::s32>(1, chainButtonRect.getHeight())
+		: (fullscreenDuelHud ? std::max<irr::s32>(1, Resize(0, 35).Y) : 0);
+	const irr::s32 avatarBottom = avatarTop + avatarSize;
+	const irr::s32 leftOuter = fullscreenDuelHud
+		? Resize(kFullscreenCardRightX + kUiEdgeMargin, 0).X
+		: Resize(leftFrameStart, 0).X;
 	const irr::s32 rightOuter = Resize(rightFrameEnd, 0).X;
 	const irr::s32 avatarGap = std::max<irr::s32>(1, ResizeX(8));
 	const irr::core::recti leftAvatar(leftOuter, avatarTop, leftOuter + avatarSize, avatarBottom);
@@ -602,7 +608,7 @@ void Game::DrawMisc() {
 		if(inner.getWidth() > 1 && inner.getHeight() > 1)
 			driver->draw2DRectangleOutline(inner, active ? skin::DUELFIELD_TURNPLAYER_COLOR_VAL : avatarInnerOutline);
 	};
-	if(hasAvatarAnchor) {
+	if(hasAvatarAnchor || fullscreenDuelHud) {
 		drawAvatarFrame(leftAvatar, leftIsTurnPlayer);
 		drawAvatarFrame(rightAvatar, !leftIsTurnPlayer);
 	}
@@ -664,6 +670,8 @@ void Game::DrawMisc() {
 	};
 	static LpDigitState digitState[2][10]{};
 	static std::wstring acceptedLp[2];
+	static std::vector<int> pendingRollSlots[2];
+	static int activeRollSlot[2] = { -1, -1 };
 	static bool lpDisplayInitialized = false;
 	if(!dInfo.isInDuel) {
 		lpDisplayInitialized = false;
@@ -672,6 +680,10 @@ void Game::DrawMisc() {
 		for(auto& side : digitState)
 			for(auto& digit : side)
 				digit = LpDigitState{};
+		for(int side = 0; side < 2; ++side) {
+			pendingRollSlots[side].clear();
+			activeRollSlot[side] = -1;
+		}
 	} else {
 		if(!lpDisplayInitialized) {
 			for(int side = 0; side < 2; ++side)
@@ -708,6 +720,8 @@ void Game::DrawMisc() {
 				return aa == bb ? 0 : (aa > bb ? 1 : -1);
 			};
 			const int direction = compareNumeric(target, previous) >= 0 ? -1 : 1;
+			pendingRollSlots[side].clear();
+			activeRollSlot[side] = -1;
 			int slotCount = std::max(7, std::min(10, static_cast<int>(target.size())));
 			for(int other = 0; other < 2; ++other) {
 				const auto& otherValue = other == side ? target : acceptedLp[other];
@@ -731,8 +745,15 @@ void Game::DrawMisc() {
 				auto& state = digitState[side][slot];
 				state.from = oldDigit;
 				state.to = newDigit;
-				state.progress = 0.0f;
+				state.progress = 1.0f;
 				state.direction = direction;
+				pendingRollSlots[side].push_back(slot);
+			}
+			// Pop from the rightmost changed place first (ones, tens, hundreds...).
+			if(!pendingRollSlots[side].empty()) {
+				activeRollSlot[side] = pendingRollSlots[side].back();
+				pendingRollSlots[side].pop_back();
+				digitState[side][activeRollSlot[side]].progress = 0.0f;
 			}
 			acceptedLp[side] = target;
 		}
@@ -777,11 +798,20 @@ void Game::DrawMisc() {
 					newCell.LowerRightCorner.Y -= state.direction * incoming;
 					DrawLpDigit(driver, newCell, state.to, lpDigitColor, cell);
 				}
-				if(state.progress >= 1.0f)
+				if(state.progress >= 1.0f) {
 					state.from = state.to;
+					if(activeRollSlot[side] == slot)
+						activeRollSlot[side] = -1;
+				}
 			} else if(state.to >= 0) {
 				DrawLpDigit(driver, cell, state.to, lpDigitColor, cell);
 			}
+		}
+		// Start the next more-significant digit only after the current one settles.
+		if(activeRollSlot[side] < 0 && !pendingRollSlots[side].empty()) {
+			activeRollSlot[side] = pendingRollSlots[side].back();
+			pendingRollSlots[side].pop_back();
+			digitState[side][activeRollSlot[side]].progress = 0.0f;
 		}
 	}
 
@@ -807,7 +837,7 @@ void Game::DrawMisc() {
 			y += lineHeight + lineGap;
 		}
 	};
-	if(hasAvatarAnchor) {
+	if(hasAvatarAnchor || fullscreenDuelHud) {
 		drawPlayerNames(self, leftAvatar, dInfo.current_player[0], false);
 		drawPlayerNames(oppo, rightAvatar, dInfo.current_player[1], true);
 	}
