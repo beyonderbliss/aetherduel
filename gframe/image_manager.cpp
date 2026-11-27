@@ -20,6 +20,10 @@ namespace ygo {
 #define ASSIGN_DEFAULT(obj) do { def_##obj=obj; } while(0)
 
 namespace {
+// Render thumbnails at 1.5x their on-screen pixel dimensions to preserve
+// card text and fine artwork detail when Deck Editor thumbnails are enlarged.
+constexpr float CARD_THUMB_RENDER_SCALE = 1.5f;
+
 bool hasNPotSupport(irr::video::IVideoDriver* driver) {
 	static const auto supported = [driver] {
 		return driver->queryFeature(irr::video::EVDF_TEXTURE_NPOT);
@@ -257,8 +261,8 @@ bool ImageManager::Initial() {
 
 	sizes[0].first = sizes[1].first = toPow2(driver, CARD_IMG_WIDTH * gGameConfig->dpi_scale);
 	sizes[0].second = sizes[1].second = toPow2(driver, CARD_IMG_HEIGHT * gGameConfig->dpi_scale);
-	sizes[2].first = toPow2(driver, CARD_THUMB_WIDTH * gGameConfig->dpi_scale);
-	sizes[2].second = toPow2(driver, CARD_THUMB_HEIGHT * gGameConfig->dpi_scale);
+	sizes[2].first = toPow2(driver, CARD_THUMB_WIDTH * gGameConfig->dpi_scale * CARD_THUMB_RENDER_SCALE);
+	sizes[2].second = toPow2(driver, CARD_THUMB_HEIGHT * gGameConfig->dpi_scale * CARD_THUMB_RENDER_SCALE);
 	return true;
 }
 void ImageManager::replaceTextureLoadingFixedSize(irr::video::ITexture*& texture, irr::video::ITexture* fallback, epro::path_stringview texture_name, int width, int height) {
@@ -349,8 +353,8 @@ void ImageManager::ClearTexture(bool resize) {
 		const auto card_sizes = mainGame->imgCard->getRelativePosition().getSize();
 		sizes[1].first = toPow2(driver, card_sizes.Width);
 		sizes[1].second = toPow2(driver, card_sizes.Height);
-		sizes[2].first = toPow2(driver, CARD_THUMB_WIDTH * mainGame->window_scale.X * gGameConfig->dpi_scale);
-		sizes[2].second = toPow2(driver, CARD_THUMB_HEIGHT * mainGame->window_scale.Y * gGameConfig->dpi_scale);
+		sizes[2].first = toPow2(driver, CARD_THUMB_WIDTH * mainGame->window_scale.X * gGameConfig->dpi_scale * CARD_THUMB_RENDER_SCALE);
+		sizes[2].second = toPow2(driver, CARD_THUMB_HEIGHT * mainGame->window_scale.Y * gGameConfig->dpi_scale * CARD_THUMB_RENDER_SCALE);
 		RefreshCovers();
 	} else
 		ClearCachedTextures();
