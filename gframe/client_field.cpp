@@ -581,6 +581,26 @@ void ClientField::ShowLocationCard() {
 	UpdateLocationCardDisplay();
 	mainGame->btnDisplayOK->setVisible(true);
 	mainGame->PopupElement(mainGame->wCardDisplay);
+#if EDOPRO_ANDROID || EDOPRO_IOS
+	const auto displayRect = mainGame->wCardDisplay->getAbsolutePosition();
+	const bool selectWindowVisible = mainGame->wCardSelect->isVisible();
+	const bool selectScrollbarVisible = mainGame->scrCardList && mainGame->scrCardList->isVisible();
+	mainGame->AddLog(epro::format(L"[PILE-DIAG] preview-open cards={} offset={} display-window={} select-window={} select-scrollbar={} select-scrollbar-visible={} display-scrollbar-created={}",
+		display_cards.size(), display_cards_offset, mainGame->wCardDisplay->isVisible(), selectWindowVisible,
+		mainGame->scrCardList != nullptr, selectScrollbarVisible, mainGame->scrDisplayList != nullptr));
+	mainGame->AddLog(epro::format(L"[PILE-DIAG] display-rect=({},{} - {},{}) select-scrollbar-rect=({},{} - {},{})",
+		displayRect.UpperLeftCorner.X, displayRect.UpperLeftCorner.Y, displayRect.LowerRightCorner.X, displayRect.LowerRightCorner.Y,
+		mainGame->scrCardList ? mainGame->scrCardList->getAbsolutePosition().UpperLeftCorner.X : -1,
+		mainGame->scrCardList ? mainGame->scrCardList->getAbsolutePosition().UpperLeftCorner.Y : -1,
+		mainGame->scrCardList ? mainGame->scrCardList->getAbsolutePosition().LowerRightCorner.X : -1,
+		mainGame->scrCardList ? mainGame->scrCardList->getAbsolutePosition().LowerRightCorner.Y : -1));
+	for(int i = 0; i < 5; ++i) {
+		const auto cardRect = mainGame->btnCardDisplay[i]->getAbsolutePosition();
+		mainGame->AddLog(epro::format(L"[PILE-DIAG] card-button[{}] visible={} border={} rect=({},{} - {},{})",
+			i, mainGame->btnCardDisplay[i]->isVisible(), mainGame->btnCardDisplay[i]->isDrawingBorder(),
+			cardRect.UpperLeftCorner.X, cardRect.UpperLeftCorner.Y, cardRect.LowerRightCorner.X, cardRect.LowerRightCorner.Y));
+	}
+#endif
 }
 void ClientField::ShowSelectOption(uint64_t select_hint, bool should_lock) {
 	std::unique_lock<epro::mutex> lock = (should_lock ? std::unique_lock<epro::mutex>(mainGame->gMutex) : std::unique_lock<epro::mutex>());
