@@ -3470,7 +3470,12 @@ void Game::SetMessageWindow() {
 	}
 }
 int Game::GetDeckPanelLeft() const {
-	// Keep the deck menu/editor 5 logical units beyond the shared fullscreen-card edge.
+	// Follow the actual fullscreen card edge so the Deck Menu and Main Deck
+	// retain the same 5-unit gap when the card is height-constrained.
+	if(cardViewFullscreen && wCardImg) {
+		const irr::s32 cardRight = wCardImg->getAbsolutePosition().LowerRightCorner.X;
+		return Resize(cardRight, 0, true).X + kUiEdgeMargin;
+	}
 	return kFullscreenCardRightX + kUiEdgeMargin;
 }
 DeckGridLayout Game::GetDeckGridLayout() const {
@@ -3588,12 +3593,26 @@ void Game::ResizeCardinfoWindow(bool keep_ratio) {
 		wInfos->setVisible(false);
 
 		const float aspect = static_cast<float>(layout::kFullscreenAspectWidth) / layout::kFullscreenAspectHeight;
-		// Use one logical card rectangle for every viewport ratio.
+		// Keep the original card ratio and use the viewport height only when a
+		// phone-like landscape viewport would otherwise clip the card vertically.
 		const irr::s32 left = Resize(kUiEdgeMargin, 0).X;
 		const irr::s32 top = Resize(0, kUiEdgeMargin).Y;
 		const irr::s32 cardRight = Resize(kFullscreenCardRightX, 0).X;
-		const irr::s32 cardWidth = std::max<irr::s32>(0, cardRight - left);
-		const irr::s32 cardHeight = static_cast<irr::s32>(cardWidth / aspect);
+		irr::s32 cardWidth = std::max<irr::s32>(0, cardRight - left);
+		const irr::s32 bottomMargin = Resize(0, kUiEdgeMargin).Y;
+		const irr::s32 availableHeight = std::max<irr::s32>(0,
+			static_cast<irr::s32>(window_size.Height) - top - bottomMargin);
+		const float viewportAspect = window_size.Height > 0
+			? static_cast<float>(window_size.Width) / static_cast<float>(window_size.Height) : 0.0f;
+		// Landscape phones are typically much wider than 16:10 tablets.
+		// On those viewports, reserve 5 units below the card; other ratios
+		// keep the existing card width so the action-button area remains below it.
+		if(viewportAspect >= 1.85f) {
+			const irr::s32 heightLimitedWidth = static_cast<irr::s32>(
+				std::floor(static_cast<float>(availableHeight) * aspect));
+			cardWidth = std::min(cardWidth, heightLimitedWidth);
+		}
+		const irr::s32 cardHeight = static_cast<irr::s32>(std::floor(cardWidth / aspect));
 		wCardImg->setRelativePosition(irr::core::recti(left, top, left + cardWidth, top + cardHeight));
 		imgCard->setRelativePosition(irr::core::recti(0, 0, cardWidth, cardHeight));
 		wCardImg->getParent()->bringToFront(wCardImg);
@@ -3955,12 +3974,13 @@ void Game::UpdateVerticalButtonLayout() {
 		// rows; Duel Mode reserves three rows so every control keeps a stable
 		// slot even when some controls are currently inactive.
 		const auto cardRect = wCardImg->getRelativePosition();
-		const irr::s32 edgeMargin = Scale(kUiEdgeMargin);
-		const irr::s32 gridLeft = cardRect.UpperLeftCorner.X + edgeMargin;
-		const irr::s32 gridRight = cardRect.LowerRightCorner.X - edgeMargin;
-		const irr::s32 gridTop = cardRect.LowerRightCorner.Y + edgeMargin;
-		const irr::s32 screenBottom = Resize(0, static_cast<irr::s32>(window_size.Height), true).Y;
-		const irr::s32 gridBottom = screenBottom - edgeMargin;
+		const irr::s32 edgeMarginX = Resize(kUiEdgeMargin, 0).X;
+		const irr::s32 edgeMarginY = Resize(0, kUiEdgeMargin).Y;
+		const irr::s32 gridLeft = cardRect.UpperLeftCorner.X + edgeMarginX;
+		const irr::s32 gridRight = cardRect.LowerRightCorner.X - edgeMarginX;
+		const irr::s32 gridTop = cardRect.LowerRightCorner.Y + edgeMarginY;
+		// GUI rectangles and window_size are both in physical pixels here.
+		const irr::s32 gridBottom = static_cast<irr::s32>(window_size.Height) - edgeMarginY;
 		const irr::s32 gridWidth = gridRight - gridLeft;
 		const irr::s32 availableHeight = gridBottom - gridTop;
 		const irr::s32 gap = Resize(211, 0, 301, 3).getHeight();
