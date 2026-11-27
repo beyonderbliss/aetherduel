@@ -587,19 +587,21 @@ void Game::DrawMisc() {
 	const irr::core::recti rightAvatar(rightOuter - avatarSize, avatarTop, rightOuter, avatarBottom);
 
 	const irr::video::SColor avatarFill(235, 19, 22, 30);
+	const irr::video::SColor activeAvatarTint(70, 117, 91, 54);
 	const irr::video::SColor avatarOutline(255, 117, 91, 54);
 	const irr::video::SColor avatarInnerOutline(210, 65, 70, 82);
-	auto drawAvatarFrame = [&](const irr::core::recti& frame) {
-		driver->draw2DRectangle(avatarFill, frame);
-		driver->draw2DRectangleOutline(frame, avatarOutline);
+	const bool leftIsTurnPlayer = (dInfo.turn % 2 && dInfo.isFirst) || (!(dInfo.turn % 2) && !dInfo.isFirst);
+	auto drawAvatarFrame = [&](const irr::core::recti& frame, bool active) {
+		driver->draw2DRectangle(active ? activeAvatarTint : avatarFill, frame);
+		driver->draw2DRectangleOutline(frame, active ? skin::DUELFIELD_TURNPLAYER_OUTLINE_COLOR_VAL : avatarOutline);
 		const irr::s32 inset = std::max<irr::s32>(1, ResizeX(2));
 		const irr::core::recti inner(frame.UpperLeftCorner.X + inset, frame.UpperLeftCorner.Y + inset,
 			frame.LowerRightCorner.X - inset, frame.LowerRightCorner.Y - inset);
 		if(inner.getWidth() > 1 && inner.getHeight() > 1)
-			driver->draw2DRectangleOutline(inner, avatarInnerOutline);
+			driver->draw2DRectangleOutline(inner, active ? skin::DUELFIELD_TURNPLAYER_COLOR_VAL : avatarInnerOutline);
 	};
-	drawAvatarFrame(leftAvatar);
-	drawAvatarFrame(rightAvatar);
+	drawAvatarFrame(leftAvatar, leftIsTurnPlayer);
+	drawAvatarFrame(rightAvatar, !leftIsTurnPlayer);
 
 	// Keep LP digits and timer bars in the inner half of each HUD wing.
 	const irr::s32 leftLpStart = leftAvatar.LowerRightCorner.X + avatarGap;
