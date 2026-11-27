@@ -620,7 +620,7 @@ void Game::DrawMisc() {
 		if(inner.getWidth() > 1 && inner.getHeight() > 1)
 			driver->draw2DRectangleOutline(inner, active ? skin::DUELFIELD_TURNPLAYER_COLOR_VAL : avatarInnerOutline);
 	};
-	ifshowDuelHud {
+	if(showDuelHud) {
 		drawAvatarFrame(leftAvatar, leftIsTurnPlayer);
 		drawAvatarFrame(rightAvatar, !leftIsTurnPlayer);
 	}
