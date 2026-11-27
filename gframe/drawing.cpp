@@ -754,12 +754,10 @@ void Game::DrawMisc() {
 			// change complete in under a second while retaining every integer step.
 			constexpr float kLpStepsPerMillisecond = 2.4f;
 			lpStepRemainder[side] += static_cast<float>(delta_time) * kLpStepsPerMillisecond;
-			int steps = static_cast<int>(lpStepRemainder[side]);
+			int steps = std::min(500, static_cast<int>(lpStepRemainder[side]));
 			lpStepRemainder[side] -= static_cast<float>(steps);
-			// Bound work per frame; any remaining distance continues next frame.
-			steps = std::min(steps, 500);
 			for(int step = 0; step < steps && compareNumeric(displayedLp[side], targetLp[side]) != 0; ++step)
-				displayedLp[side] = stepDecimal(displayedLp[side], direction < 0);
+				displayedLp[side] = stepDecimal(displayedLp[side], direction > 0);
 		}
 	}
 
