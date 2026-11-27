@@ -645,12 +645,8 @@ void Game::DrawMisc() {
 #define RECTCOLOR(what) SKCOLOR(what##_TOP_LEFT), SKCOLOR(what##_TOP_RIGHT), SKCOLOR(what##_BOTTOM_LEFT), SKCOLOR(what##_BOTTOM_RIGHT)
 #define	DRAWRECT(rect_pos,what,clip) do { driver->draw2DRectangleClip(rect_pos, RECTCOLOR(what),nullptr,clip); } while(0)
 
-	if(lpframe > 0 && delta_frames) {
-		dInfo.lp[lpplayer] -= lpd * delta_frames;
-		dInfo.strLP[lpplayer] = epro::to_wstring(std::max(0, dInfo.lp[lpplayer]));
+	if(lpframe > 0 && delta_frames)
 		lpcalpha -= 0x19 * delta_frames;
-		lpframe -= delta_frames;
-	}
 	if(lpcstring.size()) {
 		if(lpplayer == 0)
 			DrawShadowText(lpcFont, lpcstring, Resize(400, 470, 920, 520), Resize(0, 2, 2, 0), (lpcalpha << 24) | lpccolor, (lpcalpha << 24) | 0x00ffffff, true);
@@ -673,91 +669,74 @@ void Game::DrawMisc() {
 		driver->draw2DRectangleOutline(rectpos, skin::TIMEBAR_2_OUTLINE_VAL);
 	}
 
-	// Keep the existing 10-step LP transition intact, then roll each changed
-	// digit once when the engine has reached its final value.
-	struct LpDigitState {
-		int from = -1;
-		int to = -1;
-		float progress = 1.0f;
-		int direction = -1;
+	// Animate toward the engine LP value with a bounded, eased transition.
+	struct LpAnimationState {
+		long long from = 0;
+		long long target = 0;
+		float elapsedMs = 0.0f;
+		float durationMs = 0.0f;
+		float updateAccumulatorMs = 0.0f;
+		bool active = false;
 	};
-	static LpDigitState digitState[2][10]{};
+	static LpAnimationState lpAnimation[2]{};
 	static std::wstring displayedLp[2];
-	static std::wstring targetLp[2];
-	static float lpStepRemainder[2] = { 0.0f, 0.0f };
 	static bool lpDisplayInitialized = false;
 	if(!dInfo.isInDuel) {
 		lpDisplayInitialized = false;
 		for(int side = 0; side < 2; ++side) {
 			displayedLp[side].clear();
-			targetLp[side].clear();
-			lpStepRemainder[side] = 0.0f;
+			lpAnimation[side] = {};
 		}
 	} else {
-		auto compareNumeric = [](const std::wstring& a, const std::wstring& b) {
-			const auto firstA = a.find_first_not_of(L'0');
-			const auto firstB = b.find_first_not_of(L'0');
-			const std::wstring aa = firstA == std::wstring::npos ? L"0" : a.substr(firstA);
-			const std::wstring bb = firstB == std::wstring::npos ? L"0" : b.substr(firstB);
-			if(aa.size() != bb.size())
-				return aa.size() > bb.size() ? 1 : -1;
-			return aa == bb ? 0 : (aa > bb ? 1 : -1);
-		};
-		auto stepDecimal = [](std::wstring value, bool increase) {
-			if(value.empty())
-				return std::wstring(L"0");
-			int index = static_cast<int>(value.size()) - 1;
-			int carry = 1;
-			while(index >= 0 && carry) {
-				if(increase) {
-					if(value[index] == L'9') {
-						value[index] = L'0';
-					} else {
-						++value[index];
-						carry = 0;
-					}
-				} else {
-					if(value[index] == L'0') {
-						value[index] = L'9';
-					} else {
-						--value[index];
-						carry = 0;
-					}
-				}
-				--index;
-			}
-			if(increase && carry)
-				value.insert(value.begin(), L'1');
-			if(!increase) {
-				const auto first = value.find_first_not_of(L'0');
-				value = first == std::wstring::npos ? L"0" : value.substr(first);
-			}
-			return value;
-		};
 		if(!lpDisplayInitialized) {
 			for(int side = 0; side < 2; ++side) {
-				displayedLp[side] = targetLp[side] = dInfo.strLP[side];
-				lpStepRemainder[side] = 0.0f;
+				displayedLp[side] = dInfo.strLP[side];
+				lpAnimation[side] = {};
 			}
 			lpDisplayInitialized = true;
 		}
 		for(int side = 0; side < 2; ++side) {
-			if(lpframe > 0 && lpplayer == side)
-				continue;
-			targetLp[side] = dInfo.strLP[side];
-			const int direction = compareNumeric(targetLp[side], displayedLp[side]);
-			if(direction == 0) {
-				lpStepRemainder[side] = 0.0f;
-				continue;
+			const long long targetValue = dInfo.strLP[side].empty() ? 0 : std::stoll(dInfo.strLP[side]);
+			const long long displayedValue = displayedLp[side].empty() ? 0 : std::stoll(displayedLp[side]);
+			auto& animation = lpAnimation[side];
+
+			if(!animation.active && targetValue != displayedValue) {
+				animation.from = displayedValue;
+				animation.target = targetValue;
+				animation.elapsedMs = 0.0f;
+				animation.updateAccumulatorMs = 0.0f;
+				const long long difference = std::abs(targetValue - displayedValue);
+				animation.durationMs = std::clamp(static_cast<float>(difference) * 1.5f, 450.0f, 3000.0f);
+				animation.active = true;
+			} else if(animation.active && targetValue != animation.target) {
+				// A new LP event retargets smoothly from the value currently on screen.
+				animation.from = displayedValue;
+				animation.target = targetValue;
+				animation.elapsedMs = 0.0f;
+				animation.updateAccumulatorMs = 0.0f;
+				const long long difference = std::abs(targetValue - displayedValue);
+				animation.durationMs = std::clamp(static_cast<float>(difference) * 1.5f, 450.0f, 3000.0f);
 			}
-			// Count every LP point in order. 2400 points/second makes a 2000-LP
-			// change complete in under a second while retaining every integer step.
-			constexpr float kLpStepsPerMillisecond = 2.4f;
-			lpStepRemainder[side] += static_cast<float>(delta_time) * kLpStepsPerMillisecond;
-			int steps = std::min(500, static_cast<int>(lpStepRemainder[side]));
-			lpStepRemainder[side] -= static_cast<float>(steps);
-			for(int step = 0; step < steps && compareNumeric(displayedLp[side], targetLp[side]) != 0; ++step)
-				displayedLp[side] = stepDecimal(displayedLp[side], direction > 0);
+
+			if(!animation.active)
+				continue;
+
+			animation.elapsedMs = std::min(animation.durationMs,
+				animation.elapsedMs + static_cast<float>(delta_time));
+			animation.updateAccumulatorMs += static_cast<float>(delta_time);
+			if(animation.updateAccumulatorMs >= 50.0f || animation.elapsedMs >= animation.durationMs) {
+				animation.updateAccumulatorMs = 0.0f;
+				const float progress = animation.durationMs > 0.0f
+					? std::clamp(animation.elapsedMs / animation.durationMs, 0.0f, 1.0f) : 1.0f;
+				const float eased = progress * progress * (3.0f - 2.0f * progress);
+				const double interpolated = static_cast<double>(animation.from)
+					+ static_cast<double>(animation.target - animation.from) * eased;
+				const long long currentValue = progress >= 1.0f
+					? animation.target : std::llround(interpolated);
+				displayedLp[side] = std::to_wstring(currentValue);
+				if(progress >= 1.0f)
+					animation.active = false;
+			}
 		}
 	}
 
