@@ -575,10 +575,12 @@ void Game::DrawMisc() {
 	const auto& oppo = dInfo.isTeam1 ? dInfo.opponames : dInfo.selfnames;
 
 	const irr::s32 avatarTop = Resize(0, kUiEdgeMargin).Y;
-	const auto chainButtonRect = btnChainWhenAvail
-		? btnChainWhenAvail->getAbsolutePosition()
-		: Resize(0, 76, 0, 76);
-	const irr::s32 avatarBottom = std::max(avatarTop + 1, chainButtonRect.LowerRightCorner.Y);
+	// Fullscreen card view replaces the vertical stack with a bottom grid, so
+	// there is no fifth vertical button to anchor an avatar frame to.
+	const bool hasAvatarAnchor = !cardViewFullscreen && btnChainWhenAvail;
+	const auto chainButtonRect = hasAvatarAnchor ? btnChainWhenAvail->getAbsolutePosition() : irr::core::recti();
+	const irr::s32 avatarBottom = hasAvatarAnchor
+		? std::max(avatarTop + 1, chainButtonRect.LowerRightCorner.Y) : avatarTop;
 	const irr::s32 avatarSize = avatarBottom - avatarTop;
 	const irr::s32 leftOuter = Resize(leftFrameStart, 0).X;
 	const irr::s32 rightOuter = Resize(rightFrameEnd, 0).X;
@@ -600,14 +602,18 @@ void Game::DrawMisc() {
 		if(inner.getWidth() > 1 && inner.getHeight() > 1)
 			driver->draw2DRectangleOutline(inner, active ? skin::DUELFIELD_TURNPLAYER_COLOR_VAL : avatarInnerOutline);
 	};
-	drawAvatarFrame(leftAvatar, leftIsTurnPlayer);
-	drawAvatarFrame(rightAvatar, !leftIsTurnPlayer);
+	if(hasAvatarAnchor) {
+		drawAvatarFrame(leftAvatar, leftIsTurnPlayer);
+		drawAvatarFrame(rightAvatar, !leftIsTurnPlayer);
+	}
 
 	// Keep LP digits and timer bars in the inner half of each HUD wing.
-	const irr::s32 leftLpStart = leftAvatar.LowerRightCorner.X + avatarGap;
+	const irr::s32 leftLpStart = hasAvatarAnchor
+		? leftAvatar.LowerRightCorner.X + avatarGap : leftOuter + avatarGap;
 	const irr::s32 leftLpEnd = Resize(leftFrameEnd - 8, 0).X;
 	const irr::s32 rightLpStart = Resize(rightFrameStart + 8, 0).X;
-	const irr::s32 rightLpEnd = rightAvatar.UpperLeftCorner.X - avatarGap;
+	const irr::s32 rightLpEnd = hasAvatarAnchor
+		? rightAvatar.UpperLeftCorner.X - avatarGap : rightOuter - avatarGap;
 	const irr::s32 availableWidth = std::max<irr::s32>(0,
 		std::min(leftLpEnd - leftLpStart, rightLpEnd - rightLpStart));
 	const irr::s32 timerWidth = std::min<irr::s32>(100, availableWidth);
@@ -801,8 +807,10 @@ void Game::DrawMisc() {
 			y += lineHeight + lineGap;
 		}
 	};
-	drawPlayerNames(self, leftAvatar, dInfo.current_player[0], false);
-	drawPlayerNames(oppo, rightAvatar, dInfo.current_player[1], true);
+	if(hasAvatarAnchor) {
+		drawPlayerNames(self, leftAvatar, dInfo.current_player[0], false);
+		drawPlayerNames(oppo, rightAvatar, dInfo.current_player[1], true);
+	}
 	/*driver->draw2DRectangle(Resize(632, 10, 688, 30), 0x00000000, 0x00000000, 0xffffffff, 0xffffffff);
 	driver->draw2DRectangle(Resize(632, 30, 688, 50), 0xffffffff, 0xffffffff, 0x00000000, 0x00000000);*/
 	DrawShadowText(lpcFont, gDataManager->GetNumString(dInfo.turn), Resize(635, 5, 685, 40), Resize(0, 0, 2, 0), skin::DUELFIELD_TURN_COUNT_VAL, 0x80000000, true);
