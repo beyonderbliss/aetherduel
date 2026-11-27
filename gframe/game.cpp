@@ -566,6 +566,12 @@ void Game::Initialize() {
 	defaultStrings.emplace_back(btnSelectOK, 1211);
 	//card display
 	wCardDisplay = env->addWindow(Scale(320, 100, 1000, 400), false, L"");
+	auto* cardDisplaySquareBackground = new CGUIRoundedPanel(env, wCardDisplay, -1,
+		irr::core::rect<irr::s32>(0, 0, wCardDisplay->getRelativePosition().getWidth(), wCardDisplay->getRelativePosition().getHeight()),
+		driver, Scale(0), irr::gui::EGDC_WINDOW);
+	cardDisplaySquareBackground->drop();
+	cardDisplaySquareBackground->setAnchor(wCardDisplay);
+	wCardDisplay->setDrawBackground(false);
 	wCardDisplay->getCloseButton()->setVisible(false);
 	wCardDisplay->setVisible(false);
 	for(int i = 0; i < 5; ++i) {
