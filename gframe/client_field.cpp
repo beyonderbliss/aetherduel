@@ -511,27 +511,24 @@ void ClientField::ShowChainCard() {
 	else mainGame->btnSelectOK->setVisible(false);
 	mainGame->PopupElement(mainGame->wCardSelect);
 }
-void ClientField::ShowLocationCard() {
-	size_t startpos;
-	size_t ct;
-	if(display_cards.size() <= 5) {
-		startpos = 30 + 125 * (5 - display_cards.size()) / 2;
-		ct = display_cards.size();
-	} else {
-		startpos = 30;
-		ct = 5;
-	}
-	for(size_t i = 0; i < ct; ++i) {
+void ClientField::UpdateLocationCardDisplay() {
+	display_cards_offset = std::min(display_cards_offset, display_cards.size() > 5 ? display_cards.size() - 5 : 0);
+	const size_t startpos = display_cards.size() <= 5 ? 30 + 125 * (5 - display_cards.size()) / 2 : 30;
+	const size_t count = std::min<size_t>(5, display_cards.size() - display_cards_offset);
+
+	for(size_t i = 0; i < count; ++i) {
 		auto& curstring = mainGame->stDisplayPos[i];
-		auto& curcard = display_cards[i];
+		auto& curcard = display_cards[display_cards_offset + i];
 		curstring->enableOverrideColor(false);
 		if(curcard->code)
 			mainGame->imageLoading[mainGame->btnCardDisplay[i]] = curcard->code;
 		else
 			mainGame->btnCardDisplay[i]->setImage(mainGame->imageManager.tCover[curcard->controler]);
-		mainGame->btnCardDisplay[i]->setRelativePosition(mainGame->Scale<irr::s32>(static_cast<irr::s32>(startpos + i * 125), 55, static_cast<irr::s32>(startpos + 120 + i * 125), 225));
+		mainGame->btnCardDisplay[i]->setRelativePosition(mainGame->Scale<irr::s32>(static_cast<irr::s32>(startpos + i * 125), 55,
+			static_cast<irr::s32>(startpos + 120 + i * 125), 225));
 		mainGame->btnCardDisplay[i]->setPressed(false);
 		mainGame->btnCardDisplay[i]->setVisible(true);
+
 		std::wstring text;
 		if(curcard->location == LOCATION_OVERLAY) {
 			text = epro::format(L"{}[{}]({})", gDataManager->FormatLocation(curcard->overlayTarget->location, curcard->overlayTarget->sequence),
@@ -541,6 +538,7 @@ void ClientField::ShowLocationCard() {
 				curcard->sequence + 1);
 		}
 		curstring->setText(text.data());
+
 		if(curcard->location == LOCATION_OVERLAY) {
 			if(curcard->owner != curcard->overlayTarget->controler)
 				curstring->setOverrideColor(skin::DUELFIELD_CARD_SELECT_WINDOW_OVERLAY_TEXT_VAL);
@@ -562,27 +560,25 @@ void ClientField::ShowLocationCard() {
 				curstring->setBackgroundColor(skin::DUELFIELD_CARD_SELF_WINDOW_BACKGROUND_VAL);
 		}
 		curstring->setVisible(true);
-		curstring->setRelativePosition(mainGame->Scale<irr::s32>(static_cast<irr::s32>(startpos + i * 125), 30, static_cast<irr::s32>(startpos + 120 + i * 125), 50));
+		curstring->setRelativePosition(mainGame->Scale<irr::s32>(static_cast<irr::s32>(startpos + i * 125), 30,
+			static_cast<irr::s32>(startpos + 120 + i * 125), 50));
 	}
-	if(display_cards.size() <= 5) {
-		for(auto i = display_cards.size(); i < 5; ++i) {
-			mainGame->btnCardDisplay[i]->setVisible(false);
-			mainGame->stDisplayPos[i]->setVisible(false);
-		}
-		mainGame->scrDisplayList->setPos(0);
-		mainGame->scrDisplayList->setVisible(false);
-	} else {
-#if EDOPRO_ANDROID || EDOPRO_IOS
-		// Mobile pile navigation is handled by swiping the card row itself.
-		mainGame->scrDisplayList->setVisible(false);
-#else
-		mainGame->scrDisplayList->setVisible(true);
+
+	for(size_t i = count; i < 5; ++i) {
+		mainGame->btnCardDisplay[i]->setVisible(false);
+		mainGame->stDisplayPos[i]->setVisible(false);
+	}
+}
+
+void ClientField::ShowLocationCard() {
+	display_cards_offset = 0;
+#if !EDOPRO_ANDROID && !EDOPRO_IOS
+	mainGame->scrDisplayList->setMin(0);
+	mainGame->scrDisplayList->setMax(static_cast<irr::s32>(display_cards.size() > 5 ? display_cards.size() - 5 : 0) * 10);
+	mainGame->scrDisplayList->setPos(0);
+	mainGame->scrDisplayList->setVisible(display_cards.size() > 5);
 #endif
-		mainGame->scrDisplayList->setMin(0);
-		// Each card occupies exactly 10 scrollbar units; the last position is the final full five-card page.
-		mainGame->scrDisplayList->setMax(static_cast<irr::s32>(display_cards.size() - 5) * 10);
-		mainGame->scrDisplayList->setPos(0);
-	}
+	UpdateLocationCardDisplay();
 	mainGame->btnDisplayOK->setVisible(true);
 	mainGame->PopupElement(mainGame->wCardDisplay);
 }

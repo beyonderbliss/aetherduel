@@ -60,6 +60,58 @@ namespace ygo {
 std::string showing_repo = "";
 
 bool ClientField::OnEvent(const irr::SEvent& event) {
+#if EDOPRO_ANDROID || EDOPRO_IOS
+	static bool pileSwipeActive = false;
+	static bool pileSwipeMoved = false;
+	static irr::s32 pileSwipeStartX = 0;
+	static size_t pileSwipeStartOffset = 0;
+	if(event.EventType == irr::EET_MOUSE_INPUT_EVENT) {
+		if(event.MouseInput.Event == irr::EMIE_LMOUSE_PRESSED_DOWN) {
+			pileSwipeActive = false;
+			pileSwipeMoved = false;
+			if(mainGame->wCardDisplay->isVisible() && display_cards.size() > 5) {
+				const auto first = mainGame->btnCardDisplay[0]->getAbsolutePosition();
+				const auto last = mainGame->btnCardDisplay[4]->getAbsolutePosition();
+				const irr::core::recti cardArea(first.UpperLeftCorner.X, first.UpperLeftCorner.Y,
+					last.LowerRightCorner.X, last.LowerRightCorner.Y);
+				if(cardArea.isPointInside({ event.MouseInput.X, event.MouseInput.Y })) {
+					pileSwipeActive = true;
+					pileSwipeStartX = event.MouseInput.X;
+					pileSwipeStartOffset = display_cards_offset;
+				}
+			}
+		} else if(event.MouseInput.Event == irr::EMIE_MOUSE_MOVED && pileSwipeActive) {
+			const irr::s32 deltaX = event.MouseInput.X - pileSwipeStartX;
+			const irr::s32 dragThreshold = mainGame->Scale(16);
+			if(!pileSwipeMoved && (deltaX >= dragThreshold || deltaX <= -dragThreshold)) {
+				pileSwipeMoved = true;
+				for(int i = 0; i < 5; ++i)
+					mainGame->btnCardDisplay[i]->setPressed(false);
+			}
+			if(pileSwipeMoved) {
+				const irr::s32 cardStepWidth = std::max<irr::s32>(1, mainGame->Scale(125));
+				const irr::s32 distance = deltaX < 0 ? -deltaX : deltaX;
+				const size_t steps = static_cast<size_t>(std::max<irr::s32>(1, (distance + cardStepWidth / 2) / cardStepWidth));
+				const size_t maxOffset = display_cards.size() - 5;
+				const irr::s32 direction = deltaX < 0 ? 1 : -1;
+				const irr::s32 nextOffset = std::clamp<irr::s32>(
+					static_cast<irr::s32>(pileSwipeStartOffset) + direction * static_cast<irr::s32>(steps),
+					0, static_cast<irr::s32>(maxOffset));
+				if(display_cards_offset != static_cast<size_t>(nextOffset)) {
+					display_cards_offset = static_cast<size_t>(nextOffset);
+					UpdateLocationCardDisplay();
+				}
+				return true;
+			}
+		} else if(event.MouseInput.Event == irr::EMIE_LMOUSE_LEFT_UP && pileSwipeActive) {
+			const bool consumedSwipe = pileSwipeMoved;
+			pileSwipeActive = false;
+			pileSwipeMoved = false;
+			if(consumedSwipe)
+				return true;
+		}
+	}
+#endif
 	bool stopPropagation = false;
 	if(OnCommonEvent(event, stopPropagation))
 		return stopPropagation;
@@ -957,48 +1009,10 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 				break;
 			}
 			case SCROLL_CARD_DISPLAY: {
-				int pos = mainGame->scrDisplayList->getPos() / 10;
-				for(int i = 0; i < 5; ++i) {
-					auto& curcard = display_cards[i + pos];
-					auto& curstring = mainGame->stDisplayPos[i];
-					// draw display_cards[i + pos] in btnCardDisplay[i]
-					curstring->enableOverrideColor(false);
-					if(curcard->code)
-						mainGame->imageLoading[mainGame->btnCardDisplay[i]] = curcard->code;
-					else
-						mainGame->btnCardDisplay[i]->setImage(mainGame->imageManager.tCover[0]);
-					mainGame->btnCardDisplay[i]->setRelativePosition(mainGame->Scale(30 + i * 125, 55, 30 + 120 + i * 125, 225));
-					std::wstring text;
-					if(curcard->location == LOCATION_OVERLAY) {
-						text = epro::format(L"{}[{}]({})", gDataManager->FormatLocation(curcard->overlayTarget->location, curcard->overlayTarget->sequence),
-							curcard->overlayTarget->sequence + 1, curcard->sequence + 1);
-					} else {
-						text = epro::format(L"{}[{}]", gDataManager->FormatLocation(curcard->location, curcard->sequence),
-							curcard->sequence + 1);
-					}
-					curstring->setText(text.data());
-					if(curcard->location == LOCATION_OVERLAY) {
-						if(curcard->owner != curcard->overlayTarget->controler)
-							curstring->setOverrideColor(skin::DUELFIELD_CARD_SELECT_WINDOW_OVERLAY_TEXT_VAL);
-						// BackgroundColor: controller of the xyz monster
-						if(curcard->overlayTarget->controler)
-							curstring->setBackgroundColor(skin::DUELFIELD_CARD_OPPONENT_WINDOW_BACKGROUND_VAL);
-						else
-							curstring->setBackgroundColor(skin::DUELFIELD_CARD_SELF_WINDOW_BACKGROUND_VAL);
-					} else if(curcard->location == LOCATION_EXTRA || curcard->location == LOCATION_REMOVED) {
-						if(curcard->position & POS_FACEDOWN)
-							curstring->setOverrideColor(skin::DUELFIELD_CARD_SELECT_WINDOW_SET_TEXT_VAL);
-						if(curcard->controler)
-							curstring->setBackgroundColor(skin::DUELFIELD_CARD_OPPONENT_WINDOW_BACKGROUND_VAL);
-						else
-							curstring->setBackgroundColor(skin::DUELFIELD_CARD_SELF_WINDOW_BACKGROUND_VAL);
-					} else {
-						if(curcard->controler)
-							curstring->setBackgroundColor(skin::DUELFIELD_CARD_OPPONENT_WINDOW_BACKGROUND_VAL);
-						else
-							curstring->setBackgroundColor(skin::DUELFIELD_CARD_SELF_WINDOW_BACKGROUND_VAL);
-					}
-				}
+#if !EDOPRO_ANDROID && !EDOPRO_IOS
+				display_cards_offset = static_cast<size_t>(mainGame->scrDisplayList->getPos() / 10);
+				UpdateLocationCardDisplay();
+#endif
 				break;
 			}
 			}
@@ -1044,7 +1058,7 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 				}
 			}
 			if(id >= BUTTON_DISPLAY_0 && id <= BUTTON_DISPLAY_4) {
-				int pos = mainGame->scrDisplayList->getPos() / 10;
+				const size_t pos = display_cards_offset;
 				ClientCard* mcard = display_cards[id - BUTTON_DISPLAY_0 + pos];
 				if(mcard) {
 					SetShowMark(mcard, true);
@@ -1074,7 +1088,7 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 					mainGame->stCardListTip->setVisible(false);
 				}
 				if(id >= BUTTON_DISPLAY_0 && id <= BUTTON_DISPLAY_4) {
-					int pos = mainGame->scrDisplayList->getPos() / 10;
+					const size_t pos = display_cards_offset;
 					ClientCard* mcard = display_cards[id - BUTTON_DISPLAY_0 + pos];
 					if(mcard)
 						SetShowMark(mcard, false);
@@ -1092,71 +1106,6 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 		break;
 	}
 	case irr::EET_MOUSE_INPUT_EVENT: {
-		// Android touch input is delivered through Irrlicht's left-mouse events.
-		// Capture horizontal drags over the pile cards without changing card-button taps.
-		static bool pileSwipeActive = false;
-		static bool pileSwipeMoved = false;
-		static irr::s32 pileSwipeStartX = 0;
-		static irr::s32 pileSwipeStartPos = 0;
-		if(event.MouseInput.Event == irr::EMIE_LMOUSE_PRESSED_DOWN) {
-			pileSwipeActive = false;
-			pileSwipeMoved = false;
-			if(mainGame->wCardDisplay->isVisible() && mainGame->scrDisplayList->getMax() > 0) {
-				const auto first = mainGame->btnCardDisplay[0]->getAbsolutePosition();
-				const auto last = mainGame->btnCardDisplay[4]->getAbsolutePosition();
-				const irr::core::recti cardArea(first.UpperLeftCorner.X, first.UpperLeftCorner.Y,
-					last.LowerRightCorner.X, last.LowerRightCorner.Y);
-				if(cardArea.isPointInside({ event.MouseInput.X, event.MouseInput.Y })) {
-					pileSwipeActive = true;
-					pileSwipeStartX = event.MouseInput.X;
-					pileSwipeStartPos = mainGame->scrDisplayList->getPos();
-				}
-			}
-		} else if(event.MouseInput.Event == irr::EMIE_MOUSE_MOVED && pileSwipeActive &&
-			  event.MouseInput.isLeftPressed()) {
-			const irr::s32 deltaX = event.MouseInput.X - pileSwipeStartX;
-			const irr::s32 dragThreshold = mainGame->Scale(8);
-			if(!pileSwipeMoved && (deltaX >= dragThreshold || deltaX <= -dragThreshold)) {
-				pileSwipeMoved = true;
-				// A drag is navigation, not a card tap. Clear the button's pressed visual state.
-				for(int i = 0; i < 5; ++i)
-					mainGame->btnCardDisplay[i]->setPressed(false);
-			}
-			if(pileSwipeMoved) {
-				const irr::s32 cardStepWidth = std::max<irr::s32>(1, mainGame->Scale(125));
-				const irr::s32 steps = (deltaX * 10) / cardStepWidth;
-				const irr::s32 maxPos = mainGame->scrDisplayList->getMax();
-				const irr::s32 nextPos = std::clamp(pileSwipeStartPos - steps * 10, 0, maxPos);
-				if(mainGame->scrDisplayList->getPos() != nextPos) {
-					mainGame->scrDisplayList->setPos(nextPos);
-					irr::SEvent scrollEvent{};
-					scrollEvent.EventType = irr::EET_GUI_EVENT;
-					scrollEvent.GUIEvent.Caller = mainGame->scrDisplayList;
-					scrollEvent.GUIEvent.EventType = irr::gui::EGET_SCROLL_BAR_CHANGED;
-					OnEvent(scrollEvent);
-				}
-				return true;
-			}
-		} else if(event.MouseInput.Event == irr::EMIE_LMOUSE_LEFT_UP && pileSwipeActive) {
-			const bool consumedSwipe = pileSwipeMoved;
-			pileSwipeActive = false;
-			pileSwipeMoved = false;
-			if(consumedSwipe) {
-				// Keep the final offset aligned to a complete card slot.
-				const irr::s32 maxPos = mainGame->scrDisplayList->getMax();
-				const irr::s32 snappedPos = std::clamp(
-					((mainGame->scrDisplayList->getPos() + 5) / 10) * 10, 0, maxPos);
-				if(mainGame->scrDisplayList->getPos() != snappedPos) {
-					mainGame->scrDisplayList->setPos(snappedPos);
-					irr::SEvent scrollEvent{};
-					scrollEvent.EventType = irr::EET_GUI_EVENT;
-					scrollEvent.GUIEvent.Caller = mainGame->scrDisplayList;
-					scrollEvent.GUIEvent.EventType = irr::gui::EGET_SCROLL_BAR_CHANGED;
-					OnEvent(scrollEvent);
-				}
-				return true;
-			}
-		}
 		bool isroot = [&event,root=mainGame->env->getRootGUIElement()] {
 			const auto elem = root->getElementFromPoint({ event.MouseInput.X, event.MouseInput.Y });
 			return elem == root || elem == mainGame->wPhase;

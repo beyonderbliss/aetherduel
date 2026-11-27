@@ -76,9 +76,10 @@ public:
 	CGUIRoundedPanel(irr::gui::IGUIEnvironment* env, irr::gui::IGUIElement* parent,
 		irr::s32 id, const irr::core::rect<irr::s32>& rectangle,
 		irr::video::IVideoDriver* videoDriver, irr::s32 cornerRadius,
-		irr::gui::EGUI_DEFAULT_COLOR backgroundColor)
+		irr::gui::EGUI_DEFAULT_COLOR backgroundColor, bool useParentClip = false)
 		: irr::gui::IGUIElement(irr::gui::EGUIET_ELEMENT, env, parent, id, rectangle),
-		EnvironmentRef(env), VideoDriver(videoDriver), Radius(cornerRadius), BackgroundColor(backgroundColor) {
+		EnvironmentRef(env), VideoDriver(videoDriver), Radius(cornerRadius), BackgroundColor(backgroundColor),
+		UseParentClip(useParentClip) {
 		setAlignment(irr::gui::EGUIA_SCALE, irr::gui::EGUIA_SCALE, irr::gui::EGUIA_SCALE, irr::gui::EGUIA_SCALE);
 	}
 
@@ -89,9 +90,10 @@ public:
 			return;
 
 		const auto& bounds = Anchor ? Anchor->getAbsolutePosition() : AbsoluteRect;
-		const auto& clip = Anchor ? Anchor->getAbsoluteClippingRect() : AbsoluteClippingRect;
+		const auto& anchorClip = Anchor ? Anchor->getAbsoluteClippingRect() : AbsoluteClippingRect;
 		const auto& shadowClip = Anchor && Anchor->getParent()
-			? Anchor->getParent()->getAbsoluteClippingRect() : clip;
+			? Anchor->getParent()->getAbsoluteClippingRect() : anchorClip;
+		const auto& clip = UseParentClip ? shadowClip : anchorClip;
 		if(bounds.getWidth() <= 0 || bounds.getHeight() <= 0)
 			return;
 
@@ -168,6 +170,7 @@ private:
 	irr::video::IVideoDriver* VideoDriver;
 	irr::s32 Radius;
 	irr::gui::EGUI_DEFAULT_COLOR BackgroundColor;
+	bool UseParentClip;
 	irr::gui::IGUIElement* Anchor = nullptr;
 };
 }
@@ -568,7 +571,7 @@ void Game::Initialize() {
 	wCardDisplay = env->addWindow(Scale(320, 100, 1000, 400), false, L"");
 	auto* cardDisplaySquareBackground = new CGUIRoundedPanel(env, wCardDisplay, -1,
 		irr::core::rect<irr::s32>(0, 0, wCardDisplay->getRelativePosition().getWidth(), wCardDisplay->getRelativePosition().getHeight()),
-		driver, Scale(0), irr::gui::EGDC_WINDOW);
+		driver, Scale(0), irr::gui::EGDC_WINDOW, true);
 	cardDisplaySquareBackground->drop();
 	cardDisplaySquareBackground->setAnchor(wCardDisplay);
 	wCardDisplay->setDrawBackground(false);
@@ -582,7 +585,10 @@ void Game::Initialize() {
 		btnCardDisplay[i]->setImageSize(imgsize);
 		btnCardDisplay[i]->setDrawBorder(false);
 	}
+	scrDisplayList = nullptr;
+#if !EDOPRO_ANDROID && !EDOPRO_IOS
 	scrDisplayList = env->addScrollBar(true, Scale(30, 235, 650, 255), wCardDisplay, SCROLL_CARD_DISPLAY);
+#endif
 	btnDisplayOK = env->addButton(Scale(300, 265, 380, 290), wCardDisplay, BUTTON_CARD_DISP_OK, gDataManager->GetSysString(1211).data());
 	defaultStrings.emplace_back(btnDisplayOK, 1211);
 	//announce number

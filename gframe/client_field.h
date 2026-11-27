@@ -74,6 +74,7 @@ public:
 	std::vector<ClientCard*> selectsum_all;
 	std::vector<uint64_t> declare_opcodes;
 	std::vector<ClientCard*> display_cards;
+	size_t display_cards_offset = 0;
 	std::vector<int> sort_list;
 	std::map<uint64_t, int> player_desc_hints[2];
 	bool grave_act[2];
@@ -103,6 +104,7 @@ public:
 	void ShowSelectCard(bool buttonok = false, bool chain = false);
 	void ShowChainCard();
 	void ShowLocationCard();
+	void UpdateLocationCardDisplay();
 	void ShowSelectOption(uint64_t select_hint = 0, bool should_lock = true);
 	void ReplaySwap();
 	void RefreshAllCards();
