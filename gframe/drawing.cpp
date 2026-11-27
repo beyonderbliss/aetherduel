@@ -566,27 +566,53 @@ void Game::DrawMisc() {
 		driver->setTransform(irr::video::ETS_WORLD, it);
 		driver->drawVertexPrimitiveList(matManager.vChainNum, 4, matManager.iRectangle, 2);
 	}
-	// Shared logical LP geometry: fixed length, mirrored around X=660.
+	// Avatar frames follow the real Chain: ON button position, not a guessed height.
 	constexpr irr::s32 leftFrameStart = kLpBarLeftOuterX;
 	constexpr irr::s32 leftFrameEnd = kDuelLayoutCenterX - 31;
 	constexpr irr::s32 rightFrameStart = kDuelLayoutCenterX + 31;
 	constexpr irr::s32 rightFrameEnd = 2 * kDuelLayoutCenterX - kLpBarLeftOuterX;
-	constexpr irr::s32 leftFillStart = 335;
-	constexpr irr::s32 leftFillEnd = 625;
-	constexpr irr::s32 rightFillStart = 695;
-	constexpr irr::s32 rightFillEnd = 985;
-	const irr::s32 fillWidth = std::max<irr::s32>(0, leftFillEnd - leftFillStart);
-	const irr::s32 timerWidth = std::min<irr::s32>(100, fillWidth);
-	const irr::s32 leftTimerStart = leftFillEnd - timerWidth;
-	const irr::s32 rightTimerEnd = rightFillStart + timerWidth;
-
 	const auto& self = dInfo.isTeam1 ? dInfo.selfnames : dInfo.opponames;
 	const auto& oppo = dInfo.isTeam1 ? dInfo.opponames : dInfo.selfnames;
-	const auto lpframe_pos = ((dInfo.turn % 2 && dInfo.isFirst) || (!(dInfo.turn % 2) && !dInfo.isFirst)) ?
-						Resize(leftFrameStart - 3, 8, leftFrameEnd + 1, 76 + static_cast<irr::s32>(23 * (self.size() - 1))) :
-						Resize(rightFrameStart - 1, 8, rightFrameEnd + 3, 76 + static_cast<irr::s32>(23 * (oppo.size() - 1)));
-	driver->draw2DRectangle(skin::DUELFIELD_TURNPLAYER_COLOR_VAL, lpframe_pos);
-	driver->draw2DRectangleOutline(lpframe_pos, skin::DUELFIELD_TURNPLAYER_OUTLINE_COLOR_VAL);
+
+	const irr::s32 avatarTop = Resize(0, kUiEdgeMargin).Y;
+	const auto chainButtonRect = btnChainWhenAvail
+		? btnChainWhenAvail->getAbsolutePosition()
+		: Resize(0, 76, 0, 76);
+	const irr::s32 avatarBottom = std::max(avatarTop + 1, chainButtonRect.LowerRightCorner.Y);
+	const irr::s32 avatarSize = avatarBottom - avatarTop;
+	const irr::s32 leftOuter = Resize(leftFrameStart, 0).X;
+	const irr::s32 rightOuter = Resize(rightFrameEnd, 0).X;
+	const irr::s32 avatarGap = std::max<irr::s32>(1, ResizeX(8));
+	const irr::core::recti leftAvatar(leftOuter, avatarTop, leftOuter + avatarSize, avatarBottom);
+	const irr::core::recti rightAvatar(rightOuter - avatarSize, avatarTop, rightOuter, avatarBottom);
+
+	const irr::video::SColor avatarFill(235, 19, 22, 30);
+	const irr::video::SColor avatarOutline(255, 117, 91, 54);
+	const irr::video::SColor avatarInnerOutline(210, 65, 70, 82);
+	auto drawAvatarFrame = [&](const irr::core::recti& frame) {
+		driver->draw2DRectangle(avatarFill, frame);
+		driver->draw2DRectangleOutline(frame, avatarOutline);
+		const irr::s32 inset = std::max<irr::s32>(1, ResizeX(2));
+		const irr::core::recti inner(frame.UpperLeftCorner.X + inset, frame.UpperLeftCorner.Y + inset,
+			frame.LowerRightCorner.X - inset, frame.LowerRightCorner.Y - inset);
+		if(inner.getWidth() > 1 && inner.getHeight() > 1)
+			driver->draw2DRectangleOutline(inner, avatarInnerOutline);
+	};
+	drawAvatarFrame(leftAvatar);
+	drawAvatarFrame(rightAvatar);
+
+	// Keep LP digits and timer bars in the inner half of each HUD wing.
+	const irr::s32 leftLpStart = leftAvatar.LowerRightCorner.X + avatarGap;
+	const irr::s32 leftLpEnd = Resize(leftFrameEnd - 8, 0).X;
+	const irr::s32 rightLpStart = Resize(rightFrameStart + 8, 0).X;
+	const irr::s32 rightLpEnd = rightAvatar.UpperLeftCorner.X - avatarGap;
+	const irr::s32 availableWidth = std::max<irr::s32>(1,
+		std::min(leftLpEnd - leftLpStart, rightLpEnd - rightLpStart));
+	const irr::s32 timerWidth = std::min<irr::s32>(100, availableWidth);
+	const irr::s32 leftTimerStart = leftLpEnd - timerWidth;
+	const irr::s32 leftTimerEnd = leftLpEnd;
+	const irr::s32 rightTimerStart = rightLpStart;
+	const irr::s32 rightTimerEnd = rightLpStart + timerWidth;
 
 #define SKCOLOR(what) skin::LPBAR_##what##_VAL
 #define RECTCOLOR(what) SKCOLOR(what##_TOP_LEFT), SKCOLOR(what##_TOP_RIGHT), SKCOLOR(what##_BOTTOM_LEFT), SKCOLOR(what##_BOTTOM_RIGHT)
@@ -608,14 +634,14 @@ void Game::DrawMisc() {
 #define SKCOLOR(what) skin::TIMEBAR_##what##_VAL
 
 	if(!dInfo.isReplay && !dInfo.isSingleMode && dInfo.player_type < 7 && dInfo.time_limit && timerWidth > 0) {
-		auto rectpos = Resize(leftTimerStart, 80, leftFillEnd, 90);
-		auto cliprect = Resize(leftTimerStart, 80,
-			leftTimerStart + timerWidth * dInfo.time_left[0] / dInfo.time_limit, 90);
+		auto rectpos = irr::core::recti(leftTimerStart, Resize(0, 80).Y, leftTimerEnd, Resize(0, 90).Y);
+		auto cliprect = irr::core::recti(leftTimerStart, Resize(0, 80).Y,
+			leftTimerStart + timerWidth * dInfo.time_left[0] / dInfo.time_limit, Resize(0, 90).Y);
 		DRAWRECT(rectpos, 1, &cliprect);
 		driver->draw2DRectangleOutline(rectpos, skin::TIMEBAR_1_OUTLINE_VAL);
-		rectpos = Resize(rightFillStart, 80, rightTimerEnd, 90);
-		cliprect = Resize(rightFillStart + timerWidth - timerWidth * dInfo.time_left[1] / dInfo.time_limit,
-			80, rightTimerEnd, 90);
+		rectpos = irr::core::recti(rightTimerStart, Resize(0, 80).Y, rightTimerEnd, Resize(0, 90).Y);
+		cliprect = irr::core::recti(rightTimerStart + timerWidth - timerWidth * dInfo.time_left[1] / dInfo.time_limit,
+			Resize(0, 80).Y, rightTimerEnd, Resize(0, 90).Y);
 		DRAWRECT(rectpos, 2, &cliprect);
 		driver->draw2DRectangleOutline(rectpos, skin::TIMEBAR_2_OUTLINE_VAL);
 	}
@@ -704,12 +730,10 @@ void Game::DrawMisc() {
 		}
 	}
 
-	const irr::s32 displayTop = Resize(0, 8, 0, 8).UpperLeftCorner.Y;
-	const irr::s32 maxDisplayHeight = Resize(0, 0, 0, 48).getHeight();
-	const irr::s32 leftStart = Resize(leftFrameStart + 8, 0).X;
-	const irr::s32 leftEnd = Resize(leftFrameEnd - 8, 0).X;
-	const irr::s32 rightEnd = Resize(rightFrameEnd - 8, 0).X;
-	const irr::s32 availableWidth = std::max<irr::s32>(1, leftEnd - leftStart);
+	const irr::s32 displayTop = Resize(0, 8).Y;
+	const irr::s32 maxDisplayHeight = Resize(0, 48).Y;
+	const irr::s32 leftStart = leftLpStart;
+	const irr::s32 rightEnd = rightLpEnd;
 	int slotCount = 7;
 	for(int side = 0; side < 2; ++side)
 		slotCount = std::max(slotCount, std::min(10, static_cast<int>(acceptedLp[side].size())));
@@ -749,30 +773,30 @@ void Game::DrawMisc() {
 		}
 	}
 
-	irr::core::recti p1size = Resize(leftFillStart, 56, leftFrameEnd, 75);
-	irr::core::recti p2size = Resize(rightFillEnd, 56, rightFillEnd, 75);
-	{
-		int i = 0;
-		for (const auto& player : self) {
-			if (i++ == dInfo.current_player[0])
-				textFont->drawustring(player, p1size, 0xffffffff, false, false, 0);
-			else
-				textFont->drawustring(player, p1size, 0xff808080, false, false, 0);
-			p1size += irr::core::vector2di{ 0, p1size.getHeight() + ResizeY(4) };
+	// Player labels sit inside the lower edge of each avatar frame.
+	auto drawPlayerNames = [&](const std::vector<std::wstring>& names, const irr::core::recti& frame,
+		int currentPlayer, bool alignRight) {
+		if(names.empty())
+			return;
+		const irr::s32 paddingX = std::max<irr::s32>(1, ResizeX(5));
+		const irr::s32 lineHeight = std::max<irr::s32>(1, ResizeY(19));
+		const irr::s32 lineGap = std::max<irr::s32>(1, ResizeY(2));
+		const irr::s32 totalHeight = static_cast<irr::s32>(names.size()) * lineHeight
+			+ static_cast<irr::s32>(names.size() - 1) * lineGap;
+		irr::s32 y = std::max(frame.UpperLeftCorner.Y, frame.LowerRightCorner.Y - ResizeY(4) - totalHeight);
+		for(size_t i = 0; i < names.size(); ++i) {
+			const irr::core::ustring label(names[i]);
+			const auto dimensions = textFont->getDimensionustring(label);
+			const irr::s32 left = alignRight
+				? std::max(frame.UpperLeftCorner.X + paddingX, frame.LowerRightCorner.X - paddingX - static_cast<irr::s32>(dimensions.Width))
+				: frame.UpperLeftCorner.X + paddingX;
+			const irr::core::recti labelRect(left, y, frame.LowerRightCorner.X - paddingX, y + lineHeight);
+			textFont->drawustring(label, labelRect, static_cast<int>(i) == currentPlayer ? 0xffffffff : 0xff808080, false, false, 0);
+			y += lineHeight + lineGap;
 		}
-		i = 0;
-		const auto basecorner = p2size.UpperLeftCorner.X;
-		for (const auto& player : oppo) {
-			const irr::core::ustring utext(player);
-			auto cld = textFont->getDimensionustring(utext);
-			p2size.UpperLeftCorner.X = basecorner - cld.Width;
-			if (i++ == dInfo.current_player[1])
-				textFont->drawustring(utext, p2size, 0xffffffff, false, false, 0);
-			else
-				textFont->drawustring(utext, p2size, 0xff808080, false, false, 0);
-			p2size += irr::core::vector2di{ 0, p2size.getHeight() + ResizeY(4) };
-		}
-	}
+	};
+	drawPlayerNames(self, leftAvatar, dInfo.current_player[0], false);
+	drawPlayerNames(oppo, rightAvatar, dInfo.current_player[1], true);
 	/*driver->draw2DRectangle(Resize(632, 10, 688, 30), 0x00000000, 0x00000000, 0xffffffff, 0xffffffff);
 	driver->draw2DRectangle(Resize(632, 30, 688, 50), 0xffffffff, 0xffffffff, 0x00000000, 0x00000000);*/
 	DrawShadowText(lpcFont, gDataManager->GetNumString(dInfo.turn), Resize(635, 5, 685, 40), Resize(0, 0, 2, 0), skin::DUELFIELD_TURN_COUNT_VAL, 0x80000000, true);
