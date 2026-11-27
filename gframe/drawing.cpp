@@ -575,14 +575,12 @@ void Game::DrawMisc() {
 	const auto& oppo = dInfo.isTeam1 ? dInfo.opponames : dInfo.selfnames;
 
 	const irr::s32 avatarTop = Resize(0, kUiEdgeMargin).Y;
-	// Fullscreen card view replaces the vertical stack with a bottom grid.
-	// Recalculate the normal fifth-button bottom so avatar dimensions stay identical.
-	const bool fullscreenDuelHud = cardViewFullscreen && dInfo.isInDuel;
-	const bool hasAvatarAnchor = btnChainWhenAvail && !cardViewFullscreen;
+	// Derive the avatar frame from the normal fifth-button slot, but never
+	// from the button's live position: fullscreen mode rearranges that button.
+	// This keeps the HUD rectangle identical when card mode is toggled.
+	const bool showDuelHud = dInfo.isInDuel;
 	irr::s32 avatarBottom = avatarTop;
-	if(hasAvatarAnchor) {
-		avatarBottom = btnChainWhenAvail->getAbsolutePosition().LowerRightCorner.Y;
-	} else if(fullscreenDuelHud) {
+	if(showDuelHud) {
 		const auto panelRect = wInfos->getRelativePosition();
 		const auto marginRect = Resize(211, 0, 301, kUiEdgeMargin);
 		const irr::s32 stackTop = marginRect.LowerRightCorner.Y;
@@ -599,10 +597,8 @@ void Game::DrawMisc() {
 	}
 	avatarBottom = std::max(avatarTop + 1, avatarBottom);
 	const irr::s32 avatarSize = avatarBottom - avatarTop;
-	const irr::s32 fullscreenCardRight = wCardImg
-		? wCardImg->getAbsolutePosition().LowerRightCorner.X
-		: Resize(kFullscreenCardRightX, 0).X;
-	const irr::s32 leftOuter = fullscreenDuelHud
+	const irr::s32 fullscreenCardRight = GetFullscreenCardRect().LowerRightCorner.X;
+	const irr::s32 leftOuter = showDuelHud
 		? fullscreenCardRight + Resize(kUiEdgeMargin, 0).X
 		: Resize(leftFrameStart, 0).X;
 	const irr::s32 rightOuter = Resize(rightFrameEnd, 0).X;
@@ -624,17 +620,17 @@ void Game::DrawMisc() {
 		if(inner.getWidth() > 1 && inner.getHeight() > 1)
 			driver->draw2DRectangleOutline(inner, active ? skin::DUELFIELD_TURNPLAYER_COLOR_VAL : avatarInnerOutline);
 	};
-	if(hasAvatarAnchor || fullscreenDuelHud) {
+	ifshowDuelHud {
 		drawAvatarFrame(leftAvatar, leftIsTurnPlayer);
 		drawAvatarFrame(rightAvatar, !leftIsTurnPlayer);
 	}
 
 	// Keep LP digits and timer bars in the inner half of each HUD wing.
-	const irr::s32 leftLpStart = (hasAvatarAnchor || fullscreenDuelHud)
+	const irr::s32 leftLpStart = showDuelHud
 		? leftAvatar.LowerRightCorner.X + avatarGap : leftOuter + avatarGap;
 	const irr::s32 leftLpEnd = Resize(leftFrameEnd - 8, 0).X;
 	const irr::s32 rightLpStart = Resize(rightFrameStart + 8, 0).X;
-	const irr::s32 rightLpEnd = (hasAvatarAnchor || fullscreenDuelHud)
+	const irr::s32 rightLpEnd = showDuelHud
 		? rightAvatar.UpperLeftCorner.X - avatarGap : rightOuter - avatarGap;
 	const irr::s32 availableWidth = std::max<irr::s32>(0,
 		std::min(leftLpEnd - leftLpStart, rightLpEnd - rightLpStart));
@@ -807,7 +803,7 @@ void Game::DrawMisc() {
 			y += lineHeight + lineGap;
 		}
 	};
-	if(hasAvatarAnchor || fullscreenDuelHud) {
+	ifshowDuelHud {
 		drawPlayerNames(self, leftAvatar, dInfo.current_player[0], false);
 		drawPlayerNames(oppo, rightAvatar, dInfo.current_player[1], true);
 	}
