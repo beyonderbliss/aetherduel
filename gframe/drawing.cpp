@@ -645,8 +645,10 @@ void Game::DrawMisc() {
 #define RECTCOLOR(what) SKCOLOR(what##_TOP_LEFT), SKCOLOR(what##_TOP_RIGHT), SKCOLOR(what##_BOTTOM_LEFT), SKCOLOR(what##_BOTTOM_RIGHT)
 #define	DRAWRECT(rect_pos,what,clip) do { driver->draw2DRectangleClip(rect_pos, RECTCOLOR(what),nullptr,clip); } while(0)
 
-	if(lpframe > 0 && delta_frames)
+	if(lpframe > 0 && delta_frames) {
 		lpcalpha -= 0x19 * delta_frames;
+		lpframe -= delta_frames;
+	}
 	if(lpcstring.size()) {
 		if(lpplayer == 0)
 			DrawShadowText(lpcFont, lpcstring, Resize(400, 470, 920, 520), Resize(0, 2, 2, 0), (lpcalpha << 24) | lpccolor, (lpcalpha << 24) | 0x00ffffff, true);
