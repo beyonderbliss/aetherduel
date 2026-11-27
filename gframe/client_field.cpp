@@ -579,7 +579,8 @@ void ClientField::ShowLocationCard() {
 		mainGame->scrDisplayList->setVisible(true);
 #endif
 		mainGame->scrDisplayList->setMin(0);
-		mainGame->scrDisplayList->setMax(static_cast<irr::s32>(display_cards.size() - 5) * 10 + 9);
+		// Each card occupies exactly 10 scrollbar units; the last position is the final full five-card page.
+		mainGame->scrDisplayList->setMax(static_cast<irr::s32>(display_cards.size() - 5) * 10);
 		mainGame->scrDisplayList->setPos(0);
 	}
 	mainGame->btnDisplayOK->setVisible(true);
